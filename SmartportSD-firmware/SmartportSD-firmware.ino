@@ -58,7 +58,7 @@
 //*****************************************************************************
 
 //x #include <SPI.h>
-#include "SdFat.h"
+#include "SdFat.h" // SDFat version 2.1.2 
 #include <avr/eeprom.h>
 
 // Set USE_SDIO to zero for SPI card access.
@@ -206,7 +206,7 @@ void setup() {
     unsigned char n;
     packet_buffer = (unsigned char *)malloc(100);    
     for(unsigned char i=0; i<NUM_PARTITIONS; i++){
-      n = myFile.fgets(packet_buffer, 100);
+      n = myFile.fgets((char*)packet_buffer, 100);
       if(n>0) {
         if (packet_buffer[n - 1] == '\n') {
           packet_buffer[n-1] = 0;//Serial.print(n, DEC);
@@ -280,7 +280,8 @@ void loop() {
   while (1) {
     state = smartport;
 
-    if (digitalRead(ejectPin) == HIGH) rotate_boot();
+    //FIXME find v2's pin for middle button
+    //if (digitalRead(ejectPin) == HIGH) rotate_boot();
     
 
     noid = 0;  //reset noid flag
@@ -422,6 +423,7 @@ void loop() {
         switch (packet_buffer[14]) {
 
           case 0x80:  //is a status cmd
+            Serial.println("STATUS");
             digitalWrite(statusledPin, HIGH);
             source = packet_buffer[6];
             for (partition = 0; partition < NUM_PARTITIONS; partition++) { //Check if its one of ours
@@ -593,8 +595,8 @@ void loop() {
                 // block num second byte
                 //print_packet ((unsigned char*) packet_buffer,packet_length());
                 //Added (unsigned short) cast to ensure calculated block is not underflowing.
-                block_num = block_num + (((LBL & 0x7f) | (((unsigned short)LBH << 4) & 0x80)) << 8);
-                block_num = block_num + (((LBT & 0x7f) | (((unsigned short)LBH << 5) & 0x80)) << 16);
+                block_num = block_num + ( ((unsigned long)((LBL & 0x7f) | (((unsigned short)LBH << 4) & 0x80))) << 8);
+                block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 16);
                 //Serial.print(F("\r\nRead block #0x"));
                 //Serial.print(block_num, HEX);
                 // partition number indicates which 32mb block we access on the CF
@@ -1269,7 +1271,7 @@ void encode_status_dib_reply_packet (device d)
   //grps of 7
   for (grpcount = grpnum-1; grpcount >= 0; grpcount--) // 3
   {
-    for (i=0;i<8;i++) {
+    for (i=0;i<7;i++) {
       group_buffer[i]=data[i + oddnum + (grpcount * 7)];
     }
     // add group msb byte
@@ -1354,11 +1356,24 @@ void encode_extended_status_dib_reply_packet (device d)
   packet_buffer[18] = (d.blocks >> 16 ) & 0xff | 0x80 ; //block size 3 - why is the high bit set?
   packet_buffer[19] = (d.blocks >> 24 ) & 0xff | 0x80 ; //block size 3 - why is the high bit set?  
   packet_buffer[20] = 0x8d; //ID string length - 13 chars
-  packet_buffer[21] = 'Sm';  //ID string (16 chars total)
+  packet_buffer[21] = 'S';
+  packet_buffer[22] = 'm';  //ID string (16 chars total)
   packet_buffer[23] = 0x80; //grp2 msb
-  packet_buffer[24] = 'artport';
+  packet_buffer[24] = 'a';
+  packet_buffer[25] = 'r';
+  packet_buffer[26] = 't';
+  packet_buffer[27] = 'p';
+  packet_buffer[28] = 'o';
+  packet_buffer[29] = 'r';
+  packet_buffer[30] = 't';
   packet_buffer[31] = 0x80; //grp3 msb
-  packet_buffer[32] = ' SD    ';
+  packet_buffer[32] = ' ';
+  packet_buffer[33] = 'S';
+  packet_buffer[34] = 'D';
+  packet_buffer[35] = ' ';
+  packet_buffer[36] = ' ';
+  packet_buffer[37] = ' ';
+  packet_buffer[38] = ' ';
   packet_buffer[39] = 0x80; //odd msb
   packet_buffer[40] = 0x02; //Device type    - 0x02  harddisk
   packet_buffer[41] = 0x00; //Device Subtype - 0x20
