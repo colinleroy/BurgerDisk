@@ -27,7 +27,7 @@
 // 1.15 - Now uses FAT filesystem on the SD card instead of raw layout.
 //
 //
-// 1.16 - Add support .hdv and .2mg (also .po), if add config.txt to the root of the sd card, 
+// 1.16 - Add support .hdv and .2mg (also .po), if add config.txt to the root of the sd card,
 //        it will read any file name. images added to subfolders will also be loaded.
 //        if not specified in config.txt, usage is the same as in versions up to 1.15.
 //        improvement by Wing Yueng.
@@ -58,7 +58,7 @@
 //*****************************************************************************
 
 //x #include <SPI.h>
-#include "SdFat.h" // SDFat version 2.1.2 
+#include "SdFat.h" // SDFat version 2.1.2
 #include <avr/eeprom.h>
 
 // Set USE_SDIO to zero for SPI card access.
@@ -183,7 +183,7 @@ static void late_init(void) {
   // check for open error
   if (myFile.isOpen()) {
     unsigned char n;
-    packet_buffer = (unsigned char *)malloc(100);    
+    packet_buffer = (unsigned char *)malloc(100);
     for(unsigned char i = 0; i < NUM_PARTITIONS; i++){
       n = myFile.fgets((char*)packet_buffer, 100);
       if(n > 0) {
@@ -212,11 +212,10 @@ static void late_init(void) {
         }
         break;
       }
-      
     }
 
     free(packet_buffer);
-    myFile.close();    
+    myFile.close();
   } else {
     Serial.println(F("No config.txt. Searching for images."));
     for(unsigned char i = 0; i < NUM_PARTITIONS; i++) {
@@ -294,7 +293,6 @@ void loop() {
 
     //FIXME find v2's pin for middle button
     //if (digitalRead(ejectPin) == HIGH) rotate_boot();
-    
 
     noid = 0;  //reset noid flag
     DDRC = 0xDF; //set ack (wrprot) to input to avoid clashing with other devices when sp bus is not enabled
@@ -346,8 +344,7 @@ void loop() {
         if (packet_buffer[14] != 0x85)  // if its an init pkt, then assume its for us and continue on
         {
           //Serial.print(F("\r\nNot 0x85!"));
-          
-          // else check if its our one of our id's
+          // check if its our one of our id's
           for  (partition = 0; partition < NUM_PARTITIONS; partition++)
           {
             if ( devices[(partition + initPartition) % NUM_PARTITIONS].device_id != packet_buffer[6])  //destination id
@@ -398,7 +395,7 @@ void loop() {
         while (PIND & 0x04);   //wait for req to go low
 
         //Not safe to assume it's a normal command packet, GSOS may throw
-        //us several extended packets here and then crash 
+        //us several extended packets here and then crash
         //Refuse an extended packet
         source = packet_buffer[6];
 
@@ -422,7 +419,7 @@ void loop() {
                   delay(50);
                 } else {
                   // just return device status
-                  encode_status_reply_packet(devices[(partition + initPartition) % NUM_PARTITIONS]);        
+                  encode_status_reply_packet(devices[(partition + initPartition) % NUM_PARTITIONS]);
                 }
                 noInterrupts();
                 DDRD = 0x40; //set rd as output
@@ -461,7 +458,7 @@ void loop() {
                   Serial.println(F("Extended status DIB - Not implemented!"));
                 } else {
                   // just return device status
-                  encode_extended_status_reply_packet(devices[(partition + initPartition) % NUM_PARTITIONS]);        
+                  encode_extended_status_reply_packet(devices[(partition + initPartition) % NUM_PARTITIONS]);
                 }
                 noInterrupts();
                 DDRD = 0x40; //set rd as output
@@ -472,7 +469,7 @@ void loop() {
               }
             }
             digitalWrite(statusledPin, LOW);
-            break;  
+            break;
 
           case 0xC1:  // extended readblock cmd
           case 0x81:  // readblock cmd
@@ -521,7 +518,6 @@ void loop() {
           case 0x82:  //is a writeblock cmd
             source = packet_buffer[6];
 
-            
             LBH = packet_buffer[16]; //high order bits
             LBN = packet_buffer[19]; //block number low
             LBL = packet_buffer[20]; //block number middle
@@ -643,7 +639,7 @@ void encode_data_packet (unsigned char source)
     for (count = 0; count < 512; count++) // xor all the data bytes
     checksum = checksum ^ packet_buffer[count];
 
-  // Start assembling the packet at the rear and work 
+  // Start assembling the packet at the rear and work
   // your way to the front so we don't overwrite data
   // we haven't encoded yet
 
@@ -662,7 +658,7 @@ void encode_data_packet (unsigned char source)
       packet_buffer[17 + (grpcount * 8) + grpbyte] = group_buffer[grpbyte] | 0x80;
 
   }
-  
+
   //total number of packet data bytes for 512 data bytes is 584
   //odd byte
   packet_buffer[14] = ((packet_buffer[0] >> 1) & 0x40) | 0x80;
@@ -718,7 +714,7 @@ void encode_extended_data_packet (unsigned char source)
       checksum = checksum ^ packet_buffer[count];
     }
 
-  // Start assembling the packet at the rear and work 
+  // Start assembling the packet at the rear and work
   // your way to the front so we don't overwrite data
   // we haven't encoded yet
 
@@ -738,7 +734,7 @@ void encode_extended_data_packet (unsigned char source)
       packet_buffer[17 + (grpcount * 8) + grpbyte] = group_buffer[grpbyte] | 0x80;
     }
   }
-  
+
   //total number of packet data bytes for 512 data bytes is 584
   //odd byte
   packet_buffer[14] = ((packet_buffer[0] >> 1) & 0x40) | 0x80;
@@ -789,7 +785,7 @@ int decode_data_packet (void)
   unsigned char checksum = 0, bit0to6, bit7, oddbits, evenbits;
   unsigned char group_buffer[8];
 
-  //Handle arbitrary length packets :) 
+  //Handle arbitrary length packets :)
   numodd = packet_buffer[11] & 0x7f;
   numgrps = packet_buffer[12] & 0x7f;
 
@@ -922,7 +918,7 @@ void encode_init_reply_packet (unsigned char source, unsigned char status)
 // Description: this is the reply to the status command packet. The reply
 // includes following:
 // data byte 1 is general info.
-// data byte 2-4 number of blocks. 2 is the LSB and 4 the MSB. 
+// data byte 2-4 number of blocks. 2 is the LSB and 4 the MSB.
 // Size determined from image file.
 //*****************************************************************************
 void encode_status_reply_packet (device d)
@@ -940,14 +936,13 @@ void encode_status_reply_packet (device d)
   //Bit 3: Format allowed
   //Bit 2: Media write protected
   //Bit 1: Currently interrupting (//c only)
-  //Bit 0: Currently open (char devices only) 
+  //Bit 0: Currently open (char devices only)
   data[0] = 0b11111000;
   //Disk size
   data[1] = d.blocks & 0xff;
   data[2] = (d.blocks >> 8 ) & 0xff;
   data[3] = (d.blocks >> 16 ) & 0xff;
 
-  
   packet_buffer[0] = 0xff;  //sync bytes
   packet_buffer[1] = 0x3f;
   packet_buffer[2] = 0xcf;
@@ -966,9 +961,9 @@ void encode_status_reply_packet (device d)
   //4 odd bytes
   packet_buffer[14] = 0x80 | ((data[0]>> 1) & 0x40) | ((data[1]>>2) & 0x20) | (( data[2]>>3) & 0x10) | ((data[3]>>4) & 0x08 ); //odd msb
   packet_buffer[15] = data[0] | 0x80; //data 1
-  packet_buffer[16] = data[1] | 0x80; //data 2 
-  packet_buffer[17] = data[2] | 0x80; //data 3 
-  packet_buffer[18] = data[3] | 0x80; //data 4 
+  packet_buffer[16] = data[1] | 0x80; //data 2
+  packet_buffer[17] = data[2] | 0x80; //data 3
+  packet_buffer[18] = data[3] | 0x80; //data 4
 
   //calc the data bytes checksum
   for(int i = 0; i < 4; i++) {
@@ -996,7 +991,7 @@ void encode_status_reply_packet (device d)
 // Description: this is the reply to the extended status command packet. The reply
 // includes following:
 // data byte 1
-// data byte 2-5 number of blocks. 2 is the LSB and 5 the MSB. 
+// data byte 2-5 number of blocks. 2 is the LSB and 5 the MSB.
 // Size determined from image file.
 //*****************************************************************************
 void encode_extended_status_reply_packet (device d)
@@ -1014,7 +1009,7 @@ void encode_extended_status_reply_packet (device d)
   //Bit 3: Format allowed
   //Bit 2: Media write protected
   //Bit 1: Currently interrupting (//c only)
-  //Bit 0: Currently open (char devices only) 
+  //Bit 0: Currently open (char devices only)
   data[0] = 0b11111000;
   //Disk size
   data[1] = d.blocks & 0xff;
@@ -1040,9 +1035,9 @@ void encode_extended_status_reply_packet (device d)
   //5 odd bytes
   packet_buffer[14] = 0x80 | ((data[0]>> 1) & 0x40) | ((data[1]>>2) & 0x20) | (( data[2]>>3) & 0x10) | ((data[3]>>4) & 0x08 ) | ((data[4] >> 5) & 0x04) ; //odd msb
   packet_buffer[15] = data[0] | 0x80; //data 1
-  packet_buffer[16] = data[1] | 0x80; //data 2 
-  packet_buffer[17] = data[2] | 0x80; //data 3 
-  packet_buffer[18] = data[3] | 0x80; //data 4 
+  packet_buffer[16] = data[1] | 0x80; //data 2
+  packet_buffer[17] = data[2] | 0x80; //data 3
+  packet_buffer[18] = data[3] | 0x80; //data 4
   packet_buffer[19] = data[4] | 0x80; //data 5
 
   // calc the data bytes checksum
@@ -1108,20 +1103,20 @@ void encode_error_reply_packet (unsigned char source)
 void encode_status_dib_reply_packet (device d)
 {
   int grpbyte, grpcount, i;
-  int grpnum, oddnum; 
+  int grpnum, oddnum;
   unsigned char checksum = 0, grpmsb;
   unsigned char group_buffer[7];
   unsigned char data[25];
   //data buffer=25: 3 x Grp7 + 4 odds
   grpnum=3;
   oddnum=4;
-  
+
   //* write data buffer first (25 bytes) 3 grp7 + 4 odds
-  data[0] = 0xf8; //general status - f8 
+  data[0] = 0xf8; //general status - f8
   //number of blocks =0x00ffff = 65525 or 32mb
-  data[1] = d.blocks & 0xff; //block size 1 
-  data[2] = (d.blocks >> 8 ) & 0xff; //block size 2 
-  data[3] = (d.blocks >> 16 ) & 0xff ; //block size 3 
+  data[1] = d.blocks & 0xff; //block size 1
+  data[2] = (d.blocks >> 8 ) & 0xff; //block size 2
+  data[3] = (d.blocks >> 16 ) & 0xff ; //block size 3
   data[4] = 0x0b; //ID string length - 11 chars
   data[5] = 'S';
   data[6] = 'M';
@@ -1143,14 +1138,13 @@ void encode_status_dib_reply_packet (device d)
   data[22] = 0x0a; //Device Subtype - 0x0a
   data[23] = 0x01; //Firmware version 2 bytes
   data[24] = 0x0f; //
-    
 
   // Calculate checksum of sector bytes before we destroy them
   for (count = 0; count < 25; count++) {
     checksum = checksum ^ data[count];
   }
 
-  // Start assembling the packet at the rear and work 
+  // Start assembling the packet at the rear and work
   // your way to the front so we don't overwrite data
   // we haven't encoded yet
 
@@ -1172,8 +1166,7 @@ void encode_status_dib_reply_packet (device d)
       packet_buffer[(14 + oddnum + 2) + (grpcount * 8) + grpbyte] = group_buffer[grpbyte] | 0x80;
     }
   }
-       
-            
+
   //odd byte
   packet_buffer[14] = 0x80 | ((data[0]>> 1) & 0x40) | ((data[1]>>2) & 0x20) | (( data[2]>>3) & 0x10) | ((data[3]>>4) & 0x08 ); //odd msb
   packet_buffer[15] = data[0] | 0x80;
@@ -1241,10 +1234,10 @@ void encode_extended_status_dib_reply_packet (device d)
   packet_buffer[14] = 0xf0; //grp1 msb
   packet_buffer[15] = 0xf8; //general status - f8
   //number of blocks =0x00ffff = 65525 or 32mb
-  packet_buffer[16] = d.blocks & 0xff; //block size 1 
-  packet_buffer[17] = (d.blocks >> 8 ) & 0xff; //block size 2 
+  packet_buffer[16] = d.blocks & 0xff; //block size 1
+  packet_buffer[17] = (d.blocks >> 8 ) & 0xff; //block size 2
   packet_buffer[18] = (d.blocks >> 16 ) & 0xff | 0x80 ; //block size 3 - why is the high bit set?
-  packet_buffer[19] = (d.blocks >> 24 ) & 0xff | 0x80 ; //block size 3 - why is the high bit set?  
+  packet_buffer[19] = (d.blocks >> 24 ) & 0xff | 0x80 ; //block size 3 - why is the high bit set?
   packet_buffer[20] = 0x8d; //ID string length - 13 chars
   packet_buffer[21] = 'S';
   packet_buffer[22] = 'm';  //ID string (16 chars total)
@@ -1356,7 +1349,7 @@ int rotate_boot (void)
     Serial.println(initPartition, DEC);
     initPartition++;
     initPartition = initPartition % 4;
-    //Find the next partition that's available 
+    //Find the next partition that's available
     //and set it to be the boot partition
     if(devices[initPartition].sdf.isOpen()){
       Serial.print(F("Selecting boot partition number "));
@@ -1380,9 +1373,9 @@ int rotate_boot (void)
    while (1){
      for (i=0;i<(initPartition+1);i++) {
       digitalWrite(statusledPin,HIGH);
-      delay(200);   
+      delay(200);
       digitalWrite(statusledPin,LOW);
-      delay(100);   
+      delay(100);
     }
     delay(600);
   }
@@ -1418,7 +1411,7 @@ void led_err(void)
 
 extern void *__brkval;
 extern char __bss_end;
-     
+
 int freeMemory() {
   int free_memory;
   if ((int)__brkval == 0) {
