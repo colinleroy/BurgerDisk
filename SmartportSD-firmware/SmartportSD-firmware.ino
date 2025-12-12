@@ -70,13 +70,26 @@
 #include <string.h>
 #include <stdio.h>
 #include <avr/pgmspace.h>
+#include "sp_pins.h"
 
-#define PORT_REQ    PORTD   // Define the PORT to REQ
-#define PIN_REQ     6       // Define the PIN number to REQ
-#define PORT_ACK    PORTC   // Define the PORT to ACK
-#define PIN_ACK     5       // Define the PIN number to ACK
+#define PIN_CHIP_SELECT 10      // D10
+#define PIN_LED         18      // A4
 
-#define NUM_PARTITIONS  4          // Number of 32MB Prodos partions supported
+#define PIN_UP          8       //D8
+#define PIN_OK          17      //A3
+#define PIN_DOWN        9       //D9
+
+#define MAX_PARTITIONS  4
+int num_partitions =    1;
+#define EEPROM_BOOT_PART 0x00
+#define EEPROM_NUM_PARTS 0x01
+
+#define BTN_UP          0
+#define BTN_OK          1
+#define BTN_DOWN        2
+
+int btnPin[3]             = { PIN_UP, PIN_OK, PIN_DOWN };
+unsigned long btnPress[3] = { 0, 0, 0 };
 
 #define LOG(str) do {         \
   Serial.print(micros());     \
@@ -109,7 +122,7 @@ unsigned char *packet_buffer;         //Wing
 //unsigned char sector_buffer[512];   //ata sector data buffer
 unsigned char status, packet_byte;
 int count;
-int initPartition;
+int boot_partition;
 
 // We need to remember several things about a device, not just its ID
 struct device{
@@ -122,7 +135,7 @@ struct device{
   bool writeable;
 };
 
-device devices[NUM_PARTITIONS];
+device devices[MAX_PARTITIONS];
 
 //The circuit:
 //    SD card attached to SPI bus as follows:
@@ -132,14 +145,11 @@ device devices[NUM_PARTITIONS];
 // ** CS - depends on your SD card shield or module.
 //     Pin 10 used here
 
-// Change the value of chipSelect if your hardware does
+// Change the value of PIN_CHIP_SELECT if your hardware does
 // not use the default value, SS.  Common values are:
 // Arduino Ethernet shield: pin 4
 // Sparkfun SD shield: pin 8
 // Adafruit SD shields and modules: pin 10
-
-const uint8_t chipSelect = 10;
-const uint8_t statusledPin = 18;
 
 /*
    Set DISABLE_CHIP_SELECT to disable a second SPI device.
@@ -156,29 +166,22 @@ SdFat sdcard;
 static void log_io_err(const __FlashStringHelper *op, int partition, int block_num) {
   Serial.print(op);
   Serial.print(F(" error on partition "));
-  Serial.print((partition + initPartition) % NUM_PARTITIONS);
+  Serial.print(partition);
   Serial.print(F(", block "));
   Serial.println(block_num);
 }
 
-static int sd_init_done = 0;
+static int init_done = 0;
 static void late_init(void) {
-  LOG(F("SmartportSD v1.18"));
-  LOGN(F("Boot partition: "), initPartition, DEC);
-
   LOGN(F("Free memory before opening images: "), freeMemory(), DEC);
 
   // Not enough RAM for SDFat to open a file if the packet_buffer
   // is allocated.
   free(packet_buffer);
 
-  if(!sd_init_done) {
-    if (!sdcard.begin(chipSelect, SPI_HALF_SPEED)) {
-      LOG(F("Error init card"));
-      led_err();
-    } else {
-      sd_init_done = 1;
-    }
+  if (!sdcard.begin(PIN_CHIP_SELECT, SPI_HALF_SPEED)) {
+    LOG(F("Error init card"));
+    led_err();
   }
 
   SdFile myFile("config.txt", O_READ);
@@ -187,7 +190,7 @@ static void late_init(void) {
   if (myFile.isOpen()) {
     unsigned char n;
     packet_buffer = (unsigned char *)malloc(100);
-    for(unsigned char i = 0; i < NUM_PARTITIONS; i++){
+    for(unsigned char i = 0; i < num_partitions; i++){
       n = myFile.fgets((char*)packet_buffer, 100);
       if(n > 0) {
         if (packet_buffer[n - 1] == '\n') {
@@ -208,9 +211,9 @@ static void late_init(void) {
           }
         }
       } else {
-        if (initPartition > i) {
+        if (boot_partition > i) {
           LOG(F("Resetting boot partition to 0"));
-          initPartition = 0;
+          boot_partition = 0;
         }
         break;
       }
@@ -220,7 +223,7 @@ static void late_init(void) {
     myFile.close();
   } else {
     Serial.println(F("No config.txt. Searching for images."));
-    for (unsigned char i = 0; i < NUM_PARTITIONS; i++) {
+    for (unsigned char i = 0; i < num_partitions; i++) {
       String prefix = "PART";
       open_image(devices[i], prefix+(i+1)+".po");
       if (!devices[i].sdf.isOpen()) {
@@ -230,34 +233,91 @@ static void late_init(void) {
       }
     }
   }
-  LOGN(F("Free memory now "), freeMemory(), DEC);
-
   // Realloc standard packet_buffer
   packet_buffer = (unsigned char *)malloc(605);
+  LOGN(F("Free memory now "), freeMemory(), DEC);
 }
 
 void setup (void) {
-  digitalWrite(statusledPin, HIGH);
+  digitalWrite(PIN_LED, HIGH);
   // Input/Output Ports initialization
-  PORT_ACK = 0xFF;
-  DDRC = 0xFF;
+  WR_PORT_ACK = 0xFF;
+  DIR_PORT_ACK = 0xFF;
 
   PORTB = 0x00;
 
-  PORT_REQ = _BV(7) | _BV(PIN_REQ);
-  DDRD = 0x00;
+  WR_PORT_REQ = _BV(PIN_WR) | _BV(PIN_RD);
+  DIR_PORT_REQ = 0x00;
 
   // Analog Comparator initialization
   ACSR = 0x80;
 
+  // LED
+  pinMode(PIN_LED, OUTPUT);
+  // Buttons
+  pinMode(PIN_OK, INPUT_PULLUP);
+  pinMode(PIN_UP, INPUT_PULLUP);
+  pinMode(PIN_DOWN, INPUT_PULLUP);
+
   // Serial init
   Serial.begin(230400);
-  initPartition = eeprom_read_byte(0);
-  if (initPartition == 0xFF) initPartition = 0;
-  initPartition = (initPartition % NUM_PARTITIONS);
+  LOG(F("SmartportSD v1.18"));
+
+  num_partitions = eeprom_read_byte(EEPROM_NUM_PARTS);
+  if (num_partitions == 0xFF) {
+    num_partitions = MAX_PARTITIONS;
+  }
+  boot_partition = eeprom_read_byte(EEPROM_BOOT_PART);
+  if (boot_partition == 0xFF) {
+    boot_partition = 0;
+  }
+  boot_partition = (boot_partition % num_partitions);
+
+  LOGN(F("Partitions presented: "), num_partitions, DEC);
+  LOGN(F("Boot partition: "), boot_partition, DEC);
+
+  // Update number of partitions if OK is pressed on boot
+  // Do it without debounce function as delay required there
+  if (digitalRead(PIN_OK) == LOW) {
+    update_num_partitions();
+  }
 
   packet_buffer = (unsigned char *)malloc(605);
-  digitalWrite(statusledPin, LOW);
+  digitalWrite(PIN_LED, LOW);
+}
+
+// Read buttons, debounced
+static int button_pressed(int btn_num) {
+  // Buttons are INPUT_PULLUP so HIGH = not pressed
+  if (digitalRead(btnPin[btn_num]) == HIGH) {
+    btnPress[btn_num] = 0;
+    return 0;
+  } else {
+    if (millis() - btnPress[btn_num] > 2) {
+      return 1;
+    }
+    btnPress[btn_num] = millis();
+  }
+  return 0;
+}
+
+static void handle_button(int btn_num) {
+  // Wait for press to stop
+  while (button_pressed(btn_num));
+
+  Serial.print("Button pressed: ");
+  Serial.println(btn_num);
+}
+
+static int get_device_partition(int device_id) {
+  for  (int p = 0; p < num_partitions; p++)
+  {
+    int cur_partition = (p + boot_partition) % num_partitions;
+    if (devices[cur_partition].device_id == device_id) {
+      return cur_partition;
+    }
+  }
+  return -1;
 }
 
 //*****************************************************************************
@@ -267,8 +327,6 @@ void setup (void) {
 //
 // Description: Main function for Apple //c Smartport Compact Flash adpater
 //*****************************************************************************
-
-
 void loop() {
   unsigned long int block_num;
   unsigned char LBH, LBL, LBN, LBT, LBX;
@@ -276,53 +334,60 @@ void loop() {
   int number_partitions_initialised = 0;
   bool sdstato;
   unsigned char source, status, phases, status_code;
-  int not_mine = 0;
 
-  DDRD = 0x00;
+  DIR_PORT_REQ = 0x00;
 
   // set RD low
-  PORT_REQ &= ~(_BV(PIN_REQ));
+  WR_PORT_REQ &= ~(_BV(PIN_RD));
   interrupts();
 
   LOG("Entering main loop");
 
-  not_mine = 0;
   while (1) {
-    DDRC = 0xDF; //set ack (wrprot) to input to avoid clashing with other devices when sp bus is not enabled
+
+  if(button_pressed(BTN_OK)) {
+    handle_button(BTN_OK);
+  }
+  if(button_pressed(BTN_UP)) {
+    handle_button(BTN_UP);
+  }
+  if(button_pressed(BTN_DOWN)) {
+    handle_button(BTN_DOWN);
+  }
+
+
+    DIR_PORT_ACK = 0xFF & ~(_BV(PIN_ACK)); //set ack (wrprot) to input to avoid clashing with other devices when sp bus is not enabled
 
     // read phase lines to check for smartport reset or enable
-    phases = (PIND & 0x3c) >> 2;
+    phases = (RD_PORT_PHASES & PINS_PHASES) >> PIN_PH0;
 
     switch (phases) {
 
       // phase lines for smartport bus reset
       // ph3=0 ph2=1 ph1=0 ph0=1
-
-      case 0b00000101:
+      case 0b0101:
         LOG(F("SP BUS RESET"));
 
         // monitor phase lines for reset to clear
-        while ((PIND & 0x3c) >> 2 == 0x05);
+        while ((RD_PORT_PHASES & PINS_PHASES) >> PIN_PH0 == 0b0101);
 
         //reset number of partitions init'd
         number_partitions_initialised = 0;
 
-        not_mine = 0;
-
         //clear device_id table
-        for (partition = 0; partition < NUM_PARTITIONS; partition++) {
+        for (partition = 0; partition < num_partitions; partition++) {
           devices[partition].device_id = 0;
         }
         break;
 
       // phase lines for smartport bus enable
       // ph3=1 ph2=x ph1=1 ph0=x
-      case 0b00001010:
-      case 0b00001011:
-      case 0b00001110:
-      case 0b00001111:
+      case 0b1010:
+      case 0b1011:
+      case 0b1110:
+      case 0b1111:
         noInterrupts();
-        DDRC = 0xFF;   //set ack to output, sp bus is enabled
+        DIR_PORT_ACK = 0xFF;   //set ack to output, sp bus is enabled
         status = ReceivePacket( (unsigned char*) packet_buffer);
         interrupts();
 
@@ -336,19 +401,15 @@ void loop() {
         if (packet_buffer[14] != 0x85)  // if its an init pkt, then assume its for us and continue on
         {
           // check if its our one of our id's
-          for  (partition = 0; partition < NUM_PARTITIONS; partition++)
-          {
-            if ( devices[(partition + initPartition) % NUM_PARTITIONS].device_id != packet_buffer[6])  //destination id
-              not_mine++;
-          }
+          // LOGN(F("ENABLE device "), packet_buffer[6], HEX);
 
-          if (not_mine == NUM_PARTITIONS) { //not one of our id's
+          if (get_device_partition(packet_buffer[6]) == -1) { //not one of our id's
             delay(100);
             Serial.println(F("Not our ID!"));
 
-            DDRC = 0xDF; //set ack to input, so lets not interfere
-            PORT_ACK &= ~(_BV(PIN_ACK));   //set ack low, for next time its an output
-            while (PINC & 0x20);  //wait till low other dev has finished receiving it
+            DIR_PORT_ACK = 0xFF & ~(_BV(PIN_ACK)); //set ack to input, so lets not interfere
+            WR_PORT_ACK &= ~(_BV(PIN_ACK));        //preset ack low, for next time its an output
+            while (RD_PORT_ACK & _BV(PIN_ACK));    //wait till low other dev has finished receiving it
 
             //assume its a cmd packet, cmd code is in byte 14
             //now we need to work out what type of packet and stay out of the way
@@ -356,16 +417,16 @@ void loop() {
               case 0x80:  //is a status cmd
               case 0x83:  //is a format cmd
               case 0x81:  //is a readblock cmd
-                while (!(PINC & 0x20));   //wait till high
-                while (PINC & 0x20);      //wait till low
-                while (!(PINC & 0x20));  //wait till high
+                while (!(RD_PORT_ACK & _BV(PIN_ACK)));   //wait till high
+                while (RD_PORT_ACK & _BV(PIN_ACK));      //wait till low
+                while (!(RD_PORT_ACK & _BV(PIN_ACK)));   //wait till high
                 break;
               case 0x82:  //is a writeblock cmd
-                while (!(PINC & 0x20));   //wait till high
-                while (PINC & 0x20);      //wait till low
-                while (!(PINC & 0x20));   //wait till high
-                while (PINC & 0x20);      //wait till low
-                while (!(PINC & 0x20));   //wait till high
+                while (!(RD_PORT_ACK & _BV(PIN_ACK)));   //wait till high
+                while (RD_PORT_ACK & _BV(PIN_ACK));      //wait till low
+                while (!(RD_PORT_ACK & _BV(PIN_ACK)));   //wait till high
+                while (RD_PORT_ACK & _BV(PIN_ACK));      //wait till low
+                while (!(RD_PORT_ACK & _BV(PIN_ACK)));   //wait till high
                 break;
             }
             break;  //not one of ours
@@ -373,8 +434,8 @@ void loop() {
         }
 
         //else it is ours, we need to handshake the packet
-        PORT_ACK &= ~(_BV(PIN_ACK));   //set ack low
-        while (PIND & 0x04);   //wait for req to go low
+        WR_PORT_ACK &= ~(_BV(PIN_ACK));       //set ack low
+        while (RD_PORT_REQ & _BV(PIN_REQ));   //and wait for req to go low
 
         //Not safe to assume it's a normal command packet, GSOS may throw
         //us several extended packets here and then crash
@@ -386,30 +447,27 @@ void loop() {
 
           case 0x80:  //is a status cmd
             Serial.println(F("SP STATUS"));
-            digitalWrite(statusledPin, HIGH);
+            digitalWrite(PIN_LED, HIGH);
             source = packet_buffer[6];
-            for (partition = 0; partition < NUM_PARTITIONS; partition++) { //Check if its one of ours
-              if (devices[(partition + initPartition) % NUM_PARTITIONS].device_id == source
-                && devices[(partition + initPartition) % NUM_PARTITIONS].sdf.isOpen() ) {  //yes it is, and it's online, then reply
+            partition = get_device_partition(source);
+            if (partition != -1 && devices[partition].sdf.isOpen()) {
+              status_code = (packet_buffer[19] & 0x7f);
 
-                status_code = (packet_buffer[19] & 0x7f);
-
-                // if statcode=3, then status with device info block
-                if (status_code == 0x03) {
-                  Serial.println(F("Sending DIB"));
-                  encode_status_dib_reply_packet(devices[(partition + initPartition) % NUM_PARTITIONS]);
-                  delay(50);
-                } else {
-                  // just return device status
-                  encode_status_reply_packet(devices[(partition + initPartition) % NUM_PARTITIONS]);
-                }
-                noInterrupts();
-                DDRD = 0x40; //set rd as output
-                status = SendPacket( (unsigned char*) packet_buffer);
-                DDRD = 0x00; //set rd back to input so back to tristate
-                interrupts();
-                digitalWrite(statusledPin, LOW);
+              // if statcode=3, then status with device info block
+              if (status_code == 0x03) {
+                Serial.println(F("Sending DIB"));
+                encode_status_dib_reply_packet(devices[partition]);
+                delay(50);
+              } else {
+                // just return device status
+                encode_status_reply_packet(devices[partition]);
               }
+              noInterrupts();
+              DIR_PORT_REQ = _BV(PIN_RD); //set rd as output
+              status = SendPacket( (unsigned char*) packet_buffer);
+              DIR_PORT_REQ = 0x00; //set rd back to input so back to tristate
+              interrupts();
+              digitalWrite(PIN_LED, LOW);
             }
             break;
 
@@ -425,31 +483,30 @@ void loop() {
             break;
 
           case 0xC0:  //Extended status cmd
-            digitalWrite(statusledPin, HIGH);
+            digitalWrite(PIN_LED, HIGH);
             source = packet_buffer[6];
 
-            for (partition = 0; partition < NUM_PARTITIONS; partition++) { //Check if its one of ours
-              if (devices[(partition + initPartition) % NUM_PARTITIONS].device_id == source) {
-                //yes it is, then reply
+            partition = get_device_partition(source);
+            if (partition != -1) {
+              //yes it is, then reply
 
-                status_code = (packet_buffer[21] & 0x7f);
-                LOGN(F("Extended Status CMD:"), status_code, HEX);
-                print_packet ((unsigned char*) packet_buffer,packet_length());
-                if (status_code == 0x03) { // if statcode=3, then status with device info block
-                  Serial.println(F("Extended status DIB - Not implemented!"));
-                } else {
-                  // just return device status
-                  encode_extended_status_reply_packet(devices[(partition + initPartition) % NUM_PARTITIONS]);
-                }
-                noInterrupts();
-                DDRD = 0x40; //set rd as output
-                status = SendPacket( (unsigned char*) packet_buffer);
-                DDRD = 0x00; //set rd back to input so back to tristate
-                interrupts();
-
+              status_code = (packet_buffer[21] & 0x7f);
+              LOGN(F("Extended Status CMD:"), status_code, HEX);
+              print_packet ((unsigned char*) packet_buffer,packet_length());
+              if (status_code == 0x03) { // if statcode=3, then status with device info block
+                Serial.println(F("Extended status DIB - Not implemented!"));
+              } else {
+                // just return device status
+                encode_extended_status_reply_packet(devices[partition]);
               }
+              noInterrupts();
+              DIR_PORT_REQ = _BV(PIN_RD); //set rd as output
+              status = SendPacket( (unsigned char*) packet_buffer);
+              DIR_PORT_REQ = 0x00; //set rd back to input so back to tristate
+              interrupts();
+
             }
-            digitalWrite(statusledPin, LOW);
+            digitalWrite(PIN_LED, LOW);
             break;
 
           case 0xC1:  // extended readblock cmd
@@ -462,37 +519,36 @@ void loop() {
             LBL = packet_buffer[20]; //block number middle
             LBT = packet_buffer[21]; //block number high
 
-            for (partition = 0; partition < NUM_PARTITIONS; partition++) { //Check if its one of ours
-              if (devices[(partition + initPartition) % NUM_PARTITIONS].device_id == source) {  //yes it is, then do the read
-                // block num 1st byte
-                block_num = (LBN & 0x7f) | (((unsigned short)LBH << 3) & 0x80);
-                // block num second byte
-                block_num = block_num + ( ((unsigned long)((LBL & 0x7f) | (((unsigned short)LBH << 4) & 0x80))) << 8);
-                // block num third byte
-                block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 16);
+            partition = get_device_partition(source);
+            if (partition != -1) {  //yes it is, then do the read
+              // block num 1st byte
+              block_num = (LBN & 0x7f) | (((unsigned short)LBH << 3) & 0x80);
+              // block num second byte
+              block_num = block_num + ( ((unsigned long)((LBL & 0x7f) | (((unsigned short)LBH << 4) & 0x80))) << 8);
+              // block num third byte
+              block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 16);
 
-                digitalWrite(statusledPin, HIGH);
+              digitalWrite(PIN_LED, HIGH);
 
-                if(devices[(partition + initPartition) % NUM_PARTITIONS].sdf.isOpen()) {
-                  if (!devices[(partition + initPartition) % NUM_PARTITIONS].sdf.seekSet(block_num*512+devices[(partition + initPartition) % NUM_PARTITIONS].header_offset)) {
-                    log_io_err(F("Seek"), partition, block_num);
-                  }
+              if(devices[partition].sdf.isOpen()) {
+                if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
+                  log_io_err(F("Seek"), partition, block_num);
                 }
-
-                //Reading block from SD Card
-                sdstato = devices[(partition + initPartition) % NUM_PARTITIONS].sdf.read((unsigned char*) packet_buffer, 512);
-                if (!sdstato) {
-                  log_io_err(F("Read"), partition, block_num);
-                }
-                encode_data_packet(source);
-
-                noInterrupts();
-                DDRD = 0x40; //set rd as output
-                status = SendPacket( (unsigned char*) packet_buffer);
-                DDRD = 0x00; //set rd back to input so back to tristate
-                interrupts();
-                digitalWrite(statusledPin, LOW);
               }
+
+              //Reading block from SD Card
+              sdstato = devices[partition].sdf.read((unsigned char*) packet_buffer, 512);
+              if (!sdstato) {
+                log_io_err(F("Read"), partition, block_num);
+              }
+              encode_data_packet(source);
+
+              noInterrupts();
+              DIR_PORT_REQ = _BV(PIN_RD); //set rd as output
+              status = SendPacket( (unsigned char*) packet_buffer);
+              DIR_PORT_REQ = 0x00; //set rd back to input so back to tristate
+              interrupts();
+              digitalWrite(PIN_LED, LOW);
             }
             break;
 
@@ -504,94 +560,98 @@ void loop() {
             LBL = packet_buffer[20]; //block number middle
             LBT = packet_buffer[21]; //block number high
 
-            for (partition = 0; partition < NUM_PARTITIONS; partition++) { //Check if its one of ours
-              if (devices[(partition + initPartition) % NUM_PARTITIONS].device_id == source) {  //yes it is, then do the write
-                // block num 1st byte
-                block_num = (LBN & 0x7f) | (((unsigned short)LBH << 3) & 0x80);
-                // block num second byte
-                block_num = block_num + ( ((unsigned long)((LBL & 0x7f) | (((unsigned short)LBH << 4) & 0x80))) << 8);
-                // block num third byte
-                block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 16);
+            partition = get_device_partition(source);
+            if (partition != -1) {  //yes it is, then do the read
+              // block num 1st byte
+              block_num = (LBN & 0x7f) | (((unsigned short)LBH << 3) & 0x80);
+              // block num second byte
+              block_num = block_num + ( ((unsigned long)((LBL & 0x7f) | (((unsigned short)LBH << 4) & 0x80))) << 8);
+              // block num third byte
+              block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 16);
 
-                //get write data packet, keep trying until no timeout
-                noInterrupts();
-                DDRC = 0xFF;   //set ack to output, sp bus is enabled
-                while ((status = ReceivePacket( (unsigned char*) packet_buffer)));
-                interrupts();
+              //get write data packet, keep trying until no timeout
+              noInterrupts();
+              DIR_PORT_ACK = 0xFF;   //set ack to output, sp bus is enabled
+              while ((status = ReceivePacket( (unsigned char*) packet_buffer)));
+              interrupts();
 
-                //we need to handshake the packet
-                PORT_ACK &= ~(_BV(PIN_ACK));   //set ack low
-                while (PIND & 0x04);   //wait for req to go low
+              //we need to handshake the packet
+              WR_PORT_ACK &= ~(_BV(PIN_ACK));   //set ack low
+              while (RD_PORT_REQ & _BV(PIN_REQ));   //wait for req to go low
 
-                status = decode_data_packet();
-                if (status == 0) {
-                  // ok
-                  digitalWrite(statusledPin, HIGH);
+              status = decode_data_packet();
+              if (status == 0) {
+                // ok
+                digitalWrite(PIN_LED, HIGH);
 
-                  if (!devices[(partition + initPartition) % NUM_PARTITIONS].sdf.seekSet(block_num*512+devices[(partition + initPartition) % NUM_PARTITIONS].header_offset)){
-                    log_io_err(F("Seek"), partition, block_num);
-                  }
-                  // Write block to SD Card
-                  sdstato = devices[(partition + initPartition) % NUM_PARTITIONS].sdf.write((unsigned char*) packet_buffer, 512);
-                  if (!sdstato) {
-                    log_io_err(F("Write"), partition, block_num);
-                    status = 6;
-                  }
+                if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)){
+                  log_io_err(F("Seek"), partition, block_num);
                 }
-                //now return status code to host
-                encode_write_status_packet(source, status);
-                noInterrupts();
-                DDRD = 0x40; //set rd as output
-                status = SendPacket( (unsigned char*) packet_buffer);
-                DDRD = 0x00; //set rd back to input so back to tristate
-                interrupts();
+                // Write block to SD Card
+                sdstato = devices[partition].sdf.write((unsigned char*) packet_buffer, 512);
+                if (!sdstato) {
+                  log_io_err(F("Write"), partition, block_num);
+                  status = 6;
+                }
               }
-              digitalWrite(statusledPin, LOW);
+              //now return status code to host
+              encode_write_status_packet(source, status);
+              noInterrupts();
+              DIR_PORT_REQ = _BV(PIN_RD); //set rd as output
+              status = SendPacket( (unsigned char*) packet_buffer);
+              DIR_PORT_REQ = 0x00; //set rd back to input so back to tristate
+              interrupts();
             }
+            digitalWrite(PIN_LED, LOW);
             break;
 
           case 0x83:  //is a format cmd
             source = packet_buffer[6];
-            for (partition = 0; partition < NUM_PARTITIONS; partition++) { //Check if its one of ours
-              if (devices[(partition + initPartition) % NUM_PARTITIONS].device_id == source) {  //yes it is, then reply to the format cmd
-                encode_init_reply_packet(source, 0x80); //just send back a successful response
-                noInterrupts();
-                DDRD = 0x40; //set rd as output
-                status = SendPacket( (unsigned char*) packet_buffer);
-                interrupts();
-                DDRD = 0x00; //set rd back to input so back to tristate
-              }
+            partition = get_device_partition(source);
+            if (partition != -1) {  //yes it is, then do the read
+              encode_init_reply_packet(source, 0x80); //just send back a successful response
+              noInterrupts();
+              DIR_PORT_REQ = _BV(PIN_RD); //set rd as output
+              status = SendPacket( (unsigned char*) packet_buffer);
+              interrupts();
+              DIR_PORT_REQ = 0x00; //set rd back to input so back to tristate
             }
             break;
 
           case 0x85:  //is an init cmd
             source = packet_buffer[6];
 
-            devices[(number_partitions_initialised + initPartition) % NUM_PARTITIONS].device_id = source; //remember source id for partition
+            devices[(number_partitions_initialised + boot_partition) % num_partitions].device_id = source; //remember source id for partition
             number_partitions_initialised++;
 
-            if (number_partitions_initialised < NUM_PARTITIONS) { //are all init'd yet
+            if (number_partitions_initialised < num_partitions) { //are all init'd yet
               status = 0x80;         //no, so status=0
             } else { // the last one
               status = 0xff;         //yes, so status=non zero
             }
-
+            LOGN(F("Source "), source, DEC);
+            LOGN(F("Status "), status, HEX);
             encode_init_reply_packet(source, status);
 
             noInterrupts();
-            DDRD = 0x40; //set rd as output
+            DIR_PORT_REQ = _BV(PIN_RD); //set rd as output
             status = SendPacket( (unsigned char*) packet_buffer);
-            DDRD = 0x00; //set rd back to input so back to tristate
+            DIR_PORT_REQ = 0x00; //set rd back to input so back to tristate
             interrupts();
 
-            if (number_partitions_initialised == NUM_PARTITIONS) {
-              late_init();
-              for (partition = 0; partition < NUM_PARTITIONS; partition++) {
-                LOGN(F("Drive: "), devices[(partition + initPartition) % NUM_PARTITIONS].device_id, HEX);
+            if (number_partitions_initialised == num_partitions) {
+              // now we have time to init our partitions
+              if(!init_done) {
+                late_init();
+                init_done = 1;
+              }
+              for (partition = 0; partition < num_partitions; partition++) {
+                LOGN(F("Drive: "), devices[(partition + boot_partition) % num_partitions].device_id, HEX);
               }
             }
             break;
         }
+        break;
     }
   }
 }
@@ -1309,6 +1369,73 @@ int packet_length (void)
 }
 
 //*****************************************************************************
+// Function: led_err
+// Parameters: none
+// Returns: nonthing
+//
+// Description: Flashes status led for show error status
+// Reboot needed
+//*****************************************************************************
+
+void led_err(void)
+{
+  int i = 0;
+  interrupts();
+  Serial.println(F("Require reboot"));
+
+  while (1) {
+    digitalWrite(PIN_LED, HIGH);
+    delay(500);
+    digitalWrite(PIN_LED, LOW);
+    delay(500);
+  }
+}
+
+//*****************************************************************************
+// Get number of partitions to present, via the OK button. Once done, ask for
+// reboot.
+void update_num_partitions(void) {
+  int new_num_partitions = 0;
+  unsigned long now;
+  // Wait for button up
+  while (button_pressed(BTN_OK));
+  // Turn LED off
+  digitalWrite(PIN_LED, HIGH);
+
+  Serial.println(F("Getting number of partitions to present"));
+
+  // Get number (from consecutive presses)
+  now = millis();
+  while (1) {
+    // Exit after 3 seconds with no press
+    if (millis() - now > 3000) {
+      break;
+    }
+    if (button_pressed(BTN_OK)) {
+      digitalWrite(PIN_LED, LOW);
+      while (button_pressed(BTN_OK));
+      digitalWrite(PIN_LED, HIGH);
+      // increment partitions
+      new_num_partitions++;
+      if (new_num_partitions == MAX_PARTITIONS+1) {
+        new_num_partitions = 1;
+      }
+      // reset timeout timer
+      now = millis();
+    }
+  }
+  Serial.print(F("Number of partitions: "));
+  Serial.println(new_num_partitions);
+
+  // Update if required
+  if (new_num_partitions > 0 && new_num_partitions != num_partitions) {
+    eeprom_write_byte(EEPROM_NUM_PARTS, new_num_partitions);
+  }
+  // Require reboot
+  led_err();
+}
+
+//*****************************************************************************
 // Function: rotate_boot
 // Parameters: none
 // Returns: none
@@ -1320,74 +1447,37 @@ int rotate_boot (void)
 {
     int i;
 
-  for (i = 0; i < NUM_PARTITIONS; i++) {
+  for (i = 0; i < num_partitions; i++) {
     Serial.print(F("\r\nInit partition was: "));
-    Serial.println(initPartition, DEC);
-    initPartition++;
-    initPartition = initPartition % NUM_PARTITIONS;
+    Serial.println(boot_partition, DEC);
+    boot_partition++;
+    boot_partition = boot_partition % num_partitions;
     //Find the next partition that's available
     //and set it to be the boot partition
-    if(devices[initPartition].sdf.isOpen()){
+    if(devices[boot_partition].sdf.isOpen()){
       Serial.print(F("Selecting boot partition number "));
-      Serial.println(initPartition, DEC);
+      Serial.println(boot_partition, DEC);
       break;
     }
   }
 
-  if (i == NUM_PARTITIONS) {
+  if (i == num_partitions) {
     Serial.print(F("No online partitions found. Check that you have a file called PARTx.PO and try again, where x is from 1 to "));
-    Serial.println(NUM_PARTITIONS, DEC);
-    initPartition = 0;
+    Serial.println(num_partitions, DEC);
+    boot_partition = 0;
   }
 
-  eeprom_write_byte(0, initPartition);
-  digitalWrite(statusledPin, HIGH);
+  eeprom_write_byte(EEPROM_BOOT_PART, boot_partition);
+  digitalWrite(PIN_LED, HIGH);
   Serial.print(F("Changing boot partition to: "));
-  Serial.println(initPartition, DEC);
+  Serial.println(boot_partition, DEC);
 
   // stop until reset
-   while (1){
-     for (i=0;i<(initPartition+1);i++) {
-      digitalWrite(statusledPin,HIGH);
-      delay(200);
-      digitalWrite(statusledPin,LOW);
-      delay(100);
-    }
-    delay(600);
-  }
+  led_err();
 }
-
-//*****************************************************************************
-// Function: led_err
-// Parameters: none
-// Returns: nonthing
-//
-// Description: Flashes status led for show error status
-//
-//*****************************************************************************
-
-void led_err(void)
-{
-  int i = 0;
-  interrupts();
-  Serial.println(F("Error!"));
-  pinMode(statusledPin, OUTPUT);
-
-  for (i = 0; i < 5; i++) {
-    digitalWrite(statusledPin, HIGH);
-    delay(1500);
-    digitalWrite(statusledPin, LOW);
-    delay(100);
-    digitalWrite(statusledPin, HIGH);
-    delay(1500);
-    digitalWrite(statusledPin, HIGH);
-  }
-}
-
 
 extern void *__brkval;
 extern char __bss_end;
-
 int freeMemory() {
   int free_memory;
   if ((int)__brkval == 0) {

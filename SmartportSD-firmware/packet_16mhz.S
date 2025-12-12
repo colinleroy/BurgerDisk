@@ -9,7 +9,8 @@
 //*****************************************************************************
 
 // required for register definitions
-#include <avr/io.h>        
+#include <avr/io.h>
+#include "sp_pins.h"
 
  
 //*****************************************************************************
@@ -27,14 +28,12 @@ ReceivePacket:
           mov  XL,r24                 ;mov buffer pointer into X 
           mov  XH,r25
 
-          sbi  _SFR_IO_ADDR(PORTC),5  ;set ACK high to signal we are ready to send
-          ;ldi  r24,'A'                ;for debug, A indicates ACK is high
-          ;call uart_putc              ;output to serial port
+          sbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK
           
           clr  r21                    ;setup timeout counter
           ldi  r20,10                 ;two stage timer, around 1ms
 
-1:        sbic _SFR_IO_ADDR(PIND),2   ;1/2 wait for req line to go high
+1:        sbic _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ   ;1/2 wait for req line to go high
           rjmp start                  ;this indicates host is about to send packet   
           dec  r21                    ;1 
           brne 1b                     ;1/2
@@ -46,7 +45,7 @@ start:    ;ldi  r24,'R'                ;for debug, R indicates REQ is high
           ;call uart_putc              ;output to serial port
 
           ldi  r22,1                                                 ;1   remember tx line status when previously sampled
-          sbis _SFR_IO_ADDR(PIND),7                                  ;1/2 wait for txd line to go low
+          sbis _SFR_IO_ADDR(RD_PORT_PHASES),PIN_WR                   ;1/2 wait for txd line to go low
           rjmp 2f                                                    ;2   txd cleared, start of packet data
           rjmp start                                                 ;2
                                                                  ;
@@ -59,7 +58,7 @@ start:    ;ldi  r24,'R'                ;for debug, R indicates REQ is high
 nxtbyte:                                                             ;    full cycle time for each byte is 32us
           ldi  r25,8                                                 ;1   8bits to read
                                                                
-nxtbit:   sbic _SFR_IO_ADDR(PIND),7           ;2   ;2    ;1  ;1      ;1/2 now read a bit, cycle time is 4us
+nxtbit:   sbic _SFR_IO_ADDR(RD_PORT_PHASES),PIN_WR           ;2   ;2    ;1  ;1      ;1/2 now read a bit, cycle time is 4us
           rjmp bitset                                    ;3  ;3      ;2   bit is set
           rjmp bitclr                         ;4   ;4                ;2   bit is clr
                                                                      
@@ -109,13 +108,13 @@ havebyte:
           cpi  r22,1                          ;19                    ;1   check for status of last bit    
           breq wasset                         ;20  ;21               ;1/2
                                                                      
-wasclr:   sbic _SFR_IO_ADDR(PIND),7           ;21                    ;1/2 now read a bit, wait for transition to 1         
+wasclr:   sbic _SFR_IO_ADDR(RD_PORT_PHASES),PIN_WR           ;21                    ;1/2 now read a bit, wait for transition to 1         
           rjmp havesbit                       ;23                    ;2   now set, lets get the next byte
           dec  r25                                                   ;1
           breq endpkt                                                ;1/2 we have timed out, must be end of packet
           rjmp wasclr                                                ;2   lets test again
                                                                      
-wasset:   sbis _SFR_IO_ADDR(PIND),7                ;22               ;1/2 now read a bit, wait for transition to 0         
+wasset:   sbis _SFR_IO_ADDR(RD_PORT_PHASES),PIN_WR                ;22               ;1/2 now read a bit, wait for transition to 0         
           rjmp havesbit                            ;24               ;2   now clr, lets get the next byte
           dec  r25                                                   ;1
           breq endpkt                                                ;1/2 we have timed out, must be end of packet
@@ -132,11 +131,11 @@ havesbit:                                                            ;    wait f
 endpkt:   clr  r23     
           st   x+,r23               ;save zero byte in buffer to mark end
           
-          cbi  _SFR_IO_ADDR(PORTC),5  ;set ACK(BSY) low to signal we have recv'd the pkt
+          cbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK  ;set ACK(BSY) low to signal we have recv'd the pkt
           ;ldi  r24,'a'                ;for debug, a indicates ACK is low
           ;call uart_putc              ;output to serial port
 
-1:        sbis _SFR_IO_ADDR(PIND),2   ;wait for REQ line to go low
+1:        sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ   ;wait for REQ line to go low
           rjmp finish                 ;this indicates host has acknowledged ACK   
           rjmp 1b
        
@@ -146,7 +145,7 @@ finish:   ;ldi  r24,'r'                ;for debug, r indicates REQ is low
           clr  r24
           ret
           
-timeout:  cbi  _SFR_IO_ADDR(PORTC),5  ;set ACK(BSY) back to low
+timeout:  cbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK  ;set ACK(BSY) back to low
           ldi  r24,1                  ;setup return value, 1=error
           clr  r25
           ret
@@ -166,11 +165,11 @@ SendPacket:
           mov  XL,r24                 ;mov buffer pointer into X 
           mov  XH,r25
 
-          sbi  _SFR_IO_ADDR(PORTC),5  ;set ACK high to signal we are ready to send
+          sbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK  ;set ACK high to signal we are ready to send
           ;ldi  r24,'A'               ;for debug, A indicates ACK is high
           ;call uart_putc             ;output to serial port
 
-1:        sbic _SFR_IO_ADDR(PIND),2   ;wait for req line to go high
+1:        sbic _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ   ;wait for req line to go high
           rjmp contin                 ;this indicates host is ready to receive packet   
           ;ldi  r24,'r'               ;for debug, r indicates REQ is low
           ;call uart_putc             ;output to serial port
@@ -190,7 +189,7 @@ nxtsbyte: ld   r23,x+                 ;59               ;43         ;2   get fir
 nxtsbit:  sbrs r23,7                  ;64(Set) ;64      ;47   ;48   ;1/2 send bit 7 first  
                                       ;63(Clr)                       
           rjmp sbitclr                ;64+1             ;48+1       ;2   bit is clear
-          sbi  _SFR_IO_ADDR(PORTD),6                          ;2    ;2   set bit for 1us (14 cycles)-->16 cycles for 16Mhz(2 more)
+          sbi  _SFR_IO_ADDR(WR_PORT_PHASES),PIN_RD                          ;2    ;2   set bit for 1us (14 cycles)-->16 cycles for 16Mhz(2 more)
                                                                 
           ldi  r24,4                                                ;1   |delay total of 12 cycles
 3:        dec  r24                                                  ;1   | each loop +3 final loop +2
@@ -199,7 +198,7 @@ nxtsbit:  sbrs r23,7                  ;64(Set) ;64      ;47   ;48   ;1/2 send bi
           nop                                                 ;15   ;1
           nop                                             ;16   ;1 
                                                                     
-          cbi  _SFR_IO_ADDR(PORTD),6                          ;2    ;2   clr bit for 3us (42 cycles)-->48 cycles for 16Mhz(6 more)
+          cbi  _SFR_IO_ADDR(WR_PORT_PHASES),PIN_RD                          ;2    ;2   clr bit for 3us (42 cycles)-->48 cycles for 16Mhz(6 more)
                                                                     ;                                            2 more loops
           dec  r25                                            ;3    ;1   dec bit counter
           breq nxtsbyt1                                       ;4    ;1/2
@@ -250,12 +249,12 @@ nxtsbycl:                                                           ;    delay t
           rjmp nxtsbyte               ;57                           ;2
 
 
-endspkt:  cbi  _SFR_IO_ADDR(PORTC),5  ;set ACK(BSY) low to signal we have sent the pkt
+endspkt:  cbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK  ;set ACK(BSY) low to signal we have sent the pkt
           ;ldi  r24,'a'                ;for debug, a indicates ACK is low
           ;call uart_putc              ;output to serial port
           
 1:        ldi  r24,5
-          sbis _SFR_IO_ADDR(PIND),2   ;wait for REQ line to go low
+          sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ   ;wait for REQ line to go low
           rjmp finishs                ;this indicates host has acknowledged ACK   
           dec  r24
           brne 1b
@@ -273,4 +272,3 @@ error:    clr  r25
 
 
         
-
