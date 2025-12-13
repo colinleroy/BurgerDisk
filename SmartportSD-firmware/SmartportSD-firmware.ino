@@ -45,7 +45,6 @@
 // wrdata = pd7       (input to avr)
 //
 //led i/o = pa4  (for led on when i/o on boxed version)
-//eject button = pa3  (for boxed version, cycle between boot partitions)
 //
 //
 // Serial port was connected for debug purposes. Most of the prints have been commented out.
@@ -75,21 +74,7 @@
 #define PIN_CHIP_SELECT 10      // D10
 #define PIN_LED         18      // A4
 
-#define PIN_UP          8       //D8
-#define PIN_OK          17      //A3
-#define PIN_DOWN        9       //D9
-
-#define MAX_PARTITIONS  4
-int num_partitions =    1;
-#define EEPROM_BOOT_PART 0x00
-#define EEPROM_NUM_PARTS 0x01
-
-#define BTN_UP          0
-#define BTN_OK          1
-#define BTN_DOWN        2
-
-int btnPin[3]             = { PIN_UP, PIN_OK, PIN_DOWN };
-unsigned long btnPress[3] = { 0, 0, 0 };
+#define NUM_PARTITIONS  1
 
 #define LOG(str) do {         \
   Serial.print(micros());     \
@@ -122,7 +107,6 @@ unsigned char *packet_buffer;         //Wing
 //unsigned char sector_buffer[512];   //ata sector data buffer
 unsigned char status, packet_byte;
 int count;
-int boot_partition;
 
 // We need to remember several things about a device, not just its ID
 struct device{
@@ -135,7 +119,7 @@ struct device{
   bool writeable;
 };
 
-device devices[MAX_PARTITIONS];
+device devices[NUM_PARTITIONS];
 
 //The circuit:
 //    SD card attached to SPI bus as follows:
@@ -190,7 +174,7 @@ static void late_init(void) {
   if (myFile.isOpen()) {
     unsigned char n;
     packet_buffer = (unsigned char *)malloc(100);
-    for(unsigned char i = 0; i < num_partitions; i++){
+    for(unsigned char i = 0; i < NUM_PARTITIONS; i++){
       n = myFile.fgets((char*)packet_buffer, 100);
       if(n > 0) {
         if (packet_buffer[n - 1] == '\n') {
@@ -211,10 +195,6 @@ static void late_init(void) {
           }
         }
       } else {
-        if (boot_partition > i) {
-          LOG(F("Resetting boot partition to 0"));
-          boot_partition = 0;
-        }
         break;
       }
     }
@@ -223,7 +203,7 @@ static void late_init(void) {
     myFile.close();
   } else {
     Serial.println(F("No config.txt. Searching for images."));
-    for (unsigned char i = 0; i < num_partitions; i++) {
+    for (unsigned char i = 0; i < NUM_PARTITIONS; i++) {
       String prefix = "PART";
       open_image(devices[i], prefix+(i+1)+".po");
       if (!devices[i].sdf.isOpen()) {
@@ -254,67 +234,20 @@ void setup (void) {
 
   // LED
   pinMode(PIN_LED, OUTPUT);
-  // Buttons
-  pinMode(PIN_OK, INPUT_PULLUP);
-  pinMode(PIN_UP, INPUT_PULLUP);
-  pinMode(PIN_DOWN, INPUT_PULLUP);
 
   // Serial init
   Serial.begin(230400);
   LOG(F("SmartportSD v1.18"));
 
-  num_partitions = eeprom_read_byte(EEPROM_NUM_PARTS);
-  if (num_partitions == 0xFF) {
-    num_partitions = MAX_PARTITIONS;
-  }
-  boot_partition = eeprom_read_byte(EEPROM_BOOT_PART);
-  if (boot_partition == 0xFF) {
-    boot_partition = 0;
-  }
-  boot_partition = (boot_partition % num_partitions);
-
-  LOGN(F("Partitions presented: "), num_partitions, DEC);
-  LOGN(F("Boot partition: "), boot_partition, DEC);
-
-  // Update number of partitions if OK is pressed on boot
-  // Do it without debounce function as delay required there
-  if (digitalRead(PIN_OK) == LOW) {
-    update_num_partitions();
-  }
-
   packet_buffer = (unsigned char *)malloc(605);
   digitalWrite(PIN_LED, LOW);
 }
 
-// Read buttons, debounced
-static int button_pressed(int btn_num) {
-  // Buttons are INPUT_PULLUP so HIGH = not pressed
-  if (digitalRead(btnPin[btn_num]) == HIGH) {
-    btnPress[btn_num] = 0;
-    return 0;
-  } else {
-    if (millis() - btnPress[btn_num] > 2) {
-      return 1;
-    }
-    btnPress[btn_num] = millis();
-  }
-  return 0;
-}
-
-static void handle_button(int btn_num) {
-  // Wait for press to stop
-  while (button_pressed(btn_num));
-
-  Serial.print("Button pressed: ");
-  Serial.println(btn_num);
-}
-
 static int get_device_partition(int device_id) {
-  for  (int p = 0; p < num_partitions; p++)
+  for  (int p = 0; p < NUM_PARTITIONS; p++)
   {
-    int cur_partition = (p + boot_partition) % num_partitions;
-    if (devices[cur_partition].device_id == device_id) {
-      return cur_partition;
+    if (devices[p].device_id == device_id) {
+      return p;
     }
   }
   return -1;
@@ -345,17 +278,6 @@ void loop() {
 
   while (1) {
 
-  if(button_pressed(BTN_OK)) {
-    handle_button(BTN_OK);
-  }
-  if(button_pressed(BTN_UP)) {
-    handle_button(BTN_UP);
-  }
-  if(button_pressed(BTN_DOWN)) {
-    handle_button(BTN_DOWN);
-  }
-
-
     DIR_PORT_ACK = 0xFF & ~(_BV(PIN_ACK)); //set ack (wrprot) to input to avoid clashing with other devices when sp bus is not enabled
 
     // read phase lines to check for smartport reset or enable
@@ -375,7 +297,7 @@ void loop() {
         number_partitions_initialised = 0;
 
         //clear device_id table
-        for (partition = 0; partition < num_partitions; partition++) {
+        for (partition = 0; partition < NUM_PARTITIONS; partition++) {
           devices[partition].device_id = 0;
         }
         break;
@@ -621,10 +543,10 @@ void loop() {
           case 0x85:  //is an init cmd
             source = packet_buffer[6];
 
-            devices[(number_partitions_initialised + boot_partition) % num_partitions].device_id = source; //remember source id for partition
+            devices[number_partitions_initialised].device_id = source; //remember source id for partition
             number_partitions_initialised++;
 
-            if (number_partitions_initialised < num_partitions) { //are all init'd yet
+            if (number_partitions_initialised < NUM_PARTITIONS) { //are all init'd yet
               status = 0x80;         //no, so status=0
             } else { // the last one
               status = 0xff;         //yes, so status=non zero
@@ -639,14 +561,14 @@ void loop() {
             DIR_PORT_REQ = 0x00; //set rd back to input so back to tristate
             interrupts();
 
-            if (number_partitions_initialised == num_partitions) {
+            if (number_partitions_initialised == NUM_PARTITIONS) {
               // now we have time to init our partitions
               if(!init_done) {
                 late_init();
                 init_done = 1;
               }
-              for (partition = 0; partition < num_partitions; partition++) {
-                LOGN(F("Drive: "), devices[(partition + boot_partition) % num_partitions].device_id, HEX);
+              for (partition = 0; partition < NUM_PARTITIONS; partition++) {
+                LOGN(F("Drive: "), devices[partition].device_id, HEX);
               }
             }
             break;
@@ -1389,91 +1311,6 @@ void led_err(void)
     digitalWrite(PIN_LED, LOW);
     delay(500);
   }
-}
-
-//*****************************************************************************
-// Get number of partitions to present, via the OK button. Once done, ask for
-// reboot.
-void update_num_partitions(void) {
-  int new_num_partitions = 0;
-  unsigned long now;
-  // Wait for button up
-  while (button_pressed(BTN_OK));
-  // Turn LED off
-  digitalWrite(PIN_LED, HIGH);
-
-  Serial.println(F("Getting number of partitions to present"));
-
-  // Get number (from consecutive presses)
-  now = millis();
-  while (1) {
-    // Exit after 3 seconds with no press
-    if (millis() - now > 3000) {
-      break;
-    }
-    if (button_pressed(BTN_OK)) {
-      digitalWrite(PIN_LED, LOW);
-      while (button_pressed(BTN_OK));
-      digitalWrite(PIN_LED, HIGH);
-      // increment partitions
-      new_num_partitions++;
-      if (new_num_partitions == MAX_PARTITIONS+1) {
-        new_num_partitions = 1;
-      }
-      // reset timeout timer
-      now = millis();
-    }
-  }
-  Serial.print(F("Number of partitions: "));
-  Serial.println(new_num_partitions);
-
-  // Update if required
-  if (new_num_partitions > 0 && new_num_partitions != num_partitions) {
-    eeprom_write_byte(EEPROM_NUM_PARTS, new_num_partitions);
-  }
-  // Require reboot
-  led_err();
-}
-
-//*****************************************************************************
-// Function: rotate_boot
-// Parameters: none
-// Returns: none
-//
-// Description: Cycle by the 4 partition for selecting boot ones, choosing next
-// and save it to EEPROM.  Needs REBOOT to get new partition
-//*****************************************************************************
-int rotate_boot (void)
-{
-    int i;
-
-  for (i = 0; i < num_partitions; i++) {
-    Serial.print(F("\r\nInit partition was: "));
-    Serial.println(boot_partition, DEC);
-    boot_partition++;
-    boot_partition = boot_partition % num_partitions;
-    //Find the next partition that's available
-    //and set it to be the boot partition
-    if(devices[boot_partition].sdf.isOpen()){
-      Serial.print(F("Selecting boot partition number "));
-      Serial.println(boot_partition, DEC);
-      break;
-    }
-  }
-
-  if (i == num_partitions) {
-    Serial.print(F("No online partitions found. Check that you have a file called PARTx.PO and try again, where x is from 1 to "));
-    Serial.println(num_partitions, DEC);
-    boot_partition = 0;
-  }
-
-  eeprom_write_byte(EEPROM_BOOT_PART, boot_partition);
-  digitalWrite(PIN_LED, HIGH);
-  Serial.print(F("Changing boot partition to: "));
-  Serial.println(boot_partition, DEC);
-
-  // stop until reset
-  led_err();
 }
 
 extern void *__brkval;
