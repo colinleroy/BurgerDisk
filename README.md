@@ -4,6 +4,7 @@ I recently bought an SPIISD v2 kit so that I could have a "hard drive" on my App
 My use-case is to be able to save documents, photos, programs to a large storage, because
 floppies are... small.
 
+# Bug number 1
 Upon testing, I was disappointed to see that the SPIISD v2 works great, in conjunction with
 ROM4x, when we boot the Apple //c from Smartport using the ROM4x menu, but that the drive
 was "invisible" when booting from the internal floppy disk drive.
@@ -29,11 +30,18 @@ missed the first Smartport RESET and ENABLE at cold boot, and so could not adver
 existence to the Apple //c.
 
 I solved it by reflashing the firmware using an AVR ISP mkII programmer, which bypasses the
-Arduino's bootloader. As this was not enough, I defer slow inits to after having replied to the
-computer.
+Arduino's bootloader. As this was not enough, I defer storage init to the first Smartport
+STATUS call, where the computer waits for our answer.
+
+# Bug number 2
+
+At that point this firmware works good with a ROM01 Apple IIgs and a ROM4x Apple //c (A2S4000)
+and a ROM3 Apple //c (A2S4000). However! It freezes on the A2S4100 with the Memory Expansion
+Card, because of an over-eager timeout on the Nano. 
 
 # I have an official SPIISD and the same problem, how do I fix it
 
+# For bug number 1
 If you're here because you want your Apple IIc to see your SPIISD (v1 or v2) on cold boot,
 here are your options:
 
@@ -63,15 +71,28 @@ Then reflash the firmware using your backup:
 avrdude -c arduino -P /dev/ttyUSB0 -b 115200 -p m328p -U flash:w:SPIISD.orig.hex
 ```
 
+# For bug number 2
+
+There is no workaround but to use this firmware.
+
 # Directions for this project
 
-I am not yet sure what I want to do with this project. I would like to have my
+There are mainly two things I want for this project. First, I would like to have my
 firmware conform to my needs (for example, I need only one or two partitions, and
-I dislike seeing S2D1 and S2D2 when I won't use them). I would also like it to
-be a good, solid Smartport hard drive implementation that would benefit the
-community at large: while it is easy to find mass storage solutions for the
-slotted Apple IIs, there are far less options to the //c, and as far as I know,
-only one - the out-of-stock SPIISD v1 - is open-source.
+I dislike seeing S2D1 and S2D2 when I won't use them). This is done.
+
+Second, I want this device to act as a period-correct hard drive: I am not interested
+in switching images dynamically, or to be able to boot any other image than the first
+one. This is done. 
+
+Third, I would like to design a PCB (and extend the firmware) to allow this device
+to be daisy-chainable (before other Smartport devices and before dumb floppy drives).
+This is not done.
+
+Also, I want it to be a good, solid Smartport hard drive implementation base that
+would benefit the community at large: while it is easy to find mass storage
+solutions for the slotted Apple IIs, there are far less options to the //c, and
+as far as I know, only one - the out-of-stock SPIISD v1 - is open-source.
 
 So, if people are interested in such a project, I'm in. I am bad at hardware,
 and while I can wire shit to the correct pins to make prototypes, I have zero
@@ -86,14 +107,9 @@ which prohibits others to step up, have some built and sell them to the communit
 (Or, you could by a v2 board and use this firmware. Still, it's not as easy as
 it should).
 
-So what I would love to is to design a new PCB, MIT-licensed too, so that anyone
+If I manage to design a new PCB, it will be MIT-licensed too, so that anyone
 interested could build and sell them. Probably not me, I don't want to turn my
 hobby into work.
-
-Then I would like to fix/add features, maybe:
-- fix the Eject button so that one can rotate their bootable image
-- a jumper block to select 1, 2 or 4 partitions possible
-- a clean-room implementation of a basic image selection UI
 
 # SPIISD DIY KIT
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
