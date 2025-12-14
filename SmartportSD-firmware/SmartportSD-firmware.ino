@@ -183,6 +183,7 @@ static void init_storage(void) {
   }
   // Realloc standard packet_buffer
   packet_buffer = (unsigned char *)malloc(605);
+  memset(packet_buffer, 0, 605);
   LOGN(F("Free memory now "), freeMemory(), DEC);
 
   storage_init_done = 1;
@@ -191,13 +192,10 @@ static void init_storage(void) {
 void setup (void) {
   digitalWrite(PIN_LED, HIGH);
   // Input/Output Ports initialization
-  WR_PORT_ACK = 0xFF;
-  DIR_PORT_ACK = 0xFF;
-
-  PORTB = 0x00;
-
-  WR_PORT_REQ = _BV(PIN_WR) | _BV(PIN_RD);
-  DIR_PORT_REQ &= ~(_BV(PIN_RD));
+  
+  SET_ACK_HIGH; SET_ACK_OUT;
+  SET_WR_HIGH; SET_WR_IN;
+  SET_RD_HIGH; SET_RD_IN;
 
   // Analog Comparator initialization
   ACSR = 0x80;
@@ -239,25 +237,21 @@ void loop() {
   unsigned char source, status, phases, status_code;
   unsigned char prev_phases = 0xFF;
 
-  DIR_PORT_REQ &= ~(_BV(PIN_RD));
+  // set RD input low
+  SET_RD_IN; SET_RD_LOW;
 
-  // set RD low
-  WR_PORT_REQ &= ~(_BV(PIN_RD));
   interrupts();
 
   LOG("Ready");
 
   while (1) {
 
-    DIR_PORT_ACK &= ~(_BV(PIN_ACK)); //set ack (wrprot) to input to avoid clashing with other devices when sp bus is not enabled
+    //set ack (wrprot) to input to avoid clashing with other devices when sp bus is not enabled
+    // It's already set low.
+    SET_ACK_IN;
 
     // read phase lines to check for smartport reset or enable
     phases = (RD_PORT_PHASES & PINS_PHASES) >> PIN_PH0;
-
-    if (phases == prev_phases) {
-      continue;
-    }
-
     switch (phases) {
 
       // phase lines for smartport bus reset
@@ -284,7 +278,7 @@ void loop() {
       case 0b1110:
       case 0b1111:
         noInterrupts();
-        DIR_PORT_ACK |= _BV(PIN_ACK);   //set ack to output, sp bus is enabled
+        SET_ACK_OUT;   //set ack to output, sp bus is enabled
         status = ReceivePacket( (unsigned char*) packet_buffer);
         interrupts();
 
@@ -292,47 +286,49 @@ void loop() {
           break;     //error timeout, break and loop again
         }
 
-        LOGN(F("SP BUS ENABLE, code "), packet_buffer[14], HEX);
-
-        // lets check if the pkt is for us
-        if (packet_buffer[14] != 0x85)  // if its not an init pkt, then check if it's for us
-        {
-          // check if its our one of our id's
-          // LOGN(F("ENABLE device "), packet_buffer[6], HEX);
-
-          if (get_device_partition(packet_buffer[6]) == -1) { //not one of our id's
-            delay(100);
-            Serial.println(F("Not our ID!"));
-
-            DIR_PORT_ACK &= ~(_BV(PIN_ACK));       //set ack to input, so lets not interfere
-            WR_PORT_ACK &= ~(_BV(PIN_ACK));        //preset ack low, for next time its an output
-            while (RD_PORT_ACK & _BV(PIN_ACK));    //wait till low other dev has finished receiving it
-
-            //assume its a cmd packet, cmd code is in byte 14
-            //now we need to work out what type of packet and stay out of the way
-            switch (packet_buffer[14]) {
-              case 0x80:  //is a status cmd
-              case 0x83:  //is a format cmd
-              case 0x81:  //is a readblock cmd
-                while (!(RD_PORT_ACK & _BV(PIN_ACK)));   //wait till high
-                while (RD_PORT_ACK & _BV(PIN_ACK));      //wait till low
-                while (!(RD_PORT_ACK & _BV(PIN_ACK)));   //wait till high
-                break;
-              case 0x82:  //is a writeblock cmd
-                while (!(RD_PORT_ACK & _BV(PIN_ACK)));   //wait till high
-                while (RD_PORT_ACK & _BV(PIN_ACK));      //wait till low
-                while (!(RD_PORT_ACK & _BV(PIN_ACK)));   //wait till high
-                while (RD_PORT_ACK & _BV(PIN_ACK));      //wait till low
-                while (!(RD_PORT_ACK & _BV(PIN_ACK)));   //wait till high
-                break;
-            }
-            break;  //not one of ours
-          }
+        Serial.print("P: ");
+        for (int i = 0; i < 30; i++) {
+          Serial.print(packet_buffer[i], HEX);
+          Serial.print(' ');
         }
+        Serial.println();
 
-        //we need to handshake the packet
-        WR_PORT_ACK &= ~(_BV(PIN_ACK));       //set ack low
-        while (RD_PORT_REQ & _BV(PIN_REQ));   //and wait for req to go low
+        // // lets check if the pkt is for us
+        // if (packet_buffer[14] != 0x85)  // if its not an init pkt, then check if it's for us
+        // {
+        //   // check if its our one of our id's
+        //   // LOGN(F("ENABLE device "), packet_buffer[6], HEX);
+        // 
+        //   if (get_device_partition(packet_buffer[6]) == -1) { //not one of our id's
+        //     delay(100);
+        //     Serial.println(F("Not our ID!"));
+        // 
+        //     SET_ACK_IN;         //set ack to input, so lets not interfere
+        //     SET_ACK_LOW;        //preset ack low, for next time its an output
+        // 
+        //     WAIT_ACK_LOW;
+        // 
+        //     //assume its a cmd packet, cmd code is in byte 14
+        //     //now we need to work out what type of packet and stay out of the way
+        //     switch (packet_buffer[14]) {
+        //       case 0x80:  //is a status cmd
+        //       case 0x83:  //is a format cmd
+        //       case 0x81:  //is a readblock cmd
+        //         WAIT_ACK_HIGH;
+        //         WAIT_ACK_LOW;
+        //         WAIT_ACK_HIGH;
+        //         break;
+        //       case 0x82:  //is a writeblock cmd
+        //         WAIT_ACK_HIGH;
+        //         WAIT_ACK_LOW;
+        //         WAIT_ACK_HIGH;
+        //         WAIT_ACK_LOW;
+        //         WAIT_ACK_HIGH;
+        //         break;
+        //     }
+        //     break;  //not one of ours
+        //   }
+        // }
 
         //Not safe to assume it's a normal command packet, GSOS may throw
         //us several extended packets here and then crash
@@ -343,9 +339,11 @@ void loop() {
         switch (packet_buffer[14]) {
 
           case 0x80:  //is a status cmd
+            SET_ACK_LOW;
+            WAIT_REQ_LOW;
             Serial.println(F("SP STATUS"));
             digitalWrite(PIN_LED, HIGH);
-            source = packet_buffer[6];
+
             partition = get_device_partition(source);
             if (partition != -1 && devices[partition].sdf.isOpen()) {
               status_code = (packet_buffer[19] & 0x7f);
@@ -360,9 +358,10 @@ void loop() {
                 encode_status_reply_packet(devices[partition]);
               }
               noInterrupts();
-              DIR_PORT_REQ |= _BV(PIN_RD); //set rd as output
+              SET_RD_OUT;
               status = SendPacket( (unsigned char*) packet_buffer);
-              DIR_PORT_REQ &= ~(_BV(PIN_RD)); //set rd back to input so back to tristate
+              SET_RD_IN;
+
               interrupts();
               digitalWrite(PIN_LED, LOW);
             }
@@ -380,8 +379,9 @@ void loop() {
             break;
 
           case 0xC0:  //Extended status cmd
+            SET_ACK_LOW;
+            WAIT_REQ_LOW;
             digitalWrite(PIN_LED, HIGH);
-            source = packet_buffer[6];
 
             partition = get_device_partition(source);
             if (partition != -1) {
@@ -397,9 +397,9 @@ void loop() {
                 encode_extended_status_reply_packet(devices[partition]);
               }
               noInterrupts();
-              DIR_PORT_REQ |= _BV(PIN_RD); //set rd as output
+              SET_RD_OUT;
               status = SendPacket( (unsigned char*) packet_buffer);
-              DIR_PORT_REQ &= ~(_BV(PIN_RD)); //set rd back to input so back to tristate
+              SET_RD_IN;
               interrupts();
 
             }
@@ -408,8 +408,8 @@ void loop() {
 
           case 0xC1:  // extended readblock cmd
           case 0x81:  // readblock cmd
-
-            source = packet_buffer[6];
+            SET_ACK_LOW;
+            WAIT_REQ_LOW;
 
             LBH = packet_buffer[16]; //high order bits
             LBN = packet_buffer[19]; //block number low
@@ -441,16 +441,17 @@ void loop() {
               encode_data_packet(source);
 
               noInterrupts();
-              DIR_PORT_REQ |= _BV(PIN_RD); //set rd as output
+              SET_RD_OUT;
               status = SendPacket( (unsigned char*) packet_buffer);
-              DIR_PORT_REQ &= ~(_BV(PIN_RD)); //set rd back to input so back to tristate
+              SET_RD_IN;
               interrupts();
               digitalWrite(PIN_LED, LOW);
             }
             break;
 
           case 0x82:  //is a writeblock cmd
-            source = packet_buffer[6];
+            SET_ACK_LOW;
+            WAIT_REQ_LOW;
 
             LBH = packet_buffer[16]; //high order bits
             LBN = packet_buffer[19]; //block number low
@@ -468,13 +469,14 @@ void loop() {
 
               //get write data packet, keep trying until no timeout
               noInterrupts();
-              DIR_PORT_ACK |= _BV(PIN_ACK);   //set ack to output, sp bus is enabled
+
+              SET_ACK_OUT;
               while ((status = ReceivePacket( (unsigned char*) packet_buffer)));
               interrupts();
 
               //we need to handshake the packet
-              WR_PORT_ACK &= ~(_BV(PIN_ACK));   //set ack low
-              while (RD_PORT_REQ & _BV(PIN_REQ));   //wait for req to go low
+              SET_ACK_LOW;
+              WAIT_REQ_LOW;
 
               status = decode_data_packet();
               if (status == 0) {
@@ -494,29 +496,32 @@ void loop() {
               //now return status code to host
               encode_write_status_packet(source, status);
               noInterrupts();
-              DIR_PORT_REQ |= _BV(PIN_RD); //set rd as output
+              SET_RD_OUT;
               status = SendPacket( (unsigned char*) packet_buffer);
-              DIR_PORT_REQ &= ~(_BV(PIN_RD)); //set rd back to input so back to tristate
+              SET_RD_IN;
               interrupts();
             }
             digitalWrite(PIN_LED, LOW);
             break;
 
           case 0x83:  //is a format cmd
-            source = packet_buffer[6];
+            SET_ACK_LOW;
+            WAIT_REQ_LOW;
+
             partition = get_device_partition(source);
             if (partition != -1) {  //yes it is, then do the read
               encode_init_reply_packet(source, 0x80); //just send back a successful response
               noInterrupts();
-              DIR_PORT_REQ |= _BV(PIN_RD); //set rd as output
+              SET_RD_OUT;
               status = SendPacket( (unsigned char*) packet_buffer);
               interrupts();
-              DIR_PORT_REQ &= ~(_BV(PIN_RD)); //set rd back to input so back to tristate
+              SET_RD_IN;
             }
             break;
 
           case 0x85:  //is an init cmd
-            source = packet_buffer[6];
+            SET_ACK_LOW;
+            WAIT_REQ_LOW;
 
             devices[number_partitions_initialised].device_id = source; //remember source id for partition
             number_partitions_initialised++;
@@ -529,16 +534,18 @@ void loop() {
             } else { // the last one
               status = 0xff;         //yes, so status=non zero
             }
-            LOGN(F("Source "), source, DEC);
-            LOGN(F("Status "), status, HEX);
             encode_init_reply_packet(source, status);
 
             noInterrupts();
-            DIR_PORT_REQ |= _BV(PIN_RD); //set rd as output
+            SET_RD_OUT;
             status = SendPacket( (unsigned char*) packet_buffer);
-            DIR_PORT_REQ &= ~(_BV(PIN_RD)); //set rd back to input so back to tristate
+            SET_RD_IN;
             interrupts();
             break;
+          default:
+            LOGN(F("Discarding packet code "), packet_buffer[14], HEX);
+            SET_ACK_IN;         //set ack to input, so lets not interfere
+            SET_ACK_LOW;        //preset ack low, for next time its an output
         }
         break;
     }
@@ -766,7 +773,6 @@ void encode_write_status_packet(unsigned char source, unsigned char status)
   packet_buffer[2] = 0xcf;
   packet_buffer[3] = 0xf3;
   packet_buffer[4] = 0xfc;
-    int i;
   packet_buffer[5] = 0xff;
 
   packet_buffer[6] = 0xc3;  //PBEGIN - start byte
