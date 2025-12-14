@@ -31,16 +31,9 @@ ReceivePacket:
           sbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK  ; Set ACK output
           sbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK   ; Set ACK high
           
-          clr  r21                    ;setup timeout counter
-          ldi  r20,10                 ;two stage timer, around 1ms
-
 1:        sbic _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ   ;1/2 wait for req line to go high
-          rjmp start                  ;this indicates host is about to send packet   
-          dec  r21                    ;1 
-          brne 1b                     ;1/2
-          dec  r20
-          brne 1b
-          rjmp timeout                ;yes, we have timed out
+          rjmp start                               ;this indicates host is about to send packet   
+          rjmp 1b                                  ;Keep waiting
 
 start:    ;ldi  r24,'R'                ;for debug, R indicates REQ is high
           ;call uart_putc              ;output to serial port
@@ -147,13 +140,7 @@ finish:   ;ldi  r24,'r'                                              ;for debug,
           clr  r24
           ;cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; Set ACK input
           ret
-          
-timeout:  cbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK                     ;set ACK(BSY) back to low
-          ldi  r24,1                                                 ;setup return value, 1=error
-          clr  r25
-          ;cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; Set ACK input
-          ret
-          
+
 //*****************************************************************************
 // Function: SendPacket
 // Parameters: packet_buffer pointer
