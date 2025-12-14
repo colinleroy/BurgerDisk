@@ -281,6 +281,12 @@ void loop() {
         interrupts();
 
         if (status) {
+          Serial.print(" T! ");
+          for (int i = 0; i < 30; i++) {
+            Serial.print(packet_buffer[i], HEX);
+            Serial.print(' ');
+          }
+          Serial.println();
           break;     //error timeout, break and loop again
         }
 
@@ -514,6 +520,8 @@ void loop() {
             }
             encode_init_reply_packet(source, status);
 
+            LOGN("STATUS dev_id ", source, HEX);
+            LOGN("STATUS status ", status, HEX);
             noInterrupts();
             SET_RD_OUT;
             status = SendPacket( (unsigned char*) packet_buffer);
