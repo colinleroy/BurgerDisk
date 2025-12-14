@@ -3,38 +3,7 @@
 // Apple //c Smartport Compact Flash adapter
 // Written by Robert Justice  email: rjustice(at)internode.on.net
 // Ported to Arduino UNO with SD Card adapter by Andrea Ottaviani email: andrea.ottaviani.69(at)gmail.com
-//
-// 1.00 - basic read and write working for one partition
-// 1.01 - add support for 4 partions, assume no other smartport devices on bus
-// 1.02 - add correct handling of device ids, should work with other smartport devices
-//        before this one in the drive chain.
-// 1.03 - fixup smartort bus enable and reset handling, will now start ok with llc reset
-// 1.04 - fixup rddata line handling so that it will work with internal 5.25 drive. Now if
-//        there is a disk in the floppy drive, it will boot first. Otherwise it will boot
-//        from the CF
-// 1.05 - fix problem with internal disk being always write protected. Code was stuck in
-//        receivepacket loop, so wrprot(ACK) was always 1. Added timeout support for
-//        receivepacket function, so this now times out and goes back to the main loop for
-//        another try.
-// 1.1  - added support for being connected after unidisk 3.5. Need some more io pins to
-//        support pass through, this is the next step.
-//
-// 1.12 - add eeprom storing of boot partition, cycling by eject button (PA3)
-//
-// 1.13 - Fixed an issue where the block number was calculated incorrectly, leading to
-//        failed operations. Now Total Replay v3 works!
-//
-// 1.15 - Now uses FAT filesystem on the SD card instead of raw layout.
-//
-//
-// 1.16 - Add support .hdv and .2mg (also .po), if add config.txt to the root of the sd card,
-//        it will read any file name. images added to subfolders will also be loaded.
-//        if not specified in config.txt, usage is the same as in versions up to 1.15.
-//        improvement by Wing Yueng.
-//
-// 1.17 - Add support IIcPlus. Fixed memory allocation to dynamic allocation.
-//
-//
+////
 // Apple disk interface is connected as follows:
 // wrprot = pa5 (ack) (output)
 // ph0    = pd2 (req) (input)
@@ -58,13 +27,6 @@
 
 //x #include <SPI.h>
 #include "SdFat.h" // SDFat version 2.1.2
-#include <avr/eeprom.h>
-
-// Set USE_SDIO to zero for SPI card access.
-// Deprecated maintly because I don't want to
-// maintain two codepaths
-// #define USE_SDIO 0
-
 #include <avr/io.h>
 #include <string.h>
 #include <stdio.h>
@@ -74,7 +36,8 @@
 #define PIN_CHIP_SELECT 10      // D10
 #define PIN_LED         18      // A4
 
-#define NUM_PARTITIONS  1
+#define MAX_PARTITIONS 4
+int open_partitions = 0;
 
 #define LOG(str) do {         \
   Serial.print(micros());     \
@@ -119,7 +82,7 @@ struct device{
   bool writeable;
 };
 
-device devices[NUM_PARTITIONS];
+device devices[MAX_PARTITIONS];
 
 //The circuit:
 //    SD card attached to SPI bus as follows:
@@ -155,8 +118,11 @@ static void log_io_err(const __FlashStringHelper *op, int partition, int block_n
   Serial.println(block_num);
 }
 
-static int init_done = 0;
-static void late_init(void) {
+static int storage_init_done = 0;
+static void init_storage(void) {
+  if (storage_init_done) {
+    return;
+  }
   LOGN(F("Free memory before opening images: "), freeMemory(), DEC);
 
   // Not enough RAM for SDFat to open a file if the packet_buffer
@@ -174,7 +140,7 @@ static void late_init(void) {
   if (myFile.isOpen()) {
     unsigned char n;
     packet_buffer = (unsigned char *)malloc(100);
-    for(unsigned char i = 0; i < NUM_PARTITIONS; i++){
+    for(unsigned char i = 0; i < MAX_PARTITIONS; i++) {
       n = myFile.fgets((char*)packet_buffer, 100);
       if(n > 0) {
         if (packet_buffer[n - 1] == '\n') {
@@ -187,6 +153,7 @@ static void late_init(void) {
           LOG(F("Image open error!"));
         }
         else {
+          open_partitions++;
           if ((packet_buffer[n-4]=='2')&&((packet_buffer[n-3]&0xdf)=='M')&&((packet_buffer[n-2]&0xdf)=='G')) {
             devices[i].header_offset=64;
           }
@@ -203,12 +170,13 @@ static void late_init(void) {
     myFile.close();
   } else {
     Serial.println(F("No config.txt. Searching for images."));
-    for (unsigned char i = 0; i < NUM_PARTITIONS; i++) {
+    for (unsigned char i = 0; i < MAX_PARTITIONS; i++) {
       String prefix = "PART";
       open_image(devices[i], prefix+(i+1)+".po");
       if (!devices[i].sdf.isOpen()) {
         Serial.println(F("Can not open."));
       } else {
+        open_partitions++;
         Serial.println(F("Opened."));
       }
     }
@@ -216,6 +184,8 @@ static void late_init(void) {
   // Realloc standard packet_buffer
   packet_buffer = (unsigned char *)malloc(605);
   LOGN(F("Free memory now "), freeMemory(), DEC);
+
+  storage_init_done = 1;
 }
 
 void setup (void) {
@@ -227,7 +197,7 @@ void setup (void) {
   PORTB = 0x00;
 
   WR_PORT_REQ = _BV(PIN_WR) | _BV(PIN_RD);
-  DIR_PORT_REQ = 0x00;
+  DIR_PORT_REQ &= ~(_BV(PIN_RD));
 
   // Analog Comparator initialization
   ACSR = 0x80;
@@ -244,7 +214,7 @@ void setup (void) {
 }
 
 static int get_device_partition(int device_id) {
-  for  (int p = 0; p < NUM_PARTITIONS; p++)
+  for  (int p = 0; p < MAX_PARTITIONS; p++)
   {
     if (devices[p].device_id == device_id) {
       return p;
@@ -267,21 +237,26 @@ void loop() {
   int number_partitions_initialised = 0;
   bool sdstato;
   unsigned char source, status, phases, status_code;
+  unsigned char prev_phases = 0xFF;
 
-  DIR_PORT_REQ = 0x00;
+  DIR_PORT_REQ &= ~(_BV(PIN_RD));
 
   // set RD low
   WR_PORT_REQ &= ~(_BV(PIN_RD));
   interrupts();
 
-  LOG("Entering main loop");
+  LOG("Ready");
 
   while (1) {
 
-    DIR_PORT_ACK = 0xFF & ~(_BV(PIN_ACK)); //set ack (wrprot) to input to avoid clashing with other devices when sp bus is not enabled
+    DIR_PORT_ACK &= ~(_BV(PIN_ACK)); //set ack (wrprot) to input to avoid clashing with other devices when sp bus is not enabled
 
     // read phase lines to check for smartport reset or enable
     phases = (RD_PORT_PHASES & PINS_PHASES) >> PIN_PH0;
+
+    if (phases == prev_phases) {
+      continue;
+    }
 
     switch (phases) {
 
@@ -297,7 +272,7 @@ void loop() {
         number_partitions_initialised = 0;
 
         //clear device_id table
-        for (partition = 0; partition < NUM_PARTITIONS; partition++) {
+        for (partition = 0; partition < MAX_PARTITIONS; partition++) {
           devices[partition].device_id = 0;
         }
         break;
@@ -309,7 +284,7 @@ void loop() {
       case 0b1110:
       case 0b1111:
         noInterrupts();
-        DIR_PORT_ACK = 0xFF;   //set ack to output, sp bus is enabled
+        DIR_PORT_ACK |= _BV(PIN_ACK);   //set ack to output, sp bus is enabled
         status = ReceivePacket( (unsigned char*) packet_buffer);
         interrupts();
 
@@ -320,7 +295,7 @@ void loop() {
         LOGN(F("SP BUS ENABLE, code "), packet_buffer[14], HEX);
 
         // lets check if the pkt is for us
-        if (packet_buffer[14] != 0x85)  // if its an init pkt, then assume its for us and continue on
+        if (packet_buffer[14] != 0x85)  // if its not an init pkt, then check if it's for us
         {
           // check if its our one of our id's
           // LOGN(F("ENABLE device "), packet_buffer[6], HEX);
@@ -329,7 +304,7 @@ void loop() {
             delay(100);
             Serial.println(F("Not our ID!"));
 
-            DIR_PORT_ACK = 0xFF & ~(_BV(PIN_ACK)); //set ack to input, so lets not interfere
+            DIR_PORT_ACK &= ~(_BV(PIN_ACK));       //set ack to input, so lets not interfere
             WR_PORT_ACK &= ~(_BV(PIN_ACK));        //preset ack low, for next time its an output
             while (RD_PORT_ACK & _BV(PIN_ACK));    //wait till low other dev has finished receiving it
 
@@ -355,7 +330,7 @@ void loop() {
           }
         }
 
-        //else it is ours, we need to handshake the packet
+        //we need to handshake the packet
         WR_PORT_ACK &= ~(_BV(PIN_ACK));       //set ack low
         while (RD_PORT_REQ & _BV(PIN_REQ));   //and wait for req to go low
 
@@ -385,9 +360,9 @@ void loop() {
                 encode_status_reply_packet(devices[partition]);
               }
               noInterrupts();
-              DIR_PORT_REQ = _BV(PIN_RD); //set rd as output
+              DIR_PORT_REQ |= _BV(PIN_RD); //set rd as output
               status = SendPacket( (unsigned char*) packet_buffer);
-              DIR_PORT_REQ = 0x00; //set rd back to input so back to tristate
+              DIR_PORT_REQ &= ~(_BV(PIN_RD)); //set rd back to input so back to tristate
               interrupts();
               digitalWrite(PIN_LED, LOW);
             }
@@ -422,9 +397,9 @@ void loop() {
                 encode_extended_status_reply_packet(devices[partition]);
               }
               noInterrupts();
-              DIR_PORT_REQ = _BV(PIN_RD); //set rd as output
+              DIR_PORT_REQ |= _BV(PIN_RD); //set rd as output
               status = SendPacket( (unsigned char*) packet_buffer);
-              DIR_PORT_REQ = 0x00; //set rd back to input so back to tristate
+              DIR_PORT_REQ &= ~(_BV(PIN_RD)); //set rd back to input so back to tristate
               interrupts();
 
             }
@@ -466,9 +441,9 @@ void loop() {
               encode_data_packet(source);
 
               noInterrupts();
-              DIR_PORT_REQ = _BV(PIN_RD); //set rd as output
+              DIR_PORT_REQ |= _BV(PIN_RD); //set rd as output
               status = SendPacket( (unsigned char*) packet_buffer);
-              DIR_PORT_REQ = 0x00; //set rd back to input so back to tristate
+              DIR_PORT_REQ &= ~(_BV(PIN_RD)); //set rd back to input so back to tristate
               interrupts();
               digitalWrite(PIN_LED, LOW);
             }
@@ -493,7 +468,7 @@ void loop() {
 
               //get write data packet, keep trying until no timeout
               noInterrupts();
-              DIR_PORT_ACK = 0xFF;   //set ack to output, sp bus is enabled
+              DIR_PORT_ACK |= _BV(PIN_ACK);   //set ack to output, sp bus is enabled
               while ((status = ReceivePacket( (unsigned char*) packet_buffer)));
               interrupts();
 
@@ -519,9 +494,9 @@ void loop() {
               //now return status code to host
               encode_write_status_packet(source, status);
               noInterrupts();
-              DIR_PORT_REQ = _BV(PIN_RD); //set rd as output
+              DIR_PORT_REQ |= _BV(PIN_RD); //set rd as output
               status = SendPacket( (unsigned char*) packet_buffer);
-              DIR_PORT_REQ = 0x00; //set rd back to input so back to tristate
+              DIR_PORT_REQ &= ~(_BV(PIN_RD)); //set rd back to input so back to tristate
               interrupts();
             }
             digitalWrite(PIN_LED, LOW);
@@ -533,10 +508,10 @@ void loop() {
             if (partition != -1) {  //yes it is, then do the read
               encode_init_reply_packet(source, 0x80); //just send back a successful response
               noInterrupts();
-              DIR_PORT_REQ = _BV(PIN_RD); //set rd as output
+              DIR_PORT_REQ |= _BV(PIN_RD); //set rd as output
               status = SendPacket( (unsigned char*) packet_buffer);
               interrupts();
-              DIR_PORT_REQ = 0x00; //set rd back to input so back to tristate
+              DIR_PORT_REQ &= ~(_BV(PIN_RD)); //set rd back to input so back to tristate
             }
             break;
 
@@ -546,7 +521,10 @@ void loop() {
             devices[number_partitions_initialised].device_id = source; //remember source id for partition
             number_partitions_initialised++;
 
-            if (number_partitions_initialised < NUM_PARTITIONS) { //are all init'd yet
+            // now we have time to init our partitions before acking
+            init_storage();
+
+            if (number_partitions_initialised < open_partitions) { //are all init'd yet
               status = 0x80;         //no, so status=0
             } else { // the last one
               status = 0xff;         //yes, so status=non zero
@@ -556,21 +534,10 @@ void loop() {
             encode_init_reply_packet(source, status);
 
             noInterrupts();
-            DIR_PORT_REQ = _BV(PIN_RD); //set rd as output
+            DIR_PORT_REQ |= _BV(PIN_RD); //set rd as output
             status = SendPacket( (unsigned char*) packet_buffer);
-            DIR_PORT_REQ = 0x00; //set rd back to input so back to tristate
+            DIR_PORT_REQ &= ~(_BV(PIN_RD)); //set rd back to input so back to tristate
             interrupts();
-
-            if (number_partitions_initialised == NUM_PARTITIONS) {
-              // now we have time to init our partitions
-              if(!init_done) {
-                late_init();
-                init_done = 1;
-              }
-              for (partition = 0; partition < NUM_PARTITIONS; partition++) {
-                LOGN(F("Drive: "), devices[partition].device_id, HEX);
-              }
-            }
             break;
         }
         break;
