@@ -138,7 +138,7 @@ finish:   ;ldi  r24,'r'                                              ;for debug,
           ;call uart_putc                                            ;output to serial port
           clr  r25                                                   ;return no error (for now)
           clr  r24
-          ;cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; Set ACK input
+          cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; Set ACK input
           ret
 
 //*****************************************************************************
@@ -155,6 +155,8 @@ finish:   ;ldi  r24,'r'                                              ;for debug,
 SendPacket:
           mov  XL,r24                                                ;mov buffer pointer into X 
           mov  XH,r25
+
+          sbi  _SFR_IO_ADDR(DIR_PORT_RD),PIN_RD                      ; Set RD as output
 
           sbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK
           sbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK                     ;set ACK high to signal we are ready to send
@@ -247,12 +249,14 @@ finishs:  ;ldi  r24,'r'                                              ;for debug,
           ;call uart_putc                                            ;output to serial port
           clr  r25
           clr  r24                                                   ;return no error
-          ;cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK
+          cbi  _SFR_IO_ADDR(DIR_PORT_RD),PIN_RD                      ; Set RD as input
+          cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; And ACK
           ret
 
 error:    clr  r25
           ldi  r24,1
-          ;cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK
+          cbi  _SFR_IO_ADDR(DIR_PORT_RD),PIN_RD                      ; Set RD as input
+          cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; And ACK
           ret
 
 

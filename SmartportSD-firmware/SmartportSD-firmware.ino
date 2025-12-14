@@ -193,7 +193,7 @@ void setup (void) {
   digitalWrite(PIN_LED, HIGH);
   // Input/Output Ports initialization
   
-  SET_ACK_LOW; SET_ACK_OUT;
+  SET_ACK_LOW; SET_ACK_IN;
   SET_WR_HIGH; SET_WR_IN;
   SET_RD_HIGH; SET_RD_IN;
 
@@ -237,7 +237,8 @@ void loop() {
   unsigned char source, status, phases, status_code;
   unsigned char prev_phases = 0xFF;
 
-  // set RD input low
+  // set RD and ACK input low - should already been done by packet handler
+  // but let's make sure as I don't know all the code well enough for now.
   SET_RD_IN; SET_RD_LOW;
   SET_ACK_IN; SET_ACK_LOW;
 
@@ -279,16 +280,6 @@ void loop() {
         noInterrupts();
         status = ReceivePacket( (unsigned char*) packet_buffer);
         interrupts();
-
-        if (status) {
-          Serial.print(" T! ");
-          for (int i = 0; i < 30; i++) {
-            Serial.print(packet_buffer[i], HEX);
-            Serial.print(' ');
-          }
-          Serial.println();
-          break;     //error timeout, break and loop again
-        }
 
         Serial.print(ack_was_high);
         Serial.print(" P: ");
@@ -361,9 +352,7 @@ void loop() {
                 encode_status_reply_packet(devices[partition]);
               }
               noInterrupts();
-              SET_RD_OUT;
               status = SendPacket( (unsigned char*) packet_buffer);
-              SET_RD_IN;
 
               interrupts();
               digitalWrite(PIN_LED, LOW);
@@ -398,9 +387,7 @@ void loop() {
                 encode_extended_status_reply_packet(devices[partition]);
               }
               noInterrupts();
-              SET_RD_OUT;
               status = SendPacket( (unsigned char*) packet_buffer);
-              SET_RD_IN;
               interrupts();
 
             }
@@ -439,9 +426,7 @@ void loop() {
               encode_data_packet(source);
 
               noInterrupts();
-              SET_RD_OUT;
               status = SendPacket( (unsigned char*) packet_buffer);
-              SET_RD_IN;
               interrupts();
               digitalWrite(PIN_LED, LOW);
             }
@@ -462,10 +447,9 @@ void loop() {
               // block num third byte
               block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 16);
 
-              //get write data packet, keep trying until no timeout
+              //get write data packet
               noInterrupts();
-
-              while ((status = ReceivePacket( (unsigned char*) packet_buffer)));
+              ReceivePacket( (unsigned char*) packet_buffer);
               interrupts();
 
               status = decode_data_packet();
@@ -486,9 +470,7 @@ void loop() {
               //now return status code to host
               encode_write_status_packet(source, status);
               noInterrupts();
-              SET_RD_OUT;
               status = SendPacket( (unsigned char*) packet_buffer);
-              SET_RD_IN;
               interrupts();
             }
             digitalWrite(PIN_LED, LOW);
@@ -499,10 +481,8 @@ void loop() {
             if (partition != -1) {  //yes it is, then do the read
               encode_init_reply_packet(source, 0x80); //just send back a successful response
               noInterrupts();
-              SET_RD_OUT;
               status = SendPacket( (unsigned char*) packet_buffer);
               interrupts();
-              SET_RD_IN;
             }
             break;
 
@@ -523,9 +503,7 @@ void loop() {
             LOGN("STATUS dev_id ", source, HEX);
             LOGN("STATUS status ", status, HEX);
             noInterrupts();
-            SET_RD_OUT;
             status = SendPacket( (unsigned char*) packet_buffer);
-            SET_RD_IN;
             interrupts();
             break;
         }
