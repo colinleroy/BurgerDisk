@@ -193,7 +193,7 @@ void setup (void) {
   digitalWrite(PIN_LED, HIGH);
   // Input/Output Ports initialization
   
-  SET_ACK_HIGH; SET_ACK_OUT;
+  SET_ACK_LOW; SET_ACK_OUT;
   SET_WR_HIGH; SET_WR_IN;
   SET_RD_HIGH; SET_RD_IN;
 
@@ -239,17 +239,13 @@ void loop() {
 
   // set RD input low
   SET_RD_IN; SET_RD_LOW;
+  SET_ACK_IN; SET_ACK_LOW;
 
   interrupts();
 
   LOG("Ready");
 
   while (1) {
-
-    //set ack (wrprot) to input to avoid clashing with other devices when sp bus is not enabled
-    // It's already set low.
-    SET_ACK_IN;
-
     // read phase lines to check for smartport reset or enable
     phases = (RD_PORT_PHASES & PINS_PHASES) >> PIN_PH0;
     switch (phases) {
@@ -257,6 +253,7 @@ void loop() {
       // phase lines for smartport bus reset
       // ph3=0 ph2=1 ph1=0 ph0=1
       case 0b0101:
+        Serial.print(phases, BIN);
         LOG(F("SP BUS RESET"));
 
         // monitor phase lines for reset to clear
@@ -277,8 +274,9 @@ void loop() {
       case 0b1011:
       case 0b1110:
       case 0b1111:
+        int ack_was_high = ACK_IS_HIGH;
+
         noInterrupts();
-        SET_ACK_OUT;   //set ack to output, sp bus is enabled
         status = ReceivePacket( (unsigned char*) packet_buffer);
         interrupts();
 
@@ -286,7 +284,8 @@ void loop() {
           break;     //error timeout, break and loop again
         }
 
-        Serial.print("P: ");
+        Serial.print(ack_was_high);
+        Serial.print(" P: ");
         for (int i = 0; i < 30; i++) {
           Serial.print(packet_buffer[i], HEX);
           Serial.print(' ');
@@ -339,8 +338,6 @@ void loop() {
         switch (packet_buffer[14]) {
 
           case 0x80:  //is a status cmd
-            SET_ACK_LOW;
-            WAIT_REQ_LOW;
             Serial.println(F("SP STATUS"));
             digitalWrite(PIN_LED, HIGH);
 
@@ -379,8 +376,6 @@ void loop() {
             break;
 
           case 0xC0:  //Extended status cmd
-            SET_ACK_LOW;
-            WAIT_REQ_LOW;
             digitalWrite(PIN_LED, HIGH);
 
             partition = get_device_partition(source);
@@ -408,9 +403,6 @@ void loop() {
 
           case 0xC1:  // extended readblock cmd
           case 0x81:  // readblock cmd
-            SET_ACK_LOW;
-            WAIT_REQ_LOW;
-
             LBH = packet_buffer[16]; //high order bits
             LBN = packet_buffer[19]; //block number low
             LBL = packet_buffer[20]; //block number middle
@@ -450,9 +442,6 @@ void loop() {
             break;
 
           case 0x82:  //is a writeblock cmd
-            SET_ACK_LOW;
-            WAIT_REQ_LOW;
-
             LBH = packet_buffer[16]; //high order bits
             LBN = packet_buffer[19]; //block number low
             LBL = packet_buffer[20]; //block number middle
@@ -470,13 +459,8 @@ void loop() {
               //get write data packet, keep trying until no timeout
               noInterrupts();
 
-              SET_ACK_OUT;
               while ((status = ReceivePacket( (unsigned char*) packet_buffer)));
               interrupts();
-
-              //we need to handshake the packet
-              SET_ACK_LOW;
-              WAIT_REQ_LOW;
 
               status = decode_data_packet();
               if (status == 0) {
@@ -505,9 +489,6 @@ void loop() {
             break;
 
           case 0x83:  //is a format cmd
-            SET_ACK_LOW;
-            WAIT_REQ_LOW;
-
             partition = get_device_partition(source);
             if (partition != -1) {  //yes it is, then do the read
               encode_init_reply_packet(source, 0x80); //just send back a successful response
@@ -520,9 +501,6 @@ void loop() {
             break;
 
           case 0x85:  //is an init cmd
-            SET_ACK_LOW;
-            WAIT_REQ_LOW;
-
             devices[number_partitions_initialised].device_id = source; //remember source id for partition
             number_partitions_initialised++;
 
@@ -542,10 +520,6 @@ void loop() {
             SET_RD_IN;
             interrupts();
             break;
-          default:
-            LOGN(F("Discarding packet code "), packet_buffer[14], HEX);
-            SET_ACK_IN;         //set ack to input, so lets not interfere
-            SET_ACK_LOW;        //preset ack low, for next time its an output
         }
         break;
     }

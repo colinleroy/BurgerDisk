@@ -28,7 +28,8 @@ ReceivePacket:
           mov  XL,r24                 ;mov buffer pointer into X 
           mov  XH,r25
 
-          sbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK  ; Set ACK high
+          sbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK  ; Set ACK output
+          sbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK   ; Set ACK high
           
           clr  r21                    ;setup timeout counter
           ldi  r20,10                 ;two stage timer, around 1ms
@@ -132,6 +133,7 @@ endpkt:   clr  r23
           st   x+,r23                                                ;save zero byte in buffer to mark end
           
           cbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK                     ;set ACK(BSY) low to signal we have recv'd the pkt
+
           ;ldi  r24,'a'                                              ;for debug, a indicates ACK is low
           ;call uart_putc                                            ;output to serial port
 
@@ -143,11 +145,13 @@ finish:   ;ldi  r24,'r'                                              ;for debug,
           ;call uart_putc                                            ;output to serial port
           clr  r25                                                   ;return no error (for now)
           clr  r24
+          ;cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; Set ACK input
           ret
           
 timeout:  cbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK                     ;set ACK(BSY) back to low
           ldi  r24,1                                                 ;setup return value, 1=error
           clr  r25
+          ;cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; Set ACK input
           ret
           
 //*****************************************************************************
@@ -165,6 +169,7 @@ SendPacket:
           mov  XL,r24                                                ;mov buffer pointer into X 
           mov  XH,r25
 
+          sbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK
           sbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK                     ;set ACK high to signal we are ready to send
 
 1:        sbic _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;wait for req line to go high
@@ -255,10 +260,12 @@ finishs:  ;ldi  r24,'r'                                              ;for debug,
           ;call uart_putc                                            ;output to serial port
           clr  r25
           clr  r24                                                   ;return no error
+          ;cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK
           ret
 
 error:    clr  r25
           ldi  r24,1
+          ;cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK
           ret
 
 
