@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <avr/pgmspace.h>
 #include "sp_pins.h"
+#include "sp_vals.h"
 
 #define PIN_CHIP_SELECT 10      // D10
 #define PIN_LED         18      // A4
@@ -62,6 +63,7 @@ int partition;
 bool is_valid_image(File imageFile);
 
 extern "C" unsigned char ReceivePacket(unsigned char*); //Receive smartport packet assembler function
+extern "C" unsigned char AckPacket(void);
 extern "C" unsigned char SendPacket(unsigned char*);    //send smartport packet assembler function
 
 //unsigned char packet_buffer[768];   //smartport packet buffer
@@ -119,6 +121,8 @@ static void log_io_err(const __FlashStringHelper *op, int partition, int block_n
 }
 
 static int storage_init_done = 0;
+static int sp_init_done = 0;
+
 static void init_storage(void) {
   if (storage_init_done) {
     return;
@@ -173,11 +177,8 @@ static void init_storage(void) {
     for (unsigned char i = 0; i < MAX_PARTITIONS; i++) {
       String prefix = "PART";
       open_image(devices[i], prefix+(i+1)+".po");
-      if (!devices[i].sdf.isOpen()) {
-        Serial.println(F("Can not open."));
-      } else {
+      if (devices[i].sdf.isOpen()) {
         open_partitions++;
-        Serial.println(F("Opened."));
       }
     }
   }
@@ -191,14 +192,6 @@ static void init_storage(void) {
 
 void setup (void) {
   digitalWrite(PIN_LED, HIGH);
-  // Input/Output Ports initialization
-  
-  SET_ACK_LOW; SET_ACK_IN;
-  SET_WR_HIGH; SET_WR_IN;
-  SET_RD_HIGH; SET_RD_IN;
-
-  // Analog Comparator initialization
-  ACSR = 0x80;
 
   // LED
   pinMode(PIN_LED, OUTPUT);
@@ -208,17 +201,202 @@ void setup (void) {
   LOG(F("SmartportSD v1.18"));
 
   packet_buffer = (unsigned char *)malloc(605);
+
+  SET_WR_HIGH; SET_WR_IN;
+  SET_RD_IN; SET_RD_LOW;
+  SET_ACK_IN; SET_ACK_LOW;
+
+  LOG("Ready");
+
   digitalWrite(PIN_LED, LOW);
 }
 
 static int get_device_partition(int device_id) {
-  for  (int p = 0; p < MAX_PARTITIONS; p++)
-  {
+  for  (int p = 0; p < MAX_PARTITIONS; p++) {
     if (devices[p].device_id == device_id) {
       return p;
     }
   }
   return -1;
+}
+
+static inline SP_State sp_get_state(void) {
+  if (PHASES_BUS_RESET) {
+    return SP_BUS_RESET;
+  }
+  if (PHASES_BUS_ENABLE) {
+    return SP_ENABLED;
+  }
+  return SP_DISABLED;
+}
+
+int number_partitions_initialised = 0;
+static void smartport_device_reset(void) {
+  LOG(F("SP BUS RESET"));
+
+  // monitor phase lines for reset to clear
+  while(sp_get_state() == SP_BUS_RESET);
+
+  //reset number of partitions init'd
+  number_partitions_initialised = 0;
+  sp_init_done = 0;
+
+  //clear device_id table
+  for (partition = 0; partition < MAX_PARTITIONS; partition++) {
+    devices[partition].device_id = 0;
+  }
+}
+
+static void smartport_answer_status(unsigned char source, unsigned char extended) {
+  unsigned char status_code;
+  LOG(F("SP STATUS"));
+
+  partition = get_device_partition(source);
+  if (partition != -1 && devices[partition].sdf.isOpen()) {
+    status_code = (packet_buffer[extended ? 21 : 19] & 0x7f);
+
+    // if statcode=3, then status with device info block
+    if (status_code == 0x03) {
+      if (extended) {
+        Serial.println(F("Extended status DIB - Not implemented!"));
+      } else {
+        Serial.println(F("Sending DIB"));
+        encode_status_dib_reply_packet(devices[partition]);
+        delay(50);
+      }
+    } else {
+      // just return device status
+      if (extended) {
+        encode_extended_status_reply_packet(devices[partition]);
+      } else {
+        encode_status_reply_packet(devices[partition]);
+      }
+    }
+    status = SendPacket( (unsigned char*) packet_buffer);
+  }
+}
+
+static unsigned long int smartport_get_block_num_from_buf(void) {
+  unsigned long int block_num;
+  unsigned char LBH, LBL, LBN, LBT, LBX;
+
+  LBH = packet_buffer[16]; //high order bits
+  LBN = packet_buffer[19]; //block number low
+  LBL = packet_buffer[20]; //block number middle
+  LBT = packet_buffer[21]; //block number high
+
+  block_num = (LBN & 0x7f) | (((unsigned short)LBH << 3) & 0x80);
+  block_num = block_num + ( ((unsigned long)((LBL & 0x7f) | (((unsigned short)LBH << 4) & 0x80))) << 8);
+  block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 16);
+
+  return block_num;
+}
+
+static void smartport_read_block(unsigned char source) {
+  unsigned long int block_num;
+
+  partition = get_device_partition(source);
+  if (partition != -1) {  //yes it is, then do the read
+    block_num = smartport_get_block_num_from_buf();
+
+    if(devices[partition].sdf.isOpen()) {
+      if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
+        log_io_err(F("Seek"), partition, block_num);
+      }
+    }
+
+    //Read block from SD Card
+    if (!devices[partition].sdf.read((unsigned char*) packet_buffer, 512)) {
+      log_io_err(F("Read"), partition, block_num);
+    }
+    encode_data_packet(source);
+
+    status = SendPacket( (unsigned char*) packet_buffer);
+  }
+}
+
+static void smartport_write_block(unsigned char source) {
+  unsigned long int block_num;
+
+  partition = get_device_partition(source);
+  if (partition != -1) {  //yes it is, then do the write
+    block_num = smartport_get_block_num_from_buf();
+
+    //get write data packet
+    ReceivePacket( (unsigned char*) packet_buffer);
+    AckPacket();
+    status = decode_data_packet();
+    if (status == 0) {
+      if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
+        log_io_err(F("Seek"), partition, block_num);
+        goto err;
+      }
+      // Write block to SD Card
+      if (!devices[partition].sdf.write((unsigned char*) packet_buffer, 512)) {
+        log_io_err(F("Write"), partition, block_num);
+err:
+        status = 6;
+      }
+    }
+
+    //now return status code to host
+    encode_write_status_packet(source, status);
+    status = SendPacket( (unsigned char*) packet_buffer);
+  }
+}
+
+static void smartport_format(unsigned char source) {
+  partition = get_device_partition(source);
+  if (partition != -1) {  //yes it is, then do the read
+    encode_init_reply_packet(source, 0x80); //just send back a successful response
+    status = SendPacket( (unsigned char*) packet_buffer);
+  }
+}
+
+static void smartport_init(unsigned char source) {
+  LOG(F("SP INIT"));
+  devices[number_partitions_initialised].device_id = source; //remember source id for partition
+  number_partitions_initialised++;
+  // now we have time to init our partitions before acking
+  init_storage();
+
+  if (number_partitions_initialised < open_partitions) { //are all init'd yet
+    status = 0x80;
+  } else {
+    status = 0xff;
+    sp_init_done = 1; //Mark init done so we stop answering,
+    number_partitions_initialised = 0; // Reset variable for potential next INIT
+  }
+  encode_init_reply_packet(source, status);
+
+  LOGN("STATUS dev_id ", source, HEX);
+  LOGN("STATUS status ", status, HEX);
+  status = SendPacket( (unsigned char*) packet_buffer);
+}
+
+static void IgnorePacket(unsigned char command, unsigned char source) {
+  SET_ACK_IN;         //set ack to input, so lets not interfere
+  SET_ACK_LOW;        //preset ack low, for next time its an output
+  WAIT_ACK_LOW;
+
+  switch (command) {
+    case SP_STATUS:
+    case SP_FORMAT:
+    case SP_READ:
+      WAIT_ACK_HIGH;
+      WAIT_ACK_LOW;
+      WAIT_ACK_HIGH;
+      break;
+    case SP_WRITE:
+      WAIT_ACK_HIGH;
+      WAIT_ACK_LOW;
+      WAIT_ACK_HIGH;
+      WAIT_ACK_LOW;
+      WAIT_ACK_HIGH;
+      break;
+  }
+  interrupts();
+  LOGN(F("Ignored packet for device "), source, HEX);
 }
 
 //*****************************************************************************
@@ -229,287 +407,92 @@ static int get_device_partition(int device_id) {
 // Description: Main function for Apple //c Smartport Compact Flash adpater
 //*****************************************************************************
 void loop() {
-  unsigned long int block_num;
-  unsigned char LBH, LBL, LBN, LBT, LBX;
+  unsigned char source, command;
+  SP_State state;
 
-  int number_partitions_initialised = 0;
-  bool sdstato;
-  unsigned char source, status, phases, status_code;
-  unsigned char prev_phases = 0xFF;
+  // read phase lines to check for smartport reset or enable
+  state = sp_get_state();
 
-  // set RD and ACK input low - should already been done by packet handler
-  // but let's make sure as I don't know all the code well enough for now.
-  SET_RD_IN; SET_RD_LOW;
-  SET_ACK_IN; SET_ACK_LOW;
+  switch (state) {
+  case SP_BUS_RESET:
+    smartport_device_reset();
+    break;
 
-  interrupts();
+  case SP_ENABLED:
+    ReceivePacket( (unsigned char*) packet_buffer);
+    source = packet_buffer[6];
+    command = packet_buffer[14];
 
-  LOG("Ready");
-
-  while (1) {
-    // read phase lines to check for smartport reset or enable
-    phases = (RD_PORT_PHASES & PINS_PHASES) >> PIN_PH0;
-    switch (phases) {
-
-      // phase lines for smartport bus reset
-      // ph3=0 ph2=1 ph1=0 ph0=1
-      case 0b0101:
-        Serial.print(phases, BIN);
-        LOG(F("SP BUS RESET"));
-
-        // monitor phase lines for reset to clear
-        while ((RD_PORT_PHASES & PINS_PHASES) >> PIN_PH0 == 0b0101);
-
-        //reset number of partitions init'd
-        number_partitions_initialised = 0;
-
-        //clear device_id table
-        for (partition = 0; partition < MAX_PARTITIONS; partition++) {
-          devices[partition].device_id = 0;
-        }
-        break;
-
-      // phase lines for smartport bus enable
-      // ph3=1 ph2=x ph1=1 ph0=x
-      case 0b1010:
-      case 0b1011:
-      case 0b1110:
-      case 0b1111:
-        int ack_was_high = ACK_IS_HIGH;
-
-        noInterrupts();
-        status = ReceivePacket( (unsigned char*) packet_buffer);
-        interrupts();
-
-        Serial.print(ack_was_high);
-        Serial.print(" P: ");
-        for (int i = 0; i < 30; i++) {
-          Serial.print(packet_buffer[i], HEX);
-          Serial.print(' ');
-        }
-        Serial.println();
-
-        // // lets check if the pkt is for us
-        // if (packet_buffer[14] != 0x85)  // if its not an init pkt, then check if it's for us
-        // {
-        //   // check if its our one of our id's
-        //   // LOGN(F("ENABLE device "), packet_buffer[6], HEX);
-        // 
-        //   if (get_device_partition(packet_buffer[6]) == -1) { //not one of our id's
-        //     delay(100);
-        //     Serial.println(F("Not our ID!"));
-        // 
-        //     SET_ACK_IN;         //set ack to input, so lets not interfere
-        //     SET_ACK_LOW;        //preset ack low, for next time its an output
-        // 
-        //     WAIT_ACK_LOW;
-        // 
-        //     //assume its a cmd packet, cmd code is in byte 14
-        //     //now we need to work out what type of packet and stay out of the way
-        //     switch (packet_buffer[14]) {
-        //       case 0x80:  //is a status cmd
-        //       case 0x83:  //is a format cmd
-        //       case 0x81:  //is a readblock cmd
-        //         WAIT_ACK_HIGH;
-        //         WAIT_ACK_LOW;
-        //         WAIT_ACK_HIGH;
-        //         break;
-        //       case 0x82:  //is a writeblock cmd
-        //         WAIT_ACK_HIGH;
-        //         WAIT_ACK_LOW;
-        //         WAIT_ACK_HIGH;
-        //         WAIT_ACK_LOW;
-        //         WAIT_ACK_HIGH;
-        //         break;
-        //     }
-        //     break;  //not one of ours
-        //   }
-        // }
-
-        //Not safe to assume it's a normal command packet, GSOS may throw
-        //us several extended packets here and then crash
-        //Refuse an extended packet
-        source = packet_buffer[6];
-
-        //Check if its one of ours and an extended packet
-        switch (packet_buffer[14]) {
-
-          case 0x80:  //is a status cmd
-            Serial.println(F("SP STATUS"));
-            digitalWrite(PIN_LED, HIGH);
-
-            partition = get_device_partition(source);
-            if (partition != -1 && devices[partition].sdf.isOpen()) {
-              status_code = (packet_buffer[19] & 0x7f);
-
-              // if statcode=3, then status with device info block
-              if (status_code == 0x03) {
-                Serial.println(F("Sending DIB"));
-                encode_status_dib_reply_packet(devices[partition]);
-                delay(50);
-              } else {
-                // just return device status
-                encode_status_reply_packet(devices[partition]);
-              }
-              noInterrupts();
-              status = SendPacket( (unsigned char*) packet_buffer);
-
-              interrupts();
-              digitalWrite(PIN_LED, LOW);
-            }
-            break;
-
-
-          case 0xC2:
-            Serial.println(F("Extended write - Not implemented!"));
-            break;
-          case 0xC3:
-            Serial.println(F("Extended format - Not implemented!"));
-            break;
-          case 0xC5:
-            Serial.println(F("Extended init - Not implemented!"));
-            break;
-
-          case 0xC0:  //Extended status cmd
-            digitalWrite(PIN_LED, HIGH);
-
-            partition = get_device_partition(source);
-            if (partition != -1) {
-              //yes it is, then reply
-
-              status_code = (packet_buffer[21] & 0x7f);
-              LOGN(F("Extended Status CMD:"), status_code, HEX);
-              print_packet ((unsigned char*) packet_buffer,packet_length());
-              if (status_code == 0x03) { // if statcode=3, then status with device info block
-                Serial.println(F("Extended status DIB - Not implemented!"));
-              } else {
-                // just return device status
-                encode_extended_status_reply_packet(devices[partition]);
-              }
-              noInterrupts();
-              status = SendPacket( (unsigned char*) packet_buffer);
-              interrupts();
-
-            }
-            digitalWrite(PIN_LED, LOW);
-            break;
-
-          case 0xC1:  // extended readblock cmd
-          case 0x81:  // readblock cmd
-            LBH = packet_buffer[16]; //high order bits
-            LBN = packet_buffer[19]; //block number low
-            LBL = packet_buffer[20]; //block number middle
-            LBT = packet_buffer[21]; //block number high
-
-            partition = get_device_partition(source);
-            if (partition != -1) {  //yes it is, then do the read
-              // block num 1st byte
-              block_num = (LBN & 0x7f) | (((unsigned short)LBH << 3) & 0x80);
-              // block num second byte
-              block_num = block_num + ( ((unsigned long)((LBL & 0x7f) | (((unsigned short)LBH << 4) & 0x80))) << 8);
-              // block num third byte
-              block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 16);
-
-              digitalWrite(PIN_LED, HIGH);
-
-              if(devices[partition].sdf.isOpen()) {
-                if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
-                  log_io_err(F("Seek"), partition, block_num);
-                }
-              }
-
-              //Reading block from SD Card
-              sdstato = devices[partition].sdf.read((unsigned char*) packet_buffer, 512);
-              if (!sdstato) {
-                log_io_err(F("Read"), partition, block_num);
-              }
-              encode_data_packet(source);
-
-              noInterrupts();
-              status = SendPacket( (unsigned char*) packet_buffer);
-              interrupts();
-              digitalWrite(PIN_LED, LOW);
-            }
-            break;
-
-          case 0x82:  //is a writeblock cmd
-            LBH = packet_buffer[16]; //high order bits
-            LBN = packet_buffer[19]; //block number low
-            LBL = packet_buffer[20]; //block number middle
-            LBT = packet_buffer[21]; //block number high
-
-            partition = get_device_partition(source);
-            if (partition != -1) {  //yes it is, then do the read
-              // block num 1st byte
-              block_num = (LBN & 0x7f) | (((unsigned short)LBH << 3) & 0x80);
-              // block num second byte
-              block_num = block_num + ( ((unsigned long)((LBL & 0x7f) | (((unsigned short)LBH << 4) & 0x80))) << 8);
-              // block num third byte
-              block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 16);
-
-              //get write data packet
-              noInterrupts();
-              ReceivePacket( (unsigned char*) packet_buffer);
-              interrupts();
-
-              status = decode_data_packet();
-              if (status == 0) {
-                // ok
-                digitalWrite(PIN_LED, HIGH);
-
-                if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)){
-                  log_io_err(F("Seek"), partition, block_num);
-                }
-                // Write block to SD Card
-                sdstato = devices[partition].sdf.write((unsigned char*) packet_buffer, 512);
-                if (!sdstato) {
-                  log_io_err(F("Write"), partition, block_num);
-                  status = 6;
-                }
-              }
-              //now return status code to host
-              encode_write_status_packet(source, status);
-              noInterrupts();
-              status = SendPacket( (unsigned char*) packet_buffer);
-              interrupts();
-            }
-            digitalWrite(PIN_LED, LOW);
-            break;
-
-          case 0x83:  //is a format cmd
-            partition = get_device_partition(source);
-            if (partition != -1) {  //yes it is, then do the read
-              encode_init_reply_packet(source, 0x80); //just send back a successful response
-              noInterrupts();
-              status = SendPacket( (unsigned char*) packet_buffer);
-              interrupts();
-            }
-            break;
-
-          case 0x85:  //is an init cmd
-            devices[number_partitions_initialised].device_id = source; //remember source id for partition
-            number_partitions_initialised++;
-
-            // now we have time to init our partitions before acking
-            init_storage();
-
-            if (number_partitions_initialised < open_partitions) { //are all init'd yet
-              status = 0x80;         //no, so status=0
-            } else { // the last one
-              status = 0xff;         //yes, so status=non zero
-            }
-            encode_init_reply_packet(source, status);
-
-            LOGN("STATUS dev_id ", source, HEX);
-            LOGN("STATUS status ", status, HEX);
-            noInterrupts();
-            status = SendPacket( (unsigned char*) packet_buffer);
-            interrupts();
-            break;
-        }
-        break;
+    if (command == SP_INIT && !sp_init_done) {
+      AckPacket();
+    } else if (get_device_partition(source) != -1) {
+      AckPacket();
+    } else {
+      IgnorePacket(command, source);
+      break;
     }
+
+    Serial.print(" P: ");
+    for (int i = 0; i < 30; i++) {
+      Serial.print(packet_buffer[i], HEX);
+      Serial.print(' ');
+    }
+    Serial.println();
+
+    digitalWrite(PIN_LED, HIGH);
+
+    switch (command) {
+    case SP_INIT:
+      smartport_init(source);
+      break;
+
+    case SP_STATUS:
+      smartport_answer_status(source, 0);
+      break;
+
+    case SP_EXT_STATUS:
+      smartport_answer_status(source, 1);
+      break;
+
+    case SP_EXT_READ:
+    case SP_READ:
+      smartport_read_block(source);
+      break;
+
+    case SP_WRITE:
+      smartport_write_block(source);
+      break;
+
+    case SP_FORMAT:
+      smartport_format(source);
+      break;
+
+    case SP_EXT_WRITE:
+    case SP_EXT_FORMAT:
+    case SP_EXT_INIT:
+    default:
+      LOGN(F("Command not implemented: "), packet_buffer[14], HEX);
+      break;
+    }
+    digitalWrite(PIN_LED, LOW);
+    break;
+
+  case SP_DISABLED:
+    break;
   }
+}
+
+static void init_packet_buffer(unsigned char source) {
+  packet_buffer[0] = 0xff;  //sync bytes
+  packet_buffer[1] = 0x3f;
+  packet_buffer[2] = 0xcf;
+  packet_buffer[3] = 0xf3;
+  packet_buffer[4] = 0xfc;
+  packet_buffer[5] = 0xff;
+  packet_buffer[6] = 0xc3;  //PBEGIN - start byte
+  packet_buffer[7] = 0x80;  //DEST - dest id - host
+  packet_buffer[8] = source; //SRC - source id - us
+
 }
 
 //*****************************************************************************
@@ -556,16 +539,7 @@ void encode_data_packet (unsigned char source)
   packet_buffer[14] = ((packet_buffer[0] >> 1) & 0x40) | 0x80;
   packet_buffer[15] = packet_buffer[0] | 0x80;
 
-  packet_buffer[0] = 0xff;  //sync bytes
-  packet_buffer[1] = 0x3f;
-  packet_buffer[2] = 0xcf;
-  packet_buffer[3] = 0xf3;
-  packet_buffer[4] = 0xfc;
-  packet_buffer[5] = 0xff;
-
-  packet_buffer[6] = 0xc3;  //PBEGIN - start byte
-  packet_buffer[7] = 0x80;  //DEST - dest id - host
-  packet_buffer[8] = source; //SRC - source id - us
+  init_packet_buffer(source);
   packet_buffer[9] = 0x82;  //TYPE - 0x82 = data
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0x80; //STAT
@@ -632,16 +606,7 @@ void encode_extended_data_packet (unsigned char source)
   packet_buffer[14] = ((packet_buffer[0] >> 1) & 0x40) | 0x80;
   packet_buffer[15] = packet_buffer[0] | 0x80;
 
-  packet_buffer[0] = 0xff;  //sync bytes
-  packet_buffer[1] = 0x3f;
-  packet_buffer[2] = 0xcf;
-  packet_buffer[3] = 0xf3;
-  packet_buffer[4] = 0xfc;
-  packet_buffer[5] = 0xff;
-
-  packet_buffer[6] = 0xc3;  //PBEGIN - start byte
-  packet_buffer[7] = 0x80;  //DEST - dest id - host
-  packet_buffer[8] = source; //SRC - source id - us
+  init_packet_buffer(source);
   packet_buffer[9] = 0xC2;  //TYPE - 0xC2 = extended data
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0x80; //STAT
@@ -728,16 +693,7 @@ void encode_write_status_packet(unsigned char source, unsigned char status)
 {
   unsigned char checksum = 0;
 
-  packet_buffer[0] = 0xff;  //sync bytes
-  packet_buffer[1] = 0x3f;
-  packet_buffer[2] = 0xcf;
-  packet_buffer[3] = 0xf3;
-  packet_buffer[4] = 0xfc;
-  packet_buffer[5] = 0xff;
-
-  packet_buffer[6] = 0xc3;  //PBEGIN - start byte
-  packet_buffer[7] = 0x80;  //DEST - dest id - host
-  packet_buffer[8] = source; //SRC - source id - us
+  init_packet_buffer(source);
   packet_buffer[9] = 0x81;  //TYPE
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = status | 0x80; //STAT
@@ -772,16 +728,7 @@ void encode_init_reply_packet (unsigned char source, unsigned char status)
 {
   unsigned char checksum = 0;
 
-  packet_buffer[0] = 0xff;  //sync bytes
-  packet_buffer[1] = 0x3f;
-  packet_buffer[2] = 0xcf;
-  packet_buffer[3] = 0xf3;
-  packet_buffer[4] = 0xfc;
-  packet_buffer[5] = 0xff;
-
-  packet_buffer[6] = 0xc3;  //PBEGIN - start byte
-  packet_buffer[7] = 0x80;  //DEST - dest id - host
-  packet_buffer[8] = source; //SRC - source id - us
+  init_packet_buffer(source);
   packet_buffer[9] = 0x80;  //TYPE
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = status; //STAT - data status
@@ -834,16 +781,7 @@ void encode_status_reply_packet (device d)
   data[2] = (d.blocks >> 8 ) & 0xff;
   data[3] = (d.blocks >> 16 ) & 0xff;
 
-  packet_buffer[0] = 0xff;  //sync bytes
-  packet_buffer[1] = 0x3f;
-  packet_buffer[2] = 0xcf;
-  packet_buffer[3] = 0xf3;
-  packet_buffer[4] = 0xfc;
-  packet_buffer[5] = 0xff;
-
-  packet_buffer[6] = 0xc3;  //PBEGIN - start byte
-  packet_buffer[7] = 0x80;  //DEST - dest id - host
-  packet_buffer[8] = d.device_id; //SRC - source id - us
+  init_packet_buffer(d.device_id);
   packet_buffer[9] = 0x81;  //TYPE -status
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0x80; //STAT - data status
@@ -908,16 +846,7 @@ void encode_extended_status_reply_packet (device d)
   data[3] = (d.blocks >> 16 ) & 0xff;
   data[4] = (d.blocks >> 24 ) & 0xff;
 
-  packet_buffer[0] = 0xff;  //sync bytes
-  packet_buffer[1] = 0x3f;
-  packet_buffer[2] = 0xcf;
-  packet_buffer[3] = 0xf3;
-  packet_buffer[4] = 0xfc;
-  packet_buffer[5] = 0xff;
-
-  packet_buffer[6] = 0xc3;  //PBEGIN - start byte
-  packet_buffer[7] = 0x80;  //DEST - dest id - host
-  packet_buffer[8] = d.device_id; //SRC - source id - us
+  init_packet_buffer(d.device_id);
   packet_buffer[9] = 0xC1;  //TYPE - extended status
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0x80; //STAT - data status
@@ -951,16 +880,7 @@ void encode_error_reply_packet (unsigned char source)
 {
   unsigned char checksum = 0;
 
-  packet_buffer[0] = 0xff;  //sync bytes
-  packet_buffer[1] = 0x3f;
-  packet_buffer[2] = 0xcf;
-  packet_buffer[3] = 0xf3;
-  packet_buffer[4] = 0xfc;
-  packet_buffer[5] = 0xff;
-
-  packet_buffer[6] = 0xc3;  //PBEGIN - start byte
-  packet_buffer[7] = 0x80;  //DEST - dest id - host
-  packet_buffer[8] = source; //SRC - source id - us
+  init_packet_buffer(source);
   packet_buffer[9] = 0x80;  //TYPE -status
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0xA1; //STAT - data status - error
@@ -1065,15 +985,7 @@ void encode_status_dib_reply_packet (device d)
   packet_buffer[17] = data[2] | 0x80;
   packet_buffer[18] = data[3] | 0x80;;
 
-  packet_buffer[0] = 0xff;  //sync bytes
-  packet_buffer[1] = 0x3f;
-  packet_buffer[2] = 0xcf;
-  packet_buffer[3] = 0xf3;
-  packet_buffer[4] = 0xfc;
-  packet_buffer[5] = 0xff;
-  packet_buffer[6] = 0xc3;  //PBEGIN - start byte
-  packet_buffer[7] = 0x80;  //DEST - dest id - host
-  packet_buffer[8] = d.device_id; //SRC - source id - us
+  init_packet_buffer(d.device_id);
   packet_buffer[9] = 0x81;  //TYPE -status
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0x80; //STAT - data status
@@ -1107,16 +1019,7 @@ void encode_extended_status_dib_reply_packet (device d)
 {
   unsigned char checksum = 0;
 
-  packet_buffer[0] = 0xff;  //sync bytes
-  packet_buffer[1] = 0x3f;
-  packet_buffer[2] = 0xcf;
-  packet_buffer[3] = 0xf3;
-  packet_buffer[4] = 0xfc;
-  packet_buffer[5] = 0xff;
-
-  packet_buffer[6] = 0xc3;  //PBEGIN - start byte
-  packet_buffer[7] = 0x80;  //DEST - dest id - host
-  packet_buffer[8] = d.device_id; //SRC - source id - us
+  init_packet_buffer(d.device_id);
   packet_buffer[9] = 0x81;  //TYPE -status
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0x83; //STAT - data status
@@ -1279,7 +1182,7 @@ bool open_image( device &d, String filename ){
   }
 
   if (d.sdf.size() == 0) {
-    Serial.println(F("\r\nFile is empty"));
+    Serial.println(F(": File is empty"));
     return false;
   }
 

@@ -10,6 +10,10 @@
 #define WR_PORT_PHASES  PORTD
 #define RD_PORT_PHASES  PIND
 
+#define PHASES_BUS_RESET   ((RD_PORT_PHASES & PINS_PHASES) == (_BV(PIN_PH0)|_BV(PIN_PH2)))
+#define PHASES_BUS_ENABLE  ((RD_PORT_PHASES & (_BV(PIN_PH1)|_BV(PIN_PH3))) == (_BV(PIN_PH1)|_BV(PIN_PH3)))
+#define PHASES_BUS_DISABLE (!(PHASES_BUS_ENABLE))
+
 #define WR_PORT_RD      PORTD   // Define the PORT to RD                 - D0 to D7
 #define RD_PORT_RD      PIND
 #define DIR_PORT_RD     DDRD

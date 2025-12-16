@@ -19,18 +19,20 @@
 // Returns: status (not used yet, always returns 0)
 //
 // Description: This handles the ACK and REQ lines and reads a packet into the 
-// packet_buffer
+// packet_buffer. Warning: returns with interrupts off, must be followed by either
+// AckPacket or IgnorePacket.
 // 
 //*****************************************************************************
 .global ReceivePacket
 
 ReceivePacket:
+          cli
           mov  XL,r24                 ;mov buffer pointer into X 
           mov  XH,r25
 
           sbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK  ; Set ACK output
           sbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK   ; Set ACK high
-          
+
 1:        sbic _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ   ;1/2 wait for req line to go high
           rjmp start                               ;this indicates host is about to send packet   
           rjmp 1b                                  ;Keep waiting
@@ -124,21 +126,20 @@ havesbit:                                                            ;    wait f
 
 endpkt:   clr  r23     
           st   x+,r23                                                ;save zero byte in buffer to mark end
-          
+
+          clr  r25                                                   ;return no error (for now)
+          clr  r24
+          ret
+
+.global AckPacket
+AckPacket:
           cbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK                     ;set ACK(BSY) low to signal we have recv'd the pkt
-
-          ;ldi  r24,'a'                                              ;for debug, a indicates ACK is low
-          ;call uart_putc                                            ;output to serial port
-
 1:        sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;wait for REQ line to go low
           rjmp finish                                                ;this indicates host has acknowledged ACK   
           rjmp 1b
        
-finish:   ;ldi  r24,'r'                                              ;for debug, r indicates REQ is low
-          ;call uart_putc                                            ;output to serial port
-          clr  r25                                                   ;return no error (for now)
-          clr  r24
-          cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; Set ACK input
+finish:   cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; Set ACK input
+          sei
           ret
 
 //*****************************************************************************
@@ -153,6 +154,7 @@ finish:   ;ldi  r24,'r'                                              ;for debug,
 .global SendPacket
  
 SendPacket:
+          cli
           mov  XL,r24                                                ;mov buffer pointer into X 
           mov  XH,r25
 
@@ -251,12 +253,14 @@ finishs:  ;ldi  r24,'r'                                              ;for debug,
           clr  r24                                                   ;return no error
           cbi  _SFR_IO_ADDR(DIR_PORT_RD),PIN_RD                      ; Set RD as input
           cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; And ACK
+          sei
           ret
 
 error:    clr  r25
           ldi  r24,1
           cbi  _SFR_IO_ADDR(DIR_PORT_RD),PIN_RD                      ; Set RD as input
           cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; And ACK
+          sei
           ret
 
 
