@@ -4,8 +4,8 @@
 typedef enum _SP_State {
   SP_BOOTING,
   SP_BUS_RESET,
-  SP_ENABLED,
-  SP_DISABLED
+  SP_BUS_ENABLED,
+  SP_BUS_DISABLED
 } SP_State;
 
 typedef enum _SP_Command {

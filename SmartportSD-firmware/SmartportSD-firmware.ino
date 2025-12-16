@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <avr/pgmspace.h>
 #include "sp_pins.h"
+#include "sp_low.h"
 #include "sp_vals.h"
 
 #define PIN_CHIP_SELECT 10      // D10
@@ -61,10 +62,6 @@ void encode_status_reply_packet (struct device d);
 int  packet_length (void);
 int partition;
 bool is_valid_image(File imageFile);
-
-extern "C" unsigned char ReceivePacket(unsigned char*); //Receive smartport packet assembler function
-extern "C" unsigned char AckPacket(void);
-extern "C" unsigned char SendPacket(unsigned char*);    //send smartport packet assembler function
 
 //unsigned char packet_buffer[768];   //smartport packet buffer
 //unsigned char packet_buffer[605];   //smartport packet buffer
@@ -121,7 +118,7 @@ static void log_io_err(const __FlashStringHelper *op, int partition, int block_n
 }
 
 static int storage_init_done = 0;
-static int sp_init_done = 0;
+static int device_init_done = 0;
 
 static void init_storage(void) {
   if (storage_init_done) {
@@ -203,8 +200,9 @@ void setup (void) {
   packet_buffer = (unsigned char *)malloc(605);
 
   SET_WR_HIGH; SET_WR_IN;
-  SET_RD_IN; SET_RD_LOW;
-  SET_ACK_IN; SET_ACK_LOW;
+
+  SP_RD_OFF();
+  SP_ACK_OFF();
 
   LOG("Ready");
 
@@ -220,38 +218,41 @@ static int get_device_partition(int device_id) {
   return -1;
 }
 
-static inline SP_State sp_get_state(void) {
+static inline SP_State smartport_get_state(void) {
   if (PHASES_BUS_RESET) {
     return SP_BUS_RESET;
   }
   if (PHASES_BUS_ENABLE) {
-    return SP_ENABLED;
+    return SP_BUS_ENABLED;
   }
-  return SP_DISABLED;
+  return SP_BUS_DISABLED;
 }
 
 int number_partitions_initialised = 0;
 static void smartport_device_reset(void) {
   LOG(F("SP BUS RESET"));
 
-  // monitor phase lines for reset to clear
-  while(sp_get_state() == SP_BUS_RESET);
-
   //reset number of partitions init'd
   number_partitions_initialised = 0;
-  sp_init_done = 0;
+  device_init_done = 0;
 
   //clear device_id table
   for (partition = 0; partition < MAX_PARTITIONS; partition++) {
     devices[partition].device_id = 0;
   }
+
+  SP_RD_OFF();
+  SP_ACK_OFF();
+
+  // Ready. Wait for reset to clear
+  while(smartport_get_state() == SP_BUS_RESET);
 }
 
-static void smartport_answer_status(unsigned char source, unsigned char extended) {
+static void smartport_answer_status(unsigned char dev_id, unsigned char extended) {
   unsigned char status_code;
   LOG(F("SP STATUS"));
 
-  partition = get_device_partition(source);
+  partition = get_device_partition(dev_id);
   if (partition != -1 && devices[partition].sdf.isOpen()) {
     status_code = (packet_buffer[extended ? 21 : 19] & 0x7f);
 
@@ -292,10 +293,10 @@ static unsigned long int smartport_get_block_num_from_buf(void) {
   return block_num;
 }
 
-static void smartport_read_block(unsigned char source) {
+static void smartport_read_block(unsigned char dev_id) {
   unsigned long int block_num;
 
-  partition = get_device_partition(source);
+  partition = get_device_partition(dev_id);
   if (partition != -1) {  //yes it is, then do the read
     block_num = smartport_get_block_num_from_buf();
 
@@ -309,16 +310,16 @@ static void smartport_read_block(unsigned char source) {
     if (!devices[partition].sdf.read((unsigned char*) packet_buffer, 512)) {
       log_io_err(F("Read"), partition, block_num);
     }
-    encode_data_packet(source);
+    encode_data_packet(dev_id);
 
     status = SendPacket( (unsigned char*) packet_buffer);
   }
 }
 
-static void smartport_write_block(unsigned char source) {
+static void smartport_write_block(unsigned char dev_id) {
   unsigned long int block_num;
 
-  partition = get_device_partition(source);
+  partition = get_device_partition(dev_id);
   if (partition != -1) {  //yes it is, then do the write
     block_num = smartport_get_block_num_from_buf();
 
@@ -340,23 +341,24 @@ err:
     }
 
     //now return status code to host
-    encode_write_status_packet(source, status);
+    encode_write_status_packet(dev_id, status);
     status = SendPacket( (unsigned char*) packet_buffer);
   }
 }
 
-static void smartport_format(unsigned char source) {
-  partition = get_device_partition(source);
+static void smartport_format(unsigned char dev_id) {
+  partition = get_device_partition(dev_id);
   if (partition != -1) {  //yes it is, then do the read
-    encode_init_reply_packet(source, 0x80); //just send back a successful response
+    encode_init_reply_packet(dev_id, 0x80); //just send back a successful response
     status = SendPacket( (unsigned char*) packet_buffer);
   }
 }
 
-static void smartport_init(unsigned char source) {
+static void smartport_init(unsigned char dev_id) {
   LOG(F("SP INIT"));
-  devices[number_partitions_initialised].device_id = source; //remember source id for partition
+  devices[number_partitions_initialised].device_id = dev_id; //remember device id for partition
   number_partitions_initialised++;
+
   // now we have time to init our partitions before acking
   init_storage();
 
@@ -364,21 +366,20 @@ static void smartport_init(unsigned char source) {
     status = 0x80;
   } else {
     status = 0xff;
-    sp_init_done = 1; //Mark init done so we stop answering,
+    device_init_done = 1; //Mark init done so we stop answering,
     number_partitions_initialised = 0; // Reset variable for potential next INIT
   }
-  encode_init_reply_packet(source, status);
+  encode_init_reply_packet(dev_id, status);
 
-  LOGN("STATUS dev_id ", source, HEX);
-  LOGN("STATUS status ", status, HEX);
+  LOGN("Init device id: ", dev_id, HEX);
+  LOGN("More devices: ", status == 0x80, HEX);
   status = SendPacket( (unsigned char*) packet_buffer);
 }
 
-static void IgnorePacket(unsigned char command, unsigned char source) {
-  SET_ACK_IN;         //set ack to input, so lets not interfere
-  SET_ACK_LOW;        //preset ack low, for next time its an output
+static void IgnorePacket(unsigned char command, unsigned char dev_id) {
+  /* Monitor ACK to know when the packet is handled */
   WAIT_ACK_LOW;
-
+  
   switch (command) {
     case SP_STATUS:
     case SP_FORMAT:
@@ -396,7 +397,22 @@ static void IgnorePacket(unsigned char command, unsigned char source) {
       break;
   }
   interrupts();
-  LOGN(F("Ignored packet for device "), source, HEX);
+  LOGN(F("Ignored packet for device "), dev_id, HEX);
+}
+
+static void DumpPacket(void) {
+  Serial.print(F("Packet from: "));
+  Serial.print(packet_buffer[7], HEX);
+  Serial.print(F(", To: "));
+  Serial.print(packet_buffer[6], HEX);
+  Serial.print(F(", Command: "));
+  Serial.print(packet_buffer[14], HEX);
+  Serial.println();
+  for (int i = 0; i < 30; i++) {
+    Serial.print(' ');
+    Serial.print(packet_buffer[i], HEX);
+  }
+  Serial.println();
 }
 
 //*****************************************************************************
@@ -407,64 +423,62 @@ static void IgnorePacket(unsigned char command, unsigned char source) {
 // Description: Main function for Apple //c Smartport Compact Flash adpater
 //*****************************************************************************
 void loop() {
-  unsigned char source, command;
-  SP_State state;
+  unsigned char dev_id, command;
+  SP_State smartport_state;
 
   // read phase lines to check for smartport reset or enable
-  state = sp_get_state();
+  smartport_state = smartport_get_state();
 
-  switch (state) {
+  switch (smartport_state) {
   case SP_BUS_RESET:
+    //Set daisy PH3 low here, and
     smartport_device_reset();
     break;
 
-  case SP_ENABLED:
+  case SP_BUS_ENABLED:
     ReceivePacket( (unsigned char*) packet_buffer);
-    source = packet_buffer[6];
+    dev_id = packet_buffer[6];
+    //source_id = packet_buffer[7];
     command = packet_buffer[14];
 
-    if (command == SP_INIT && !sp_init_done) {
+    if (command == SP_INIT && !device_init_done) {
       AckPacket();
-    } else if (get_device_partition(source) != -1) {
+    } else if (get_device_partition(dev_id) != -1) {
       AckPacket();
     } else {
-      IgnorePacket(command, source);
+      //if (command == SP_INIT && device_init_done) back to mirroring PH3
+      IgnorePacket(command, dev_id);
       break;
     }
 
-    Serial.print(" P: ");
-    for (int i = 0; i < 30; i++) {
-      Serial.print(packet_buffer[i], HEX);
-      Serial.print(' ');
-    }
-    Serial.println();
+    DumpPacket();
 
     digitalWrite(PIN_LED, HIGH);
 
     switch (command) {
     case SP_INIT:
-      smartport_init(source);
+      smartport_init(dev_id);
       break;
 
     case SP_STATUS:
-      smartport_answer_status(source, 0);
+      smartport_answer_status(dev_id, 0);
       break;
 
     case SP_EXT_STATUS:
-      smartport_answer_status(source, 1);
+      smartport_answer_status(dev_id, 1);
       break;
 
     case SP_EXT_READ:
     case SP_READ:
-      smartport_read_block(source);
+      smartport_read_block(dev_id);
       break;
 
     case SP_WRITE:
-      smartport_write_block(source);
+      smartport_write_block(dev_id);
       break;
 
     case SP_FORMAT:
-      smartport_format(source);
+      smartport_format(dev_id);
       break;
 
     case SP_EXT_WRITE:
@@ -477,7 +491,7 @@ void loop() {
     digitalWrite(PIN_LED, LOW);
     break;
 
-  case SP_DISABLED:
+  case SP_BUS_DISABLED:
     break;
   }
 }
@@ -492,7 +506,6 @@ static void init_packet_buffer(unsigned char source) {
   packet_buffer[6] = 0xc3;  //PBEGIN - start byte
   packet_buffer[7] = 0x80;  //DEST - dest id - host
   packet_buffer[8] = source; //SRC - source id - us
-
 }
 
 //*****************************************************************************

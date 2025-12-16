@@ -12,7 +12,24 @@
 #include <avr/io.h>
 #include "sp_pins.h"
 
- 
+.global SP_ACK_ON
+SP_ACK_ON:
+          cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; Set ACK input
+          cbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK                     ; Set ACK low
+          ret
+
+.global SP_ACK_OFF
+SP_ACK_OFF:
+          cbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK                     ; ACK low
+          sbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; ACK output
+          ret
+
+.global SP_RD_OFF
+SP_RD_OFF:
+          cbi  _SFR_IO_ADDR(DIR_PORT_RD),PIN_RD                      ; Set RD as input
+          cbi  _SFR_IO_ADDR(WR_PORT_RD),PIN_RD                       ; Set RD low
+          ret
+
 //*****************************************************************************
 // Function: ReceivePacket
 // Parameters: packet_buffer pointer
@@ -30,8 +47,7 @@ ReceivePacket:
           mov  XL,r24                 ;mov buffer pointer into X 
           mov  XH,r25
 
-          sbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK  ; Set ACK output
-          sbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK   ; Set ACK high
+          rcall SP_ACK_ON
 
 1:        sbic _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ   ;1/2 wait for req line to go high
           rjmp start                               ;this indicates host is about to send packet   
@@ -133,13 +149,12 @@ endpkt:   clr  r23
 
 .global AckPacket
 AckPacket:
-          cbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK                     ;set ACK(BSY) low to signal we have recv'd the pkt
+          rcall SP_ACK_OFF
 1:        sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;wait for REQ line to go low
           rjmp finish                                                ;this indicates host has acknowledged ACK   
           rjmp 1b
        
-finish:   cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; Set ACK input
-          sei
+finish:   sei
           ret
 
 //*****************************************************************************
@@ -160,8 +175,7 @@ SendPacket:
 
           sbi  _SFR_IO_ADDR(DIR_PORT_RD),PIN_RD                      ; Set RD as output
 
-          sbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK
-          sbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK                     ;set ACK high to signal we are ready to send
+          rcall SP_ACK_ON
 
 1:        sbic _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;wait for req line to go high
           rjmp contin                                                ;this indicates host is ready to receive packet   
@@ -238,7 +252,8 @@ nxtsbycl:                                                           ;    delay t
           rjmp nxtsbyte                                             ;57                           ;2
 
 
-endspkt:  cbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK                    ;set ACK(BSY) low to signal we have sent the pkt
+endspkt:  rcall SP_ACK_OFF
+          rcall SP_RD_OFF
 
 1:        ldi  r24,5
           sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                    ;wait for REQ line to go low
@@ -251,15 +266,11 @@ finishs:  ;ldi  r24,'r'                                              ;for debug,
           ;call uart_putc                                            ;output to serial port
           clr  r25
           clr  r24                                                   ;return no error
-          cbi  _SFR_IO_ADDR(DIR_PORT_RD),PIN_RD                      ; Set RD as input
-          cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; And ACK
           sei
           ret
 
 error:    clr  r25
           ldi  r24,1
-          cbi  _SFR_IO_ADDR(DIR_PORT_RD),PIN_RD                      ; Set RD as input
-          cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; And ACK
           sei
           ret
 
