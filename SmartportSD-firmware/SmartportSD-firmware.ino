@@ -188,9 +188,8 @@ static void init_storage(void) {
 }
 
 void setup (void) {
-  digitalWrite(PIN_LED, HIGH);
-
   // LED
+  digitalWrite(PIN_LED, HIGH);
   pinMode(PIN_LED, OUTPUT);
 
   // Serial init
@@ -279,7 +278,7 @@ static void smartport_answer_status(unsigned char dev_id, unsigned char extended
 
 static unsigned long int smartport_get_block_num_from_buf(void) {
   unsigned long int block_num;
-  unsigned char LBH, LBL, LBN, LBT, LBX;
+  unsigned char LBH, LBL, LBN, LBT;
 
   LBH = packet_buffer[16]; //high order bits
   LBN = packet_buffer[19]; //block number low
@@ -491,6 +490,7 @@ void loop() {
     digitalWrite(PIN_LED, LOW);
     break;
 
+  case SP_BOOTING:
   case SP_BUS_DISABLED:
     break;
   }
@@ -1150,7 +1150,6 @@ int packet_length (void)
 
 void led_err(void)
 {
-  int i = 0;
   interrupts();
   Serial.println(F("Require reboot"));
 
