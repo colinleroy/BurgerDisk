@@ -27,13 +27,14 @@
 
 //x #include <SPI.h>
 #include "SdFat.h" // SDFat version 2.1.2
-#include <avr/io.h>
 #include <string.h>
 #include <stdio.h>
 #include <avr/pgmspace.h>
 #include "sp_pins.h"
 #include "sp_low.h"
 #include "sp_vals.h"
+#include "log.h"
+#include "daisy.h"
 
 #define PIN_CHIP_SELECT 10      // D10
 #define PIN_LED         18      // A4
@@ -41,18 +42,7 @@
 #define MAX_PARTITIONS 4
 int open_partitions = 0;
 
-#define LOG(str) do {         \
-  Serial.print(micros());     \
-  Serial.print(F("µs - "));   \
-  Serial.println(str);        \
-} while(0)
-
-#define LOGN(str, num, enc) do {  \
-  Serial.print(micros());         \
-  Serial.print(F("µs - "));       \
-  Serial.print(str);              \
-  Serial.println(num, enc);       \
-} while(0)
+int debug = 0;
 
 void encode_data_packet (unsigned char source);   //encode smartport 512 byte data packet
 int  decode_data_packet (void);                   //decode smartport 512 byte data packet
@@ -69,6 +59,27 @@ unsigned char *packet_buffer;         //Wing
 //unsigned char sector_buffer[512];   //ata sector data buffer
 unsigned char status, packet_byte;
 int count;
+
+static void TIMESTAMP(void) {
+  Serial.print(micros());
+  Serial.print(F("µs - "));
+}
+
+void LOG(const __FlashStringHelper *str) {
+  TIMESTAMP();
+  Serial.println(str);
+}
+
+void LOG(const char *str) {
+  TIMESTAMP();
+  Serial.println(str);
+}
+
+void LOGN(const __FlashStringHelper *str, int num, int base) {
+  TIMESTAMP();
+  Serial.print(str);
+  Serial.println(num, base);
+}
 
 // We need to remember several things about a device, not just its ID
 struct device{
@@ -124,7 +135,7 @@ static void init_storage(void) {
   if (storage_init_done) {
     return;
   }
-  LOGN(F("Free memory before opening images: "), freeMemory(), DEC);
+  DEBUGN(F("Free memory before opening images: "), freeMemory(), DEC);
 
   // Not enough RAM for SDFat to open a file if the packet_buffer
   // is allocated.
@@ -143,7 +154,7 @@ static void init_storage(void) {
     packet_buffer = (unsigned char *)malloc(100);
     for(unsigned char i = 0; i < MAX_PARTITIONS; i++) {
       n = myFile.fgets((char*)packet_buffer, 100);
-      if(n > 0) {
+      if(n > 1) {
         if (packet_buffer[n - 1] == '\n') {
           packet_buffer[n-1] = 0;
         }
@@ -166,13 +177,19 @@ static void init_storage(void) {
         break;
       }
     }
-
+    /* Now get parameters */
+    while (myFile.fgets((char*)packet_buffer, 100) > 0) {
+      if (!strncmp((const char *)packet_buffer, "debug=", 6)) {
+        debug = (packet_buffer[6] == '1');
+      }
+    }
     free(packet_buffer);
     myFile.close();
+
   } else {
     Serial.println(F("No config.txt. Searching for images."));
     for (unsigned char i = 0; i < MAX_PARTITIONS; i++) {
-      String prefix = "PART";
+      String prefix = F("PART");
       open_image(devices[i], prefix+(i+1)+".po");
       if (devices[i].sdf.isOpen()) {
         open_partitions++;
@@ -182,7 +199,7 @@ static void init_storage(void) {
   // Realloc standard packet_buffer
   packet_buffer = (unsigned char *)malloc(605);
   memset(packet_buffer, 0, 605);
-  LOGN(F("Free memory now "), freeMemory(), DEC);
+  DEBUGN(F("Free memory now "), freeMemory(), DEC);
 
   storage_init_done = 1;
 }
@@ -198,12 +215,26 @@ void setup (void) {
 
   packet_buffer = (unsigned char *)malloc(605);
 
-  SET_WR_HIGH; SET_WR_IN;
+  /* Main pins on upstream port */
+  SET_WR_HIGH; SET_WR_IN;     //WR: input pullup
+  SET_DRV1_IN;                //DRV1 & 2: input
+  SET_DRV2_IN;
 
   SP_RD_OFF();
   SP_ACK_OFF();
 
-  LOG("Ready");
+  /* Daisy pins */
+  SET_DAISY_PH3_OUT;          // PH3: output
+  daisy_ph3_disable();
+
+  SET_DAISY_DRV1_OUT;         // DRV1 & 2: output
+  SET_DAISY_DRV2_OUT;
+  daisy_diskII_mirror();
+
+  SET_DAISY_HDSEL_IN;         // HDSEL: input pullup
+  SET_DAISY_HDSEL_HIGH;
+
+  LOG(F("Ready"));
 
   digitalWrite(PIN_LED, LOW);
 }
@@ -228,6 +259,7 @@ static inline SP_State smartport_get_state(void) {
 }
 
 int number_partitions_initialised = 0;
+
 static void smartport_device_reset(void) {
   LOG(F("SP BUS RESET"));
 
@@ -240,6 +272,7 @@ static void smartport_device_reset(void) {
     devices[partition].device_id = 0;
   }
 
+  daisy_diskII_disable();
   SP_RD_OFF();
   SP_ACK_OFF();
 
@@ -249,7 +282,7 @@ static void smartport_device_reset(void) {
 
 static void smartport_answer_status(unsigned char dev_id, unsigned char extended) {
   unsigned char status_code;
-  LOG(F("SP STATUS"));
+  DEBUG(F("SP STATUS"));
 
   partition = get_device_partition(dev_id);
   if (partition != -1 && devices[partition].sdf.isOpen()) {
@@ -258,9 +291,9 @@ static void smartport_answer_status(unsigned char dev_id, unsigned char extended
     // if statcode=3, then status with device info block
     if (status_code == 0x03) {
       if (extended) {
-        Serial.println(F("Extended status DIB - Not implemented!"));
+        LOG(F("Extended status DIB - Not implemented!"));
       } else {
-        Serial.println(F("Sending DIB"));
+        DEBUG(F("Sending DIB"));
         encode_status_dib_reply_packet(devices[partition]);
         delay(50);
       }
@@ -364,14 +397,14 @@ static void smartport_init(unsigned char dev_id) {
   if (number_partitions_initialised < open_partitions) { //are all init'd yet
     status = 0x80;
   } else {
-    status = 0xff;
-    device_init_done = 1; //Mark init done so we stop answering,
+    status = DAISY_HDSEL_IS_HIGH ? 0xff : 0x80;
+    device_init_done = 1; //Mark init done
     number_partitions_initialised = 0; // Reset variable for potential next INIT
   }
   encode_init_reply_packet(dev_id, status);
 
-  LOGN("Init device id: ", dev_id, HEX);
-  LOGN("More devices: ", status == 0x80, HEX);
+  DEBUGN(F("Init device id: "), dev_id, HEX);
+  DEBUGN(F("More devices: "), status == 0x80, HEX);
   status = SendPacket( (unsigned char*) packet_buffer);
 }
 
@@ -396,7 +429,7 @@ static void IgnorePacket(unsigned char command, unsigned char dev_id) {
       break;
   }
   interrupts();
-  LOGN(F("Ignored packet for device "), dev_id, HEX);
+  DEBUGN(F("Ignored packet for device "), dev_id, HEX);
 }
 
 static void DumpPacket(void) {
@@ -422,7 +455,8 @@ static void DumpPacket(void) {
 // Description: Main function for Apple //c Smartport Compact Flash adpater
 //*****************************************************************************
 void loop() {
-  unsigned char dev_id, command;
+  unsigned char dev_id;
+  SP_Command command;
   SP_State smartport_state;
 
   // read phase lines to check for smartport reset or enable
@@ -430,27 +464,29 @@ void loop() {
 
   switch (smartport_state) {
   case SP_BUS_RESET:
-    //Set daisy PH3 low here, and
+    daisy_ph3_disable();
     smartport_device_reset();
     break;
 
   case SP_BUS_ENABLED:
+    daisy_diskII_disable();
     ReceivePacket( (unsigned char*) packet_buffer);
     dev_id = packet_buffer[6];
     //source_id = packet_buffer[7];
-    command = packet_buffer[14];
+    command = (SP_Command) packet_buffer[14];
 
     if (command == SP_INIT && !device_init_done) {
       AckPacket();
     } else if (get_device_partition(dev_id) != -1) {
       AckPacket();
     } else {
-      //if (command == SP_INIT && device_init_done) back to mirroring PH3
       IgnorePacket(command, dev_id);
       break;
     }
 
-    DumpPacket();
+    if (debug) {
+      DumpPacket();
+    }
 
     digitalWrite(PIN_LED, HIGH);
 
@@ -492,7 +528,12 @@ void loop() {
 
   case SP_BOOTING:
   case SP_BUS_DISABLED:
+    daisy_diskII_mirror();
     break;
+  }
+
+  if (device_init_done) {
+    daisy_ph3_mirror();
   }
 }
 
@@ -668,7 +709,7 @@ int decode_data_packet (void)
 
   //add oddbyte(s), 1 in a 512 data packet
   for(int i = 0; i < numodd; i++) {
-    packet_buffer[i] = ((packet_buffer[13] << i+1) & 0x80) | (packet_buffer[14+i] & 0x7f);
+    packet_buffer[i] = ((packet_buffer[13] << (i+1)) & 0x80) | (packet_buffer[14+i] & 0x7f);
   }
 
   // 73 grps of 7 in a 512 byte packet
@@ -1043,8 +1084,8 @@ void encode_extended_status_dib_reply_packet (device d)
   //number of blocks =0x00ffff = 65525 or 32mb
   packet_buffer[16] = d.blocks & 0xff; //block size 1
   packet_buffer[17] = (d.blocks >> 8 ) & 0xff; //block size 2
-  packet_buffer[18] = (d.blocks >> 16 ) & 0xff | 0x80 ; //block size 3 - why is the high bit set?
-  packet_buffer[19] = (d.blocks >> 24 ) & 0xff | 0x80 ; //block size 3 - why is the high bit set?
+  packet_buffer[18] = ((d.blocks >> 16 ) & 0xff) | 0x80 ; //block size 3 - why is the high bit set?
+  packet_buffer[19] = ((d.blocks >> 24 ) & 0xff) | 0x80 ; //block size 4 - why is the high bit set?
   packet_buffer[20] = 0x8d; //ID string length - 13 chars
   packet_buffer[21] = 'S';
   packet_buffer[22] = 'm';  //ID string (16 chars total)

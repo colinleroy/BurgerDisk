@@ -1,6 +1,8 @@
 #ifndef __SP_PINS
 #define __SP_PINS
 
+#include <avr/io.h>
+
 #define PIN_PH0         2       // D2
 #define PIN_PH1         3       // D3
 #define PIN_PH2         4       // D4
@@ -55,5 +57,62 @@
 #define ACK_IS_LOW      (!(ACK_IS_HIGH))
 #define WAIT_ACK_HIGH   while (ACK_IS_LOW)
 #define WAIT_ACK_LOW    while (ACK_IS_HIGH)
+
+//DRV1 on A0
+#define WR_PORT_DRV1    PORTB
+#define RD_PORT_DRV1    PINC
+#define DIR_PORT_DRV1   DDRC
+#define PIN_DRV1        0       // A0 (portC)
+#define SET_DRV1_IN     (DIR_PORT_DRV1 &= ~(_BV(PIN_DRV1)))
+#define DRV1_IS_HIGH    (RD_PORT_DRV1 & _BV(PIN_DRV1))
+#define DRV1_IS_LOW     (!(DRV1_IS_HIGH))
+
+//DRV2 on D9
+#define WR_PORT_DRV2    PORTC
+#define RD_PORT_DRV2    PINC
+#define DIR_PORT_DRV2   DDRC
+#define PIN_DRV2        1       // D9 (portB)
+#define SET_DRV2_IN     (DIR_PORT_DRV2 &= ~(_BV(PIN_DRV2)))
+#define DRV2_IS_HIGH    (RD_PORT_DRV2 & _BV(PIN_DRV2))
+#define DRV2_IS_LOW     (!(DRV2_IS_HIGH))
+
+//----------------------------------------------
+// Daisy pins
+//----------------------------------------------
+
+#define WR_PORT_DAISY_PH3      PORTB
+#define RD_PORT_DAISY_PH3      PINB
+#define DIR_PORT_DAISY_PH3     DDRB
+#define PIN_DAISY_PH3          0       // D8
+#define SET_DAISY_PH3_HIGH     (WR_PORT_DAISY_PH3 |= _BV(PIN_DAISY_PH3))
+#define SET_DAISY_PH3_LOW      (WR_PORT_DAISY_PH3 &= ~_BV(PIN_DAISY_PH3))
+#define SET_DAISY_PH3_OUT      (DIR_PORT_DAISY_PH3 |= _BV(PIN_DAISY_PH3))
+
+#define WR_PORT_DAISY_DRV1     PORTC
+#define RD_PORT_DAISY_DRV1     PINC
+#define DIR_PORT_DAISY_DRV1    DDRC
+#define PIN_DAISY_DRV1         2       // A2
+#define SET_DAISY_DRV1_HIGH    (WR_PORT_DAISY_DRV1 |= _BV(PIN_DAISY_DRV1))
+#define SET_DAISY_DRV1_LOW     (WR_PORT_DAISY_DRV1 &= ~_BV(PIN_DAISY_DRV1))
+#define SET_DAISY_DRV1_OUT     (DIR_PORT_DAISY_DRV1 |= _BV(PIN_DAISY_DRV1))
+
+#define WR_PORT_DAISY_DRV2     PORTC
+#define RD_PORT_DAISY_DRV2     PINC
+#define DIR_PORT_DAISY_DRV2    DDRC
+#define PIN_DAISY_DRV2         3       // A3
+#define SET_DAISY_DRV2_HIGH    (WR_PORT_DAISY_DRV2 |= _BV(PIN_DAISY_DRV2))
+#define SET_DAISY_DRV2_LOW     (WR_PORT_DAISY_DRV2 &= ~_BV(PIN_DAISY_DRV2))
+#define SET_DAISY_DRV2_OUT     (DIR_PORT_DAISY_DRV2 |= _BV(PIN_DAISY_DRV2))
+
+
+#define WR_PORT_DAISY_HDSEL    PORTC
+#define RD_PORT_DAISY_HDSEL    PINC
+#define DIR_PORT_DAISY_HDSEL   DDRC
+#define PIN_DAISY_HDSEL        1       // A1
+#define SET_DAISY_HDSEL_IN     (DIR_PORT_DAISY_HDSEL &= ~_BV(PIN_DAISY_HDSEL))
+#define SET_DAISY_HDSEL_HIGH   (WR_PORT_DAISY_HDSEL |= _BV(PIN_DAISY_HDSEL))
+#define DAISY_HDSEL_IS_HIGH    (RD_PORT_DAISY_HDSEL & _BV(PIN_DAISY_HDSEL))
+#define DAISY_HDSEL_IS_LOW     (!(DAISY_HDSEL_IS_HIGH))
+
 
 #endif
