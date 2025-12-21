@@ -56,28 +56,6 @@ struct device {
 struct device devices[MAX_PARTITIONS];
 SdFat sdcard;
 
-// LOGGING ---------------------------------------------------------------------
-static void TIMESTAMP(void) {
-  Serial.print(micros());
-  Serial.print(F("µs - "));
-}
-
-void LOG(const __FlashStringHelper *str) {
-  TIMESTAMP();
-  Serial.println(str);
-}
-
-void LOG(const char *str) {
-  TIMESTAMP();
-  Serial.println(str);
-}
-
-void LOGN(const __FlashStringHelper *str, int num, int base) {
-  TIMESTAMP();
-  Serial.print(str);
-  Serial.println(num, base);
-}
-
 static void log_io_err(const __FlashStringHelper *op, int partition, int block_num) {
   Serial.print(op);
   Serial.print(F(" error on partition "));
@@ -85,7 +63,6 @@ static void log_io_err(const __FlashStringHelper *op, int partition, int block_n
   Serial.print(F(", block "));
   Serial.println(block_num);
 }
-//------------------------------------------------------------------------------
 
 //SD cart init and images opening
 static int storage_init_done = 0;
@@ -225,22 +202,6 @@ static unsigned long int smartport_get_block_num_from_buf(void) {
   return block_num;
 }
 
-//Debug helper - dump a packet's start
-static void DumpPacket(void) {
-  Serial.print(F("Packet from: "));
-  Serial.print(packet_buffer[7], HEX);
-  Serial.print(F(", To: "));
-  Serial.print(packet_buffer[6], HEX);
-  Serial.print(F(", Command: "));
-  Serial.print(packet_buffer[14], HEX);
-  Serial.println();
-  for (int i = 0; i < 30; i++) {
-    Serial.print(' ');
-    Serial.print(packet_buffer[i], HEX);
-  }
-  Serial.println();
-}
-
 //Get Smartport state from phases pins
 static inline SP_State smartport_get_state(void) {
   if (PHASES_BUS_RESET) {
@@ -276,97 +237,86 @@ static void smartport_device_reset(void) {
 }
 
 //Smartport STATUS handler
-static void smartport_answer_status(unsigned char dev_id, unsigned char extended) {
+static void smartport_answer_status(int partition, unsigned char extended) {
   unsigned char status_code;
-  DEBUG(F("SP STATUS"));
+  DEBUGN(F("SP STATUS "), devices[partition].device_id, HEX);
 
-  int partition = get_device_partition(dev_id);
-  if (partition != -1 && devices[partition].sdf.isOpen()) {
-    status_code = (packet_buffer[extended ? 21 : 19] & 0x7f);
+  status_code = (packet_buffer[extended ? 21 : 19] & 0x7f);
 
-    // if statcode=3, then status with device info block
-    if (status_code == 0x03) {
-      if (extended) {
-        LOG(F("Extended status DIB - Not implemented!"));
-      } else {
-        DEBUG(F("Sending DIB"));
-        encode_status_dib_reply_packet(devices[partition].device_id, devices[partition].blocks);
-        delay(50);
-      }
+  // if statcode=3, then status with device info block
+  if (status_code == 0x03) {
+    if (extended) {
+      LOG(F("Extended status DIB - Not implemented!"));
     } else {
-      // just return device status
-      if (extended) {
-        encode_extended_status_reply_packet(devices[partition].device_id, devices[partition].blocks);
-      } else {
-        encode_status_reply_packet(devices[partition].device_id, devices[partition].blocks);
-      }
+      DEBUG(F("Sending DIB"));
+      encode_status_dib_reply_packet(devices[partition].device_id, devices[partition].blocks);
+      delay(50);
     }
-    SendPacket( (unsigned char*) packet_buffer);
+  } else {
+    // just return device status
+    if (extended) {
+      encode_extended_status_reply_packet(devices[partition].device_id, devices[partition].blocks);
+    } else {
+      encode_status_reply_packet(devices[partition].device_id, devices[partition].blocks);
+    }
   }
+  SendPacket( (unsigned char*) packet_buffer);
 }
 
 //Smartport READ handler
-static void smartport_read_block(unsigned char dev_id) {
+static void smartport_read_block(int partition) {
   unsigned long int block_num;
+  DEBUGN(F("SP READ "), devices[partition].device_id, HEX);
 
-  int partition = get_device_partition(dev_id);
-  if (partition != -1) {  //yes it is, then do the read
-    block_num = smartport_get_block_num_from_buf();
+  block_num = smartport_get_block_num_from_buf();
 
-    if(devices[partition].sdf.isOpen()) {
-      if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
-        log_io_err(F("Seek"), partition, block_num);
-      }
-    }
-
-    //Read block from SD Card
-    if (!devices[partition].sdf.read((unsigned char*) packet_buffer, 512)) {
-      log_io_err(F("Read"), partition, block_num);
-    }
-    encode_data_packet(dev_id);
-
-    SendPacket( (unsigned char*) packet_buffer);
+  if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
+    log_io_err(F("Seek"), partition, block_num);
   }
+
+  //Read block from SD Card
+  if (!devices[partition].sdf.read((unsigned char*) packet_buffer, 512)) {
+    log_io_err(F("Read"), partition, block_num);
+  }
+  encode_data_packet(devices[partition].device_id);
+
+  SendPacket( (unsigned char*) packet_buffer);
 }
 
 //Smartport WRITE handler
-static void smartport_write_block(unsigned char dev_id) {
+static void smartport_write_block(int partition) {
   unsigned long int block_num;
-  int partition = get_device_partition(dev_id);
 
-  if (partition != -1) {  //yes it is, then do the write
-    block_num = smartport_get_block_num_from_buf();
+  DEBUGN(F("SP WRITE "), devices[partition].device_id, HEX);
 
-    //get write data packet
-    ReceivePacket( (unsigned char*) packet_buffer);
-    AckPacket();
-    int status = decode_data_packet();
-    if (status == 0) {
-      if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
-        log_io_err(F("Seek"), partition, block_num);
-        goto err;
-      }
-      // Write block to SD Card
-      if (!devices[partition].sdf.write((unsigned char*) packet_buffer, 512)) {
-        log_io_err(F("Write"), partition, block_num);
-err:
-        status = 6;
-      }
+  block_num = smartport_get_block_num_from_buf();
+
+  //get write data packet
+  ReceivePacket( (unsigned char*) packet_buffer);
+  AckPacket();
+  int status = decode_data_packet();
+  if (status == 0) {
+    if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
+      log_io_err(F("Seek"), partition, block_num);
+      goto err;
     }
-
-    //now return status code to host
-    encode_write_status_packet(dev_id, status);
-    SendPacket( (unsigned char*) packet_buffer);
+    // Write block to SD Card
+    if (!devices[partition].sdf.write((unsigned char*) packet_buffer, 512)) {
+      log_io_err(F("Write"), partition, block_num);
+err:
+      status = 6;
+    }
   }
+
+  //now return status code to host
+  encode_write_status_packet(devices[partition].device_id, status);
+  SendPacket( (unsigned char*) packet_buffer);
 }
 
 //Smartport FORMAT handler
-static void smartport_format(unsigned char dev_id) {
-  int partition = get_device_partition(dev_id);
-  if (partition != -1) {  //yes it is, then do the read
-    encode_init_reply_packet(dev_id, 0x80); //just send back a successful response
-    SendPacket( (unsigned char*) packet_buffer);
-  }
+static void smartport_format(int partition) {
+  encode_init_reply_packet(devices[partition].device_id, 0x80); //just send back a successful response
+  SendPacket( (unsigned char*) packet_buffer);
 }
 
 //Smartport INIT handler
@@ -396,13 +346,11 @@ static void smartport_init(unsigned char dev_id) {
 
 //Not-for-us packet handler
 //Mute lines, and wait until Smartport is disabled again
-static void IgnorePacket(unsigned char dev_id) {
+static void IgnorePacket(void) {
   SP_ACK_MUTE();
   SP_RD_MUTE();
   while(smartport_get_state() == SP_BUS_ENABLED);
-
   interrupts();
-  DEBUGN(F("Ignored packet for "), dev_id, HEX);
 }
 //------------------------------------------------------------------------------
 
@@ -417,6 +365,7 @@ void loop() {
   unsigned char dev_id;
   SP_Command command;
   SP_State smartport_state;
+  int partition = -1;
 
   SP_ACK_MUTE();
   SP_RD_MUTE();
@@ -439,43 +388,40 @@ void loop() {
 
     if (command == SP_INIT && !device_init_done) {
       AckPacket();
-    } else if (get_device_partition(dev_id) != -1) {
+    } else if ((partition = get_device_partition(dev_id)) != -1) {
       AckPacket();
     } else {
-      IgnorePacket(dev_id);
+      IgnorePacket();
       break;
-    }
-
-    if (debug) {
-      DumpPacket();
     }
 
     digitalWrite(PIN_LED, HIGH);
 
     switch (command) {
     case SP_INIT:
+      //e may not have a dev_id/partition match yet
       smartport_init(dev_id);
       break;
 
     case SP_STATUS:
-      smartport_answer_status(dev_id, 0);
+      smartport_answer_status(partition, 0);
       break;
 
     case SP_EXT_STATUS:
-      smartport_answer_status(dev_id, 1);
+      smartport_answer_status(partition, 1);
       break;
 
     case SP_EXT_READ:
     case SP_READ:
-      smartport_read_block(dev_id);
+      smartport_read_block(partition);
       break;
 
     case SP_WRITE:
-      smartport_write_block(dev_id);
+      smartport_write_block(partition);
       break;
 
     case SP_FORMAT:
-      smartport_format(dev_id);
+      smartport_format(partition);
       break;
 
     case SP_EXT_WRITE:

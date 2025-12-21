@@ -1,11 +1,9 @@
 #ifndef __LOG
 #define __LOG
 
-void LOG(const __FlashStringHelper *str);
-void LOG(const char *str);
-void LOGN(const __FlashStringHelper *str, int num, int base);
-
-#define DEBUG(str)             do { if (debug) LOG(str);             } while (0)
-#define DEBUGN(str, num, base) do { if (debug) LOGN(str, num, base); } while (0)
+#define LOG(str)               do { Serial.println(str);                          } while (0)
+#define LOGN(str, num, base)   do { Serial.print(str); Serial.println(num, base); } while (0)
+#define DEBUG(str)             do { if (debug) LOG(str);                          } while (0)
+#define DEBUGN(str, num, base) do { if (debug) LOGN(str, num, base);              } while (0)
 
 #endif
