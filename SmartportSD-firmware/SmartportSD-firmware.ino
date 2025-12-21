@@ -49,16 +49,8 @@ int  decode_data_packet (void);                   //decode smartport 512 byte da
 void encode_write_status_packet(unsigned char source, unsigned char status);
 void encode_init_reply_packet (unsigned char source, unsigned char status);
 void encode_status_reply_packet (struct device d);
-int  packet_length (void);
-int partition;
-bool is_valid_image(File imageFile);
 
-//unsigned char packet_buffer[768];   //smartport packet buffer
-//unsigned char packet_buffer[605];   //smartport packet buffer
-unsigned char *packet_buffer;         //Wing
-//unsigned char sector_buffer[512];   //ata sector data buffer
-unsigned char status, packet_byte;
-int count;
+unsigned char *packet_buffer;
 
 static void TIMESTAMP(void) {
   Serial.print(micros());
@@ -82,39 +74,14 @@ void LOGN(const __FlashStringHelper *str, int num, int base) {
 }
 
 // We need to remember several things about a device, not just its ID
-struct device{
+struct device {
   File sdf;
   unsigned char device_id;              //to hold assigned device id's for the partitions
   unsigned long blocks;                 //how many 512-byte blocks this image has
   unsigned int header_offset;           //Some image files have headers, skip this many bytes to avoid them
-  //bool online;                          //Whether this image is currently available
-                                          //No longer used, user devices[...].sdf.isOpen() instead
-  bool writeable;
 };
 
 device devices[MAX_PARTITIONS];
-
-//The circuit:
-//    SD card attached to SPI bus as follows:
-// ** MOSI - pin 11 on Arduino Uno/Duemilanove/Diecimila
-// ** MISO - pin 12 on Arduino Uno/Duemilanove/Diecimila
-// ** CLK - pin 13 on Arduino Uno/Duemilanove/Diecimila
-// ** CS - depends on your SD card shield or module.
-//     Pin 10 used here
-
-// Change the value of PIN_CHIP_SELECT if your hardware does
-// not use the default value, SS.  Common values are:
-// Arduino Ethernet shield: pin 4
-// Sparkfun SD shield: pin 8
-// Adafruit SD shields and modules: pin 10
-
-/*
-   Set DISABLE_CHIP_SELECT to disable a second SPI device.
-   For example, with the Ethernet shield, set DISABLE_CHIP_SELECT
-   to 10 to disable the Ethernet controller.
-*/
-const int8_t DISABLE_CHIP_SELECT = 0;
-
 SdFat sdcard;
 
 //------------------------------------------------------------------------------
@@ -268,7 +235,7 @@ static void smartport_device_reset(void) {
   device_init_done = 0;
 
   //clear device_id table
-  for (partition = 0; partition < MAX_PARTITIONS; partition++) {
+  for (int partition = 0; partition < MAX_PARTITIONS; partition++) {
     devices[partition].device_id = 0;
   }
 
@@ -282,7 +249,7 @@ static void smartport_answer_status(unsigned char dev_id, unsigned char extended
   unsigned char status_code;
   DEBUG(F("SP STATUS"));
 
-  partition = get_device_partition(dev_id);
+  int partition = get_device_partition(dev_id);
   if (partition != -1 && devices[partition].sdf.isOpen()) {
     status_code = (packet_buffer[extended ? 21 : 19] & 0x7f);
 
@@ -303,7 +270,7 @@ static void smartport_answer_status(unsigned char dev_id, unsigned char extended
         encode_status_reply_packet(devices[partition]);
       }
     }
-    status = SendPacket( (unsigned char*) packet_buffer);
+    SendPacket( (unsigned char*) packet_buffer);
   }
 }
 
@@ -326,7 +293,7 @@ static unsigned long int smartport_get_block_num_from_buf(void) {
 static void smartport_read_block(unsigned char dev_id) {
   unsigned long int block_num;
 
-  partition = get_device_partition(dev_id);
+  int partition = get_device_partition(dev_id);
   if (partition != -1) {  //yes it is, then do the read
     block_num = smartport_get_block_num_from_buf();
 
@@ -342,21 +309,21 @@ static void smartport_read_block(unsigned char dev_id) {
     }
     encode_data_packet(dev_id);
 
-    status = SendPacket( (unsigned char*) packet_buffer);
+    SendPacket( (unsigned char*) packet_buffer);
   }
 }
 
 static void smartport_write_block(unsigned char dev_id) {
   unsigned long int block_num;
+  int partition = get_device_partition(dev_id);
 
-  partition = get_device_partition(dev_id);
   if (partition != -1) {  //yes it is, then do the write
     block_num = smartport_get_block_num_from_buf();
 
     //get write data packet
     ReceivePacket( (unsigned char*) packet_buffer);
     AckPacket();
-    status = decode_data_packet();
+    int status = decode_data_packet();
     if (status == 0) {
       if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
         log_io_err(F("Seek"), partition, block_num);
@@ -372,19 +339,21 @@ err:
 
     //now return status code to host
     encode_write_status_packet(dev_id, status);
-    status = SendPacket( (unsigned char*) packet_buffer);
+    SendPacket( (unsigned char*) packet_buffer);
   }
 }
 
 static void smartport_format(unsigned char dev_id) {
-  partition = get_device_partition(dev_id);
+  int partition = get_device_partition(dev_id);
   if (partition != -1) {  //yes it is, then do the read
     encode_init_reply_packet(dev_id, 0x80); //just send back a successful response
-    status = SendPacket( (unsigned char*) packet_buffer);
+    SendPacket( (unsigned char*) packet_buffer);
   }
 }
 
 static void smartport_init(unsigned char dev_id) {
+  int status;
+
   LOG(F("SP INIT"));
   devices[number_partitions_initialised].device_id = dev_id; //remember device id for partition
   number_partitions_initialised++;
@@ -403,13 +372,14 @@ static void smartport_init(unsigned char dev_id) {
 
   DEBUGN(F("Init device id: "), dev_id, HEX);
   DEBUGN(F("More devices: "), status == 0x80, HEX);
-  status = SendPacket( (unsigned char*) packet_buffer);
+  SendPacket( (unsigned char*) packet_buffer);
 }
 
 static void IgnorePacket(unsigned char dev_id) {
   SP_ACK_MUTE();
   SP_RD_MUTE();
   while(smartport_get_state() == SP_BUS_ENABLED);
+
   interrupts();
   DEBUGN(F("Ignored packet for "), dev_id, HEX);
 }
@@ -546,7 +516,7 @@ static void init_packet_buffer(unsigned char source) {
 //*****************************************************************************
 void encode_data_packet (unsigned char source)
 {
-  int grpbyte, grpcount;
+  int grpbyte, grpcount, count;
   unsigned char checksum = 0, grpmsb;
   unsigned char group_buffer[7];
 
@@ -597,7 +567,6 @@ void encode_data_packet (unsigned char source)
   //end bytes
   packet_buffer[602] = 0xc8;  //pkt end
   packet_buffer[603] = 0x00;  //mark the end of the packet_buffer
-
 }
 
 //*****************************************************************************
@@ -611,7 +580,7 @@ void encode_data_packet (unsigned char source)
 //*****************************************************************************
 void encode_extended_data_packet (unsigned char source)
 {
-  int grpbyte, grpcount;
+  int grpbyte, grpcount, count;
   unsigned char checksum = 0, grpmsb;
   unsigned char group_buffer[7];
 
@@ -663,9 +632,7 @@ void encode_extended_data_packet (unsigned char source)
   //end bytes
   packet_buffer[602] = 0xc8;  //pkt end
   packet_buffer[603] = 0x00;  //mark the end of the packet_buffer
-
 }
-
 
 //*****************************************************************************
 // Function: decode_data_packet
@@ -677,7 +644,7 @@ void encode_extended_data_packet (unsigned char source)
 //*****************************************************************************
 int decode_data_packet (void)
 {
-  int grpbyte, grpcount;
+  int grpbyte, grpcount, count;
   unsigned char numgrps, numodd;
   unsigned char checksum = 0, bit0to6, bit7, oddbits, evenbits;
   unsigned char group_buffer[8];
@@ -718,7 +685,6 @@ int decode_data_packet (void)
     return 0; //noerror
   else
     return 6; //smartport bus error code
-
 }
 
 //*****************************************************************************
@@ -731,6 +697,7 @@ int decode_data_packet (void)
 //*****************************************************************************
 void encode_write_status_packet(unsigned char source, unsigned char status)
 {
+  int count;
   unsigned char checksum = 0;
 
   init_packet_buffer(source);
@@ -750,7 +717,6 @@ void encode_write_status_packet(unsigned char source, unsigned char status)
 
   packet_buffer[16] = 0xc8;  //pkt end
   packet_buffer[17] = 0x00;  //mark the end of the packet_buffer
-
 }
 
 //*****************************************************************************
@@ -766,6 +732,7 @@ void encode_write_status_packet(unsigned char source, unsigned char status)
 //*****************************************************************************
 void encode_init_reply_packet (unsigned char source, unsigned char status)
 {
+  int count;
   unsigned char checksum = 0;
 
   init_packet_buffer(source);
@@ -785,7 +752,6 @@ void encode_init_reply_packet (unsigned char source, unsigned char status)
 
   packet_buffer[16] = 0xc8; //PEND
   packet_buffer[17] = 0x00; //end of packet in buffer
-
 }
 
 //*****************************************************************************
@@ -801,7 +767,7 @@ void encode_init_reply_packet (unsigned char source, unsigned char status)
 //*****************************************************************************
 void encode_status_reply_packet (device d)
 {
-
+  int count;
   unsigned char checksum = 0;
   unsigned char data[4];
 
@@ -848,7 +814,6 @@ void encode_status_reply_packet (device d)
 
   packet_buffer[21] = 0xc8; //PEND
   packet_buffer[22] = 0x00; //end of packet in buffer
-
 }
 
 
@@ -865,8 +830,8 @@ void encode_status_reply_packet (device d)
 //*****************************************************************************
 void encode_extended_status_reply_packet (device d)
 {
+  int count;
   unsigned char checksum = 0;
-
   unsigned char data[5];
 
   //Build the contents of the packet
@@ -914,10 +879,11 @@ void encode_extended_status_reply_packet (device d)
 
   packet_buffer[22] = 0xc8; //PEND
   packet_buffer[23] = 0x00; //end of packet in buffer
-
 }
+
 void encode_error_reply_packet (unsigned char source)
 {
+  int count;
   unsigned char checksum = 0;
 
   init_packet_buffer(source);
@@ -937,7 +903,6 @@ void encode_error_reply_packet (unsigned char source)
 
   packet_buffer[16] = 0xc8; //PEND
   packet_buffer[17] = 0x00; //end of packet in buffer
-
 }
 
 //*****************************************************************************
@@ -953,7 +918,7 @@ void encode_error_reply_packet (unsigned char source)
 //*****************************************************************************
 void encode_status_dib_reply_packet (device d)
 {
-  int grpbyte, grpcount, i;
+  int grpbyte, grpcount, i, count;
   int grpnum, oddnum;
   unsigned char checksum = 0, grpmsb;
   unsigned char group_buffer[7];
@@ -1043,7 +1008,6 @@ void encode_status_dib_reply_packet (device d)
   packet_buffer[46] = 0x00; //end of packet in buffer
 }
 
-
 //*****************************************************************************
 // Function: encode_long_status_dib_reply_packet
 // Parameters: source
@@ -1057,6 +1021,7 @@ void encode_status_dib_reply_packet (device d)
 //*****************************************************************************
 void encode_extended_status_dib_reply_packet (device d)
 {
+  int count;
   unsigned char checksum = 0;
 
   init_packet_buffer(d.device_id);
@@ -1107,63 +1072,6 @@ void encode_extended_status_dib_reply_packet (device d)
 
   packet_buffer[47] = 0xc8; //PEND
   packet_buffer[48] = 0x00; //end of packet in buffer
-
-}
-
-
-//*****************************************************************************
-// Function: print_packet
-// Parameters: pointer to data, number of bytes to be printed
-// Returns: none
-//
-// Description: prints packet data for debug purposes to the serial port
-//*****************************************************************************
-void print_packet (unsigned char* data, int bytes)
-{
-  int count, row;
-  char tbs[8];
-  char xx;
-
-  Serial.print(F("\r\n"));
-  for (count = 0; count < bytes; count = count + 16) {
-    sprintf(tbs, "%04X: ", count);
-    Serial.print(tbs);
-    for (row = 0; row < 16; row++) {
-      if (count + row >= bytes)
-        Serial.print(F("   "));
-      else {
-        Serial.print(data[count + row], HEX);
-        Serial.print(F(" "));
-      }
-    }
-    Serial.print(F("-"));
-    for (row = 0; row < 16; row++) {
-      if ((data[count + row] > 31) && (count + row < bytes) && (data[count + row] < 129))
-      {
-        xx = data[count + row];
-        Serial.print(xx);
-      }
-      else
-        Serial.print(F("."));
-    }
-    Serial.print(F("\r\n"));
-  }
-}
-
-//*****************************************************************************
-// Function: packet_length
-// Parameters: none
-// Returns: length
-//
-// Description: Calculates the length of the packet in the packet_buffer.
-// A zero marks the end of the packet data.
-//*****************************************************************************
-int packet_length (void)
-{
-  int x = 0;
-
-  while (packet_buffer[x++]);
-  return x - 1; // point to last packet byte = C8
 }
 
 //*****************************************************************************

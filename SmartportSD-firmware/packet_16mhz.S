@@ -36,12 +36,6 @@ SP_RD_MUTE:
           sbi  _SFR_IO_ADDR(WR_PORT_RD),PIN_RD                       ; Set RD high
           ret
 
-.global SP_RD_OFF
-SP_RD_OFF:
-          cbi  _SFR_IO_ADDR(DIR_PORT_RD),PIN_RD                      ; Set RD as input
-          cbi  _SFR_IO_ADDR(WR_PORT_RD),PIN_RD                       ; Set RD low
-          ret
-
 //*****************************************************************************
 // Function: ReceivePacket
 // Parameters: packet_buffer pointer

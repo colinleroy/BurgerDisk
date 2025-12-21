@@ -9,6 +9,5 @@ extern "C" void SP_ACK_MUTE(void);
 extern "C" void SP_ACK_ON(void);
 extern "C" void SP_ACK_OFF(void);
 extern "C" void SP_RD_MUTE(void);
-extern "C" void SP_RD_OFF(void);
 
 #endif
