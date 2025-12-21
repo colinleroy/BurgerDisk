@@ -219,7 +219,7 @@ static inline SP_State smartport_get_state(void) {
 static int number_partitions_initialised = 0;
 static int device_init_done = 0;
 static void smartport_device_reset(void) {
-  LOG(F("SP BUS RESET"));
+  LOG(F("RESET"));
 
   //reset number of partitions init'd
   number_partitions_initialised = 0;
@@ -239,7 +239,6 @@ static void smartport_device_reset(void) {
 //Smartport STATUS handler
 static void smartport_answer_status(int partition, unsigned char extended) {
   unsigned char status_code;
-  DEBUGN(F("SP STATUS "), devices[partition].device_id, HEX);
 
   status_code = (packet_buffer[extended ? 21 : 19] & 0x7f);
 
@@ -261,14 +260,16 @@ static void smartport_answer_status(int partition, unsigned char extended) {
     }
   }
   SendPacket( (unsigned char*) packet_buffer);
+  DEBUGN(F("STATUS DID "), devices[partition].device_id, HEX);
 }
 
 //Smartport READ handler
 static void smartport_read_block(int partition) {
   unsigned long int block_num;
-  DEBUGN(F("SP READ "), devices[partition].device_id, HEX);
-
   block_num = smartport_get_block_num_from_buf();
+
+  DEBUGN(F("READ DID "), devices[partition].device_id, HEX);
+  DEBUGN(F(" Block "), block_num, DEC);
 
   if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
     log_io_err(F("Seek"), partition, block_num);
@@ -286,10 +287,10 @@ static void smartport_read_block(int partition) {
 //Smartport WRITE handler
 static void smartport_write_block(int partition) {
   unsigned long int block_num;
-
-  DEBUGN(F("SP WRITE "), devices[partition].device_id, HEX);
-
   block_num = smartport_get_block_num_from_buf();
+
+  DEBUGN(F("WRITE DID "), devices[partition].device_id, HEX);
+  DEBUGN(F(" Block "), block_num, DEC);
 
   //get write data packet
   ReceivePacket( (unsigned char*) packet_buffer);
@@ -321,10 +322,10 @@ static void smartport_format(int partition) {
 
 //Smartport INIT handler
 static void smartport_init(unsigned char dev_id) {
-  int status;
+  int status, p;
 
-  LOG(F("SP INIT"));
   devices[number_partitions_initialised].device_id = dev_id; //remember device id for partition
+  p = number_partitions_initialised;
   number_partitions_initialised++;
 
   // now we have time to init our partitions before acking
@@ -339,9 +340,10 @@ static void smartport_init(unsigned char dev_id) {
   }
   encode_init_reply_packet(dev_id, status);
 
-  DEBUGN(F("Init device id: "), dev_id, HEX);
-  DEBUGN(F("More devices: "), status == 0x80, HEX);
   SendPacket( (unsigned char*) packet_buffer);
+  DEBUGN(F("INIT P "), p, DEC);
+  DEBUGN(F(" DID: "), dev_id, HEX);
+  DEBUGN(F(" MORE: "), status == 0x80, HEX);
 }
 
 //Not-for-us packet handler
