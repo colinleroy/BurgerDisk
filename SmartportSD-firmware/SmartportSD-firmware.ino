@@ -42,11 +42,21 @@
 
 #define MAX_PARTITIONS 4
 int open_partitions = 0;
-
 int debug = 0;
-
 unsigned char *packet_buffer;
 
+// We need to remember several things about a device, not just its ID
+struct device {
+  File sdf;
+  unsigned char device_id;              //to hold assigned device id's for the partitions
+  unsigned long blocks;                 //how many 512-byte blocks this image has
+  unsigned int header_offset;           //Some image files have headers, skip this many bytes to avoid them
+};
+
+struct device devices[MAX_PARTITIONS];
+SdFat sdcard;
+
+// LOGGING ---------------------------------------------------------------------
 static void TIMESTAMP(void) {
   Serial.print(micros());
   Serial.print(F("µs - "));
@@ -68,20 +78,6 @@ void LOGN(const __FlashStringHelper *str, int num, int base) {
   Serial.println(num, base);
 }
 
-// We need to remember several things about a device, not just its ID
-struct device {
-  File sdf;
-  unsigned char device_id;              //to hold assigned device id's for the partitions
-  unsigned long blocks;                 //how many 512-byte blocks this image has
-  unsigned int header_offset;           //Some image files have headers, skip this many bytes to avoid them
-};
-
-struct device devices[MAX_PARTITIONS];
-SdFat sdcard;
-
-//------------------------------------------------------------------------------
-
-
 static void log_io_err(const __FlashStringHelper *op, int partition, int block_num) {
   Serial.print(op);
   Serial.print(F(" error on partition "));
@@ -89,10 +85,10 @@ static void log_io_err(const __FlashStringHelper *op, int partition, int block_n
   Serial.print(F(", block "));
   Serial.println(block_num);
 }
+//------------------------------------------------------------------------------
 
+//SD cart init and images opening
 static int storage_init_done = 0;
-static int device_init_done = 0;
-
 static void init_storage(void) {
   if (storage_init_done) {
     return;
@@ -166,6 +162,7 @@ static void init_storage(void) {
   storage_init_done = 1;
 }
 
+//Arduino boot setup - serial, pinmodes.
 void setup (void) {
   // LED
   digitalWrite(PIN_LED, HIGH);
@@ -201,6 +198,7 @@ void setup (void) {
   digitalWrite(PIN_LED, LOW);
 }
 
+// Helper to match a Smartport device_id to one of our images
 static int get_device_partition(int device_id) {
   for  (int p = 0; p < MAX_PARTITIONS; p++) {
     if (devices[p].device_id == device_id) {
@@ -210,6 +208,40 @@ static int get_device_partition(int device_id) {
   return -1;
 }
 
+// Helper to extract the block number from the Smartport packet
+static unsigned long int smartport_get_block_num_from_buf(void) {
+  unsigned long int block_num;
+  unsigned char LBH, LBL, LBN, LBT;
+
+  LBH = packet_buffer[16]; //high order bits
+  LBN = packet_buffer[19]; //block number low
+  LBL = packet_buffer[20]; //block number middle
+  LBT = packet_buffer[21]; //block number high
+
+  block_num = (LBN & 0x7f) | (((unsigned short)LBH << 3) & 0x80);
+  block_num = block_num + ( ((unsigned long)((LBL & 0x7f) | (((unsigned short)LBH << 4) & 0x80))) << 8);
+  block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 16);
+
+  return block_num;
+}
+
+//Debug helper - dump a packet's start
+static void DumpPacket(void) {
+  Serial.print(F("Packet from: "));
+  Serial.print(packet_buffer[7], HEX);
+  Serial.print(F(", To: "));
+  Serial.print(packet_buffer[6], HEX);
+  Serial.print(F(", Command: "));
+  Serial.print(packet_buffer[14], HEX);
+  Serial.println();
+  for (int i = 0; i < 30; i++) {
+    Serial.print(' ');
+    Serial.print(packet_buffer[i], HEX);
+  }
+  Serial.println();
+}
+
+//Get Smartport state from phases pins
 static inline SP_State smartport_get_state(void) {
   if (PHASES_BUS_RESET) {
     return SP_BUS_RESET;
@@ -220,8 +252,11 @@ static inline SP_State smartport_get_state(void) {
   return SP_BUS_DISABLED;
 }
 
-int number_partitions_initialised = 0;
+//SMARTPORT COMMAND HANDLERS ---------------------------------------------------
 
+//Smartport RESET handler
+static int number_partitions_initialised = 0;
+static int device_init_done = 0;
 static void smartport_device_reset(void) {
   LOG(F("SP BUS RESET"));
 
@@ -240,6 +275,7 @@ static void smartport_device_reset(void) {
   while(smartport_get_state() == SP_BUS_RESET);
 }
 
+//Smartport STATUS handler
 static void smartport_answer_status(unsigned char dev_id, unsigned char extended) {
   unsigned char status_code;
   DEBUG(F("SP STATUS"));
@@ -269,22 +305,7 @@ static void smartport_answer_status(unsigned char dev_id, unsigned char extended
   }
 }
 
-static unsigned long int smartport_get_block_num_from_buf(void) {
-  unsigned long int block_num;
-  unsigned char LBH, LBL, LBN, LBT;
-
-  LBH = packet_buffer[16]; //high order bits
-  LBN = packet_buffer[19]; //block number low
-  LBL = packet_buffer[20]; //block number middle
-  LBT = packet_buffer[21]; //block number high
-
-  block_num = (LBN & 0x7f) | (((unsigned short)LBH << 3) & 0x80);
-  block_num = block_num + ( ((unsigned long)((LBL & 0x7f) | (((unsigned short)LBH << 4) & 0x80))) << 8);
-  block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 16);
-
-  return block_num;
-}
-
+//Smartport READ handler
 static void smartport_read_block(unsigned char dev_id) {
   unsigned long int block_num;
 
@@ -308,6 +329,7 @@ static void smartport_read_block(unsigned char dev_id) {
   }
 }
 
+//Smartport WRITE handler
 static void smartport_write_block(unsigned char dev_id) {
   unsigned long int block_num;
   int partition = get_device_partition(dev_id);
@@ -338,6 +360,7 @@ err:
   }
 }
 
+//Smartport FORMAT handler
 static void smartport_format(unsigned char dev_id) {
   int partition = get_device_partition(dev_id);
   if (partition != -1) {  //yes it is, then do the read
@@ -346,6 +369,7 @@ static void smartport_format(unsigned char dev_id) {
   }
 }
 
+//Smartport INIT handler
 static void smartport_init(unsigned char dev_id) {
   int status;
 
@@ -370,6 +394,8 @@ static void smartport_init(unsigned char dev_id) {
   SendPacket( (unsigned char*) packet_buffer);
 }
 
+//Not-for-us packet handler
+//Mute lines, and wait until Smartport is disabled again
 static void IgnorePacket(unsigned char dev_id) {
   SP_ACK_MUTE();
   SP_RD_MUTE();
@@ -378,21 +404,7 @@ static void IgnorePacket(unsigned char dev_id) {
   interrupts();
   DEBUGN(F("Ignored packet for "), dev_id, HEX);
 }
-
-static void DumpPacket(void) {
-  Serial.print(F("Packet from: "));
-  Serial.print(packet_buffer[7], HEX);
-  Serial.print(F(", To: "));
-  Serial.print(packet_buffer[6], HEX);
-  Serial.print(F(", Command: "));
-  Serial.print(packet_buffer[14], HEX);
-  Serial.println();
-  for (int i = 0; i < 30; i++) {
-    Serial.print(' ');
-    Serial.print(packet_buffer[i], HEX);
-  }
-  Serial.println();
-}
+//------------------------------------------------------------------------------
 
 //*****************************************************************************
 // Function: main loop
@@ -523,10 +535,6 @@ int freeMemory() {
   }
   return free_memory;
 }
-
-
-// TODO: Allow image files with headers, too
-// TODO: Respect read-only bit in header
 
 bool open_image(struct device &d, String filename ) {
   Serial.print(F("Testing file "));
