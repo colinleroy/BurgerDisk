@@ -4,7 +4,7 @@ I recently bought an SPIISD v2 kit so that I could have a "hard drive" on my App
 My use-case is to be able to save documents, photos, programs to a large storage, because
 floppies are... small.
 
-# Bug number 1
+## Bug number 1
 Upon testing, I was disappointed to see that the SPIISD v2 works great, in conjunction with
 ROM4x, when we boot the Apple //c from Smartport using the ROM4x menu, but that the drive
 was "invisible" when booting from the internal floppy disk drive.
@@ -33,7 +33,7 @@ I solved it by reflashing the firmware using an AVR ISP mkII programmer, which b
 Arduino's bootloader. As this was not enough, I defer storage init to the first Smartport
 STATUS call, where the computer waits for our answer.
 
-# Bug number 2
+## Bug number 2
 
 At that point this firmware works good with a ROM01 Apple IIgs and a ROM4x Apple //c (A2S4000)
 and a ROM3 Apple //c (A2S4000). However! It freezes on the A2S4100 with the Memory Expansion
@@ -41,7 +41,7 @@ Card, because of an over-eager timeout on the Nano.
 
 # I have an official SPIISD and the same problem, how do I fix it
 
-# For bug number 1
+## For bug number 1
 If you're here because you want your Apple IIc to see your SPIISD (v1 or v2) on cold boot,
 here are your options:
 
@@ -71,7 +71,7 @@ Then reflash the firmware using your backup:
 avrdude -c arduino -P /dev/ttyUSB0 -b 115200 -p m328p -U flash:w:SPIISD.orig.hex
 ```
 
-# For bug number 2
+## For bug number 2
 
 There is no workaround but to use this firmware.
 
@@ -110,6 +110,40 @@ it should).
 If I manage to design a new PCB, it will be MIT-licensed too, so that anyone
 interested could build and sell them. Probably not me, I don't want to turn my
 hobby into work.
+
+# Configuration
+
+The firmware will present between 1 and 4 images as devices to the Apple II.
+Configuring which files are mapped to which devices can be done in two ways.
+
+## The simple way
+
+Put images on the SD card with names: PART1.po, PART2.po, PART3.po, PART4.po.
+
+## The more dynamic way
+
+Put images on the SD card with arbitrary names, and paste them in a `config.txt`
+file:
+
+```
+Total_Replay.hdv
+ProDOS_2.4.3.po
+PART3.po
+PART4.po
+```
+
+## Enabling debug output on the Arduino's serial port
+
+Put `debug=1` in `config.txt` after the images names. If you don't want to present
+four images, put blank lines so that the `debug` line is the fifth:
+
+```
+Total_Replay.hdv
+ProDOS_2.4.3.po
+
+
+debug=1
+```
 
 # SPIISD DIY KIT
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
