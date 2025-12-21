@@ -12,16 +12,28 @@
 #include <avr/io.h>
 #include "sp_pins.h"
 
-.global SP_ACK_ON
-SP_ACK_ON:
+.global SP_ACK_MUTE
+SP_ACK_MUTE:
           cbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; Set ACK input
           cbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK                     ; Set ACK low
+          ret
+
+.global SP_ACK_ON
+SP_ACK_ON:
+          sbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK                     ; ACK high
+          sbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; ACK output
           ret
 
 .global SP_ACK_OFF
 SP_ACK_OFF:
           cbi  _SFR_IO_ADDR(WR_PORT_ACK),PIN_ACK                     ; ACK low
           sbi  _SFR_IO_ADDR(DIR_PORT_ACK),PIN_ACK                    ; ACK output
+          ret
+
+.global SP_RD_MUTE
+SP_RD_MUTE:
+          cbi  _SFR_IO_ADDR(DIR_PORT_RD),PIN_RD                      ; Set RD as input
+          sbi  _SFR_IO_ADDR(WR_PORT_RD),PIN_RD                       ; Set RD high
           ret
 
 .global SP_RD_OFF
@@ -253,8 +265,7 @@ nxtsbycl:                                                           ;    delay t
 
 
 endspkt:  rcall SP_ACK_OFF
-          rcall SP_RD_OFF
-
+          
 1:        ldi  r24,5
           sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                    ;wait for REQ line to go low
           rjmp finishs                                              ;this indicates host has acknowledged ACK   
@@ -264,6 +275,7 @@ endspkt:  rcall SP_ACK_OFF
    
 finishs:  ;ldi  r24,'r'                                              ;for debug, r indicates REQ is low
           ;call uart_putc                                            ;output to serial port
+          rcall SP_RD_MUTE
           clr  r25
           clr  r24                                                   ;return no error
           sei

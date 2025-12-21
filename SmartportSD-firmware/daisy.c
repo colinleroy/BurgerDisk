@@ -1,5 +1,4 @@
 #include "sp_pins.h"
-#include "log.h"
 
 void daisy_ph3_mirror(void) {
   if (RD_PORT_PHASES & _BV(PIN_PH3)) {

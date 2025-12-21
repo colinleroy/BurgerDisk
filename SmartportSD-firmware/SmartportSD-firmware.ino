@@ -220,8 +220,8 @@ void setup (void) {
   SET_DRV1_IN;                //DRV1 & 2: input
   SET_DRV2_IN;
 
-  SP_RD_OFF();
-  SP_ACK_OFF();
+  SP_ACK_MUTE();
+  SP_RD_MUTE();
 
   /* Daisy pins */
   SET_DAISY_PH3_OUT;          // PH3: output
@@ -273,8 +273,6 @@ static void smartport_device_reset(void) {
   }
 
   daisy_diskII_disable();
-  SP_RD_OFF();
-  SP_ACK_OFF();
 
   // Ready. Wait for reset to clear
   while(smartport_get_state() == SP_BUS_RESET);
@@ -408,28 +406,12 @@ static void smartport_init(unsigned char dev_id) {
   status = SendPacket( (unsigned char*) packet_buffer);
 }
 
-static void IgnorePacket(unsigned char command, unsigned char dev_id) {
-  /* Monitor ACK to know when the packet is handled */
-  WAIT_ACK_LOW;
-  
-  switch (command) {
-    case SP_STATUS:
-    case SP_FORMAT:
-    case SP_READ:
-      WAIT_ACK_HIGH;
-      WAIT_ACK_LOW;
-      WAIT_ACK_HIGH;
-      break;
-    case SP_WRITE:
-      WAIT_ACK_HIGH;
-      WAIT_ACK_LOW;
-      WAIT_ACK_HIGH;
-      WAIT_ACK_LOW;
-      WAIT_ACK_HIGH;
-      break;
-  }
+static void IgnorePacket(unsigned char dev_id) {
+  SP_ACK_MUTE();
+  SP_RD_MUTE();
+  while(smartport_get_state() == SP_BUS_ENABLED);
   interrupts();
-  DEBUGN(F("Ignored packet for device "), dev_id, HEX);
+  DEBUGN(F("Ignored packet for "), dev_id, HEX);
 }
 
 static void DumpPacket(void) {
@@ -459,6 +441,9 @@ void loop() {
   SP_Command command;
   SP_State smartport_state;
 
+  SP_ACK_MUTE();
+  SP_RD_MUTE();
+
   // read phase lines to check for smartport reset or enable
   smartport_state = smartport_get_state();
 
@@ -480,7 +465,7 @@ void loop() {
     } else if (get_device_partition(dev_id) != -1) {
       AckPacket();
     } else {
-      IgnorePacket(command, dev_id);
+      IgnorePacket(dev_id);
       break;
     }
 
@@ -524,6 +509,7 @@ void loop() {
       break;
     }
     digitalWrite(PIN_LED, LOW);
+
     break;
 
   case SP_BOOTING:
