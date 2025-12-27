@@ -35,7 +35,6 @@
 #include "sp_low.h"
 #include "sp_vals.h"
 #include "log.h"
-#include "daisy.h"
 
 #define PIN_CHIP_SELECT 10      // D10
 #define PIN_LED         18      // A4
@@ -216,11 +215,43 @@ static inline SP_State smartport_get_state(void) {
   return SP_BUS_DISABLED;
 }
 
+
+static inline void daisy_ph3_mirror(void) {
+  if (RD_PORT_PHASES & _BV(PIN_PH3)) {
+    SET_DAISY_PH3_HIGH;
+  } else {
+    SET_DAISY_PH3_LOW;
+  }
+}
+
+static inline void daisy_ph3_disable() {
+  SET_DAISY_PH3_LOW;
+}
+
+static inline void daisy_diskII_mirror(void) {
+  if (DRV1_IS_HIGH) {
+    SET_DAISY_DRV1_HIGH;
+  } else {
+    SET_DAISY_DRV1_LOW;
+  }
+
+  if (DRV2_IS_HIGH) {
+    SET_DAISY_DRV2_HIGH;
+  } else {
+    SET_DAISY_DRV2_LOW;
+  }
+}
+
+static inline void daisy_diskII_disable(void) {
+  SET_DAISY_DRV1_HIGH;
+  SET_DAISY_DRV2_HIGH;
+}
+
 //SMARTPORT COMMAND HANDLERS ---------------------------------------------------
 
 //Smartport RESET handler
-static int number_partitions_initialised = 0;
-static int device_init_done = 0;
+static unsigned char number_partitions_initialised = 0;
+static unsigned char device_init_done = 0;
 static void smartport_device_reset(void) {
   LOG(F("RESET"));
 
@@ -370,84 +401,94 @@ void loop() {
   unsigned char dev_id;
   SP_Command command;
   SP_State smartport_state;
-  int partition = -1;
+  int partition;
 
   SP_ACK_MUTE();
   SP_RD_MUTE();
 
-  // read phase lines to check for smartport reset or enable
-  smartport_state = smartport_get_state();
-
-  switch (smartport_state) {
-  case SP_BUS_RESET:
-    daisy_ph3_disable();
-    smartport_device_reset();
-    break;
-
-  case SP_BUS_ENABLED:
-    daisy_diskII_disable();
-    ReceivePacket( (unsigned char*) packet_buffer);
-    dev_id = packet_buffer[6];
-    //source_id = packet_buffer[7];
-    command = (SP_Command) packet_buffer[14];
-
-    if (command == SP_INIT && !device_init_done) {
-      AckPacket();
-    } else if ((partition = get_device_partition(dev_id)) != -1) {
-      AckPacket();
-    } else {
-      IgnorePacket();
-      break;
-    }
-
-    digitalWrite(PIN_LED, HIGH);
-
-    switch (command) {
-    case SP_INIT:
-      //e may not have a dev_id/partition match yet
-      smartport_init(dev_id);
-      break;
-
-    case SP_STATUS:
-      smartport_answer_status(partition, 0);
-      break;
-
-    case SP_EXT_STATUS:
-      smartport_answer_status(partition, 1);
-      break;
-
-    case SP_EXT_READ:
-    case SP_READ:
-      smartport_read_block(partition);
-      break;
-
-    case SP_WRITE:
-      smartport_write_block(partition);
-      break;
-
-    case SP_FORMAT:
-      smartport_format(partition);
-      break;
-
-    case SP_EXT_WRITE:
-    case SP_EXT_FORMAT:
-    case SP_EXT_INIT:
-    default:
-      LOGN(F("Command not implemented: "), packet_buffer[14], HEX);
-      break;
-    }
-    digitalWrite(PIN_LED, LOW);
-
-    break;
-
-  case SP_BOOTING:
-  case SP_BUS_DISABLED:
+  while (1) {
+    noInterrupts();
     daisy_diskII_mirror();
-    break;
-  }
+    if (device_init_done) {
+      daisy_ph3_mirror();
+    }
 
-  if (device_init_done) {
-    daisy_ph3_mirror();
+    // read phase lines to check for smartport reset or enable
+    smartport_state = smartport_get_state();
+    if (smartport_state == SP_BUS_DISABLED) {
+      continue;
+    }
+
+    interrupts();
+    partition = -1;
+
+    switch (smartport_state) {
+    case SP_BUS_RESET:
+      daisy_ph3_disable();
+      smartport_device_reset();
+      break;
+
+    case SP_BUS_ENABLED:
+      daisy_diskII_disable();
+      ReceivePacket( (unsigned char*) packet_buffer);
+      dev_id = packet_buffer[6];
+      //source_id = packet_buffer[7];
+      command = (SP_Command) packet_buffer[14];
+
+      if (command == SP_INIT && !device_init_done) {
+        AckPacket();
+      } else if ((partition = get_device_partition(dev_id)) != -1) {
+        AckPacket();
+      } else {
+        IgnorePacket();
+        break;
+      }
+
+      digitalWrite(PIN_LED, HIGH);
+
+      switch (command) {
+      case SP_INIT:
+        //e may not have a dev_id/partition match yet
+        smartport_init(dev_id);
+        break;
+
+      case SP_STATUS:
+        smartport_answer_status(partition, 0);
+        break;
+
+      case SP_EXT_STATUS:
+        smartport_answer_status(partition, 1);
+        break;
+
+      case SP_EXT_READ:
+      case SP_READ:
+        smartport_read_block(partition);
+        break;
+
+      case SP_WRITE:
+        smartport_write_block(partition);
+        break;
+
+      case SP_FORMAT:
+        smartport_format(partition);
+        break;
+
+      case SP_EXT_WRITE:
+      case SP_EXT_FORMAT:
+      case SP_EXT_INIT:
+      default:
+        LOGN(F("Command not implemented: "), packet_buffer[14], HEX);
+        break;
+      }
+      digitalWrite(PIN_LED, LOW);
+      break;
+
+    case SP_BUS_DISABLED:
+      break;
+    }
+
+    SP_ACK_MUTE();
+    SP_RD_MUTE();
   }
 }
 

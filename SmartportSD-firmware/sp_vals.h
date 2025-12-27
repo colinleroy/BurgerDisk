@@ -2,10 +2,9 @@
 #define __SP_VALS
 
 typedef enum _SP_State {
-  SP_BOOTING,
+  SP_BUS_DISABLED,
   SP_BUS_RESET,
-  SP_BUS_ENABLED,
-  SP_BUS_DISABLED
+  SP_BUS_ENABLED
 } SP_State;
 
 typedef enum _SP_Command {

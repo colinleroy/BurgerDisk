@@ -3,6 +3,7 @@
 
 #include <avr/io.h>
 
+// Phases, D2 to D5 (portD)
 #define PIN_PH0         2       // D2
 #define PIN_PH1         3       // D3
 #define PIN_PH2         4       // D4
@@ -16,7 +17,8 @@
 #define PHASES_BUS_ENABLE  ((RD_PORT_PHASES & (_BV(PIN_PH1)|_BV(PIN_PH3))) == (_BV(PIN_PH1)|_BV(PIN_PH3)))
 #define PHASES_BUS_DISABLE (!(PHASES_BUS_ENABLE))
 
-#define WR_PORT_RD      PORTD   // Define the PORT to RD                 - D0 to D7
+// RDDATA on D6
+#define WR_PORT_RD      PORTD
 #define RD_PORT_RD      PIND
 #define DIR_PORT_RD     DDRD
 #define PIN_RD          6       // D6
@@ -25,7 +27,8 @@
 #define SET_RD_OUT      (DIR_PORT_RD |= _BV(PIN_RD))
 #define SET_RD_IN       (DIR_PORT_RD &= ~(_BV(PIN_RD)))
 
-#define WR_PORT_WR      PORTD   // Define the PORT to WR                 - D0 to D7
+// WRDATA on D7
+#define WR_PORT_WR      PORTD
 #define RD_PORT_WR      PIND
 #define DIR_PORT_WR     DDRD
 #define PIN_WR          7       // D7
@@ -34,7 +37,8 @@
 #define SET_WR_OUT      (DIR_PORT_WR |= _BV(PIN_WR))
 #define SET_WR_IN       (DIR_PORT_WR &= ~(_BV(PIN_WR)))
 
-#define WR_PORT_REQ     PORTD   // Define the PORT to REQ                - D0 to D7
+// REQ aka PH0, on D2
+#define WR_PORT_REQ     PORTD
 #define RD_PORT_REQ     PIND
 #define DIR_PORT_REQ    DDRD
 #define PIN_REQ         PIN_PH0    // Define the PIN number to REQ (PH0)    - PORTD bit2: D2
@@ -55,14 +59,12 @@
 
 #define ACK_IS_HIGH     (RD_PORT_ACK & _BV(PIN_ACK))
 #define ACK_IS_LOW      (!(ACK_IS_HIGH))
-#define WAIT_ACK_HIGH   while (ACK_IS_LOW)
-#define WAIT_ACK_LOW    while (ACK_IS_HIGH)
 
 //DRV1 on A0
-#define WR_PORT_DRV1    PORTB
+#define WR_PORT_DRV1    PORTC
 #define RD_PORT_DRV1    PINC
 #define DIR_PORT_DRV1   DDRC
-#define PIN_DRV1        0       // A0 (portC)
+#define PIN_DRV1        0       // A0 (portC bit 0)
 #define SET_DRV1_IN     (DIR_PORT_DRV1 &= ~(_BV(PIN_DRV1)))
 #define DRV1_IS_HIGH    (RD_PORT_DRV1 & _BV(PIN_DRV1))
 #define DRV1_IS_LOW     (!(DRV1_IS_HIGH))
@@ -71,7 +73,7 @@
 #define WR_PORT_DRV2    PORTB
 #define RD_PORT_DRV2    PINB
 #define DIR_PORT_DRV2   DDRB
-#define PIN_DRV2        1       // D9 (portB)
+#define PIN_DRV2        1       // D9 (portB bit 1)
 #define SET_DRV2_IN     (DIR_PORT_DRV2 &= ~(_BV(PIN_DRV2)))
 #define DRV2_IS_HIGH    (RD_PORT_DRV2 & _BV(PIN_DRV2))
 #define DRV2_IS_LOW     (!(DRV2_IS_HIGH))
@@ -83,7 +85,7 @@
 #define WR_PORT_DAISY_PH3      PORTB
 #define RD_PORT_DAISY_PH3      PINB
 #define DIR_PORT_DAISY_PH3     DDRB
-#define PIN_DAISY_PH3          0       // D8
+#define PIN_DAISY_PH3          0       // D8, portB bit 0
 #define SET_DAISY_PH3_HIGH     (WR_PORT_DAISY_PH3 |= _BV(PIN_DAISY_PH3))
 #define SET_DAISY_PH3_LOW      (WR_PORT_DAISY_PH3 &= ~_BV(PIN_DAISY_PH3))
 #define SET_DAISY_PH3_OUT      (DIR_PORT_DAISY_PH3 |= _BV(PIN_DAISY_PH3))
