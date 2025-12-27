@@ -1,3 +1,8 @@
+#include <Arduino.h>
+#include <string.h>
+#include <stdio.h>
+#include <avr/pgmspace.h>
+
 #include "sp_pins.h"
 
 void daisy_ph3_mirror(void) {

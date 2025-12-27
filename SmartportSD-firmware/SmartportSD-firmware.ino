@@ -40,6 +40,9 @@
 #define PIN_CHIP_SELECT 10      // D10
 #define PIN_LED         18      // A4
 
+#define SPI_CLOCK SD_SCK_MHZ(50)
+#define SD_CONFIG SdSpiConfig(PIN_CHIP_SELECT, DEDICATED_SPI, SPI_CLOCK)
+
 #define MAX_PARTITIONS 4
 int open_partitions = 0;
 int debug = 0;
@@ -76,7 +79,7 @@ static void init_storage(void) {
   // is allocated.
   free(packet_buffer);
 
-  if (!sdcard.begin(PIN_CHIP_SELECT, SPI_HALF_SPEED)) {
+  if (!sdcard.begin(SD_CONFIG)) {
     LOG(F("Error init card"));
     led_err();
   }

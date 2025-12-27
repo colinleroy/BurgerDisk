@@ -68,9 +68,9 @@
 #define DRV1_IS_LOW     (!(DRV1_IS_HIGH))
 
 //DRV2 on D9
-#define WR_PORT_DRV2    PORTC
-#define RD_PORT_DRV2    PINC
-#define DIR_PORT_DRV2   DDRC
+#define WR_PORT_DRV2    PORTB
+#define RD_PORT_DRV2    PINB
+#define DIR_PORT_DRV2   DDRB
 #define PIN_DRV2        1       // D9 (portB)
 #define SET_DRV2_IN     (DIR_PORT_DRV2 &= ~(_BV(PIN_DRV2)))
 #define DRV2_IS_HIGH    (RD_PORT_DRV2 & _BV(PIN_DRV2))
