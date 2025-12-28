@@ -174,8 +174,8 @@ void setup (void) {
 
   /* Main pins on upstream port */
   SET_WR_HIGH; SET_WR_IN;     //WR: input pullup
-  SET_DRV1_IN;                //DRV1 & 2: input
-  SET_DRV2_IN;
+  SET_DRV1_IN; SET_DRV1_HIGH; //DRV1 & 2: input
+  SET_DRV2_IN; SET_DRV2_HIGH;
 
   SP_ACK_MUTE();
   SP_RD_MUTE();

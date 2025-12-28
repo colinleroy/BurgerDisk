@@ -66,6 +66,7 @@
 #define DIR_PORT_DRV1   DDRC
 #define PIN_DRV1        0       // A0 (portC bit 0)
 #define SET_DRV1_IN     (DIR_PORT_DRV1 &= ~(_BV(PIN_DRV1)))
+#define SET_DRV1_HIGH   (WR_PORT_DRV1 |= _BV(PIN_DRV1))
 #define DRV1_IS_HIGH    (RD_PORT_DRV1 & _BV(PIN_DRV1))
 #define DRV1_IS_LOW     (!(DRV1_IS_HIGH))
 
@@ -75,6 +76,7 @@
 #define DIR_PORT_DRV2   DDRB
 #define PIN_DRV2        1       // D9 (portB bit 1)
 #define SET_DRV2_IN     (DIR_PORT_DRV2 &= ~(_BV(PIN_DRV2)))
+#define SET_DRV2_HIGH   (WR_PORT_DRV2 |= _BV(PIN_DRV2))
 #define DRV2_IS_HIGH    (RD_PORT_DRV2 & _BV(PIN_DRV2))
 #define DRV2_IS_LOW     (!(DRV2_IS_HIGH))
 
