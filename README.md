@@ -74,6 +74,16 @@ or to a DiskII controller on an Apple II with a SoftSP card. In this case,
 *disconnect the DRV2 jumper on the BurgerDisk PCB*, or you will fry the Arduino
 Nano by feeding it +12V. *This is untested, proceed with caution*.
 
+## The daisy output port
+"DB19" is very outdated and hard to procure. One can find them on eBay, but it
+will probably be the most expensive part of the BurgerDisk. Connecting a daisy
+output port to the BurgerDisk can be done in two ways:
+- using an angled connector desoldered/salvaged from a broken daisy-chainable
+  Apple disk drive (in this case, make sure to apply tape to the border connector
+  for isolation, and be prepared to bend pins a bit as, *FIXME*, the pins spacing
+  is slightly wrong on the PCB).
+- using a flat DB19 connector and soldering it on the border pads of the PCB.
+
 ## Using BurgerDisk
 The firmware will open and present between one and four partitions.
 If a config.txt file exists on the SD card, it will use the first four
