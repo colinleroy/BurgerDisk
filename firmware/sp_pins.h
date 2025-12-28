@@ -124,5 +124,6 @@
 #define SET_LED_HIGH           (WR_PORT_LED |= _BV(PIN_LED))
 #define SET_LED_LOW            (WR_PORT_LED &= ~_BV(PIN_LED))
 
+#define PIN_CHIP_SELECT        10      // D10
 
 #endif

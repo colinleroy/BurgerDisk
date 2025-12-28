@@ -1,31 +1,52 @@
 //*****************************************************************************
+// BurgerDisk firmware.
+// This device provides the Smartport-capable Apple II with an SD-card-based
+// hard-drive, like the SmartportSD, SP2SD or FloppyEmu projects do.
+// Contrary to those, the BurgerDisk firmware handles a daisy-chain port
+// and allows you to have more Smartport devices and/or dumb floppy drives
+// connected behind it.
+// The usual Apple II daisy-chaining rules apply:
+// - first the 3.5" floppy disk drives
+// - followed by Smartport devices
+// - followed by dumb disk drives.
 //
-// Apple //c Smartport Compact Flash adapter
-// Written by Robert Justice  email: rjustice(at)internode.on.net
-// Ported to Arduino UNO with SD Card adapter by Andrea Ottaviani email: andrea.ottaviani.69(at)gmail.com
-////
-// Apple disk interface is connected as follows:
-// wrprot = pa5 (ack) (output)
-// ph0    = pd2 (req) (input)
-// ph1    = pd3       (input)
-// ph2    = pd4       (input)
-// ph3    = pd5       (input)
-// rddata = pd6       (output from avr)
-// wrdata = pd7       (input to avr)
+// The code of this firmware is based on:
+// 
+// - Apple //c Smartport Compact Flash adapter
+//      Written by Robert Justice <rjustice(at)internode.on.net>
+// - Ported to Arduino UNO with SD Card adapter
+//      Written by Andrea Ottaviani <andrea.ottaviani.69(at)gmail.com>
+// - FAT filesystem support
+//      Written by Katherine Stark
+// - Daisy chaining based on SmartportVHD's reverse engineering
+//      Written by Cedric Peltier
 //
-//led i/o = pa4  (for led on when i/o on boxed version)
+// The firmware will open and present between one and four partitions.
+// If a config.txt file exists on the SD card, it will use the first four
+// lines as filenames for the partitions to open. An optional fifth line
+// containing "debug=1" will turn debug messages on.
+// If no config.txt file exists, the firmware will search for PARTx.po
+// files, with x between 1 and 4.
 //
+// The firmware is compatible with SPIISD v1 and SPIISD v2 boards. It fixes
+// two bugs in that firmware:
+// - Too slow init preventing the partitions to be visible by ProDOS after
+//   booting from internal floppy,
+// - It fixes a non-recoverable freeze on A2S4100 Apple //c with the memory
+//   expansion board.
+// Of course, running this firmware on an SPIISD board will not allow for
+// daisy chaining.
+// The slow initialization problem has two parts, one of them is a fix in the
+// code, the other one depends on the Arduino boot process and this one must
+// be fixed by using an AVR programmer to upload the firmware.
 //
-// Serial port was connected for debug purposes. Most of the prints have been commented out.
-// I left these in and these can be uncommented as required for debugging. Sometimes the
-// prints add to much delay, so you need to be carefull when adding these in.
+// FIXME: This code uses the SDFat library, written by Bill Greiman. It builds
+// with SDFat version 2.1.2, which is outdated. 
 //
-// NOTE: This is uses the ata code from the fat/fat32/ata drivers written by
-//       Angelo Bannack and Giordano Bruno Wolaniuk and ported to mega32 by Murray Horn.
+// This firmware is licensed under the GPL v3.
 //
 //*****************************************************************************
 
-//x #include <SPI.h>
 #include "SdFat.h" // SDFat version 2.1.2
 #include <string.h>
 #include <stdio.h>
@@ -35,8 +56,6 @@
 #include "sp_low.h"
 #include "sp_vals.h"
 #include "log.h"
-
-#define PIN_CHIP_SELECT 10      // D10
 
 #define SPI_CLOCK SD_SCK_MHZ(50)
 #define SD_CONFIG SdSpiConfig(PIN_CHIP_SELECT, DEDICATED_SPI, SPI_CLOCK)
@@ -65,7 +84,7 @@ static void log_io_err(const __FlashStringHelper *op, int partition, int block_n
   Serial.println(block_num);
 }
 
-//SD cart init and images opening
+//SD card init and images opening
 static int storage_init_done = 0;
 static void init_storage(void) {
   if (storage_init_done) {
@@ -73,7 +92,7 @@ static void init_storage(void) {
   }
   DEBUGN(F("Free memory before opening images: "), freeMemory(), DEC);
 
-  // Not enough RAM for SDFat to open a file if the packet_buffer
+  // Not enough RAM for SDFat to open a file if the standard packet_buffer
   // is allocated.
   free(packet_buffer);
 
@@ -113,6 +132,7 @@ static void init_storage(void) {
         break;
       }
     }
+
     /* Now get parameters */
     while (myFile.fgets((char*)packet_buffer, 100) > 0) {
       if (!strncmp((const char *)packet_buffer, "debug=", 6)) {
@@ -148,7 +168,7 @@ void setup (void) {
 
   // Serial init
   Serial.begin(230400);
-  LOG(F("SmartportSD v1.18"));
+  LOG(F("BurgerDisk v1.0"));
 
   packet_buffer = (unsigned char *)malloc(605);
 
@@ -499,7 +519,7 @@ void loop() {
 void led_err(void)
 {
   interrupts();
-  LOG(F("Require reboot"));
+  LOG(F("Error - Require reboot"));
 
   while (1) {
     SET_LED_HIGH;
