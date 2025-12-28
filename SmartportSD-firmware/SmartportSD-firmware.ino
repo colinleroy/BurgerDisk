@@ -124,7 +124,7 @@ static void init_storage(void) {
     myFile.close();
 
   } else {
-    Serial.println(F("No config.txt. Searching for images."));
+    LOG(F("No config.txt. Searching for images."));
     for (unsigned char i = 0; i < MAX_PARTITIONS; i++) {
       String prefix = F("PART");
       open_image(devices[i], prefix+(i+1)+".po");
@@ -397,6 +397,8 @@ static void IgnorePacket(void) {
 //
 // Description: Main function for Apple //c Smartport Compact Flash adpater
 //*****************************************************************************
+#pragma GCC optimize("-O3")
+
 void loop() {
   unsigned char dev_id;
   SP_Command command;
@@ -407,20 +409,12 @@ void loop() {
   SP_RD_MUTE();
 
   while (1) {
-    noInterrupts();
-    daisy_diskII_mirror();
+    partition = -1;
+    smartport_state = smartport_get_state();
+
     if (device_init_done) {
       daisy_ph3_mirror();
     }
-
-    // read phase lines to check for smartport reset or enable
-    smartport_state = smartport_get_state();
-    if (smartport_state == SP_BUS_DISABLED) {
-      continue;
-    }
-
-    interrupts();
-    partition = -1;
 
     switch (smartport_state) {
     case SP_BUS_RESET:
@@ -430,6 +424,7 @@ void loop() {
 
     case SP_BUS_ENABLED:
       daisy_diskII_disable();
+
       ReceivePacket( (unsigned char*) packet_buffer);
       dev_id = packet_buffer[6];
       //source_id = packet_buffer[7];
@@ -443,8 +438,6 @@ void loop() {
         IgnorePacket();
         break;
       }
-
-      digitalWrite(PIN_LED, HIGH);
 
       switch (command) {
       case SP_INIT:
@@ -480,17 +473,17 @@ void loop() {
         LOGN(F("Command not implemented: "), packet_buffer[14], HEX);
         break;
       }
-      digitalWrite(PIN_LED, LOW);
+      // Wait for SP to be disabled
+      while(smartport_get_state() == SP_BUS_ENABLED);
       break;
 
     case SP_BUS_DISABLED:
+      daisy_diskII_mirror();
       break;
     }
-
-    SP_ACK_MUTE();
-    SP_RD_MUTE();
   }
 }
+#pragma GCC optimize("-Os")
 
 //*****************************************************************************
 // Function: led_err
@@ -504,7 +497,7 @@ void loop() {
 void led_err(void)
 {
   interrupts();
-  Serial.println(F("Require reboot"));
+  LOG(F("Require reboot"));
 
   while (1) {
     digitalWrite(PIN_LED, HIGH);
@@ -529,25 +522,18 @@ int freeMemory() {
 }
 
 bool open_image(struct device &d, String filename ) {
-  Serial.print(F("Testing file "));
-  Serial.print(filename);
-
   d.sdf = sdcard.open(filename, O_RDWR);
   if (!d.sdf.isOpen()) {
-    Serial.println(F(": Can not open."));
     return false;
   }
   if (!d.sdf.isFile()) {
-    Serial.println(F(": Is a directory."));
     return false;
   }
 
   if (d.sdf.size() == 0) {
-    Serial.println(F(": File is empty"));
     return false;
   }
 
-  Serial.println(F(": OK"));
   d.blocks = d.sdf.size() >> 9;
   return true;
 }
