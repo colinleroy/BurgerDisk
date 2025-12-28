@@ -1,282 +1,70 @@
-# Why this fork?
+# BurgerDisk - a daisy-chainable Smartport hard drive
 
-I recently bought an SPIISD v2 kit so that I could have a "hard drive" on my Apple //c.
-My use-case is to be able to save documents, photos, programs to a large storage, because
-floppies are... small.
+This device provides the Smartport-capable Apple II with an SD-card-based
+hard-drive, like the SmartportSD, SPIISD or FloppyEmu projects do.
 
-## Bug number 1
-Upon testing, I was disappointed to see that the SPIISD v2 works great, in conjunction with
-ROM4x, when we boot the Apple //c from Smartport using the ROM4x menu, but that the drive
-was "invisible" when booting from the internal floppy disk drive.
+Contrary to those, the BurgerDisk firmware handles a daisy-chain port
+and allows you to have more Smartport devices and/or dumb floppy drives
+connected behind it.
 
-I was told this was a limitation of the Apple //c firmware, but could not believe it, as
-it was documented nowhere on Internet, and people back in the day would have had a hard time
-booting from an external hard disk drive without any means to initialize it.
+Contrary to the SPIISD v2 and FloppyEmu projects, BurgerDisk is free software and
+free hardware, and licensed in a way to keep it that way.
 
-This is when the second disappointment happened: I wanted to investigate the problem, but when
-I bought the SPIISD v2, I missed the part in the documentation that says that the v2 firmware
-is closed-source. I doubt the legality of this, given that it seems heavily based on the v1.17
-firmware which is MIT-licensed, but that is not my main problem so far, as I so far had no
-copyright on v1.17. I was mostly annoyed that I couldn't debug anything further than looking
-at serial logs.
+Contrary to the SPIISD v2 and FloppyEmu projects, BurgerDisk has no screen UI,
+and contrary to the SPIISD v1 project, it has no "boot partition" selection
+button. The Apple II will be able to boot from the first partition when booting
+from slot 5. This is both a choice - I wanted this device to resemble a
+period-correct hard drive - and a limitation - there are no extra digital GPIOs
+available on the Nano board.
 
-I traced the PCB connections from the IDC-20 Smartport connector to the Nano, and the ones
-from the SD card module to the Nano, ignored the four buttons and the screen, and compared
-those to the gerber files for the v1 board (those are [here](SPSD_DIY_NANO_GERBER)).
-All connections matching, I flashed the v1.17 firmware on my v2 board, and started debugging.
+When daisy-chaining, the usual Apple II rules apply:
+- first the 3.5" floppy disk drives
+- followed by Smartport devices
+- followed by dumb disk drives.
 
-So far, this repository fixes my problem: the SPIISD board was booting too slowly, and
-missed the first Smartport RESET and ENABLE at cold boot, and so could not advertise its
-existence to the Apple //c.
+The code of this firmware is based on:
+- Apple //c Smartport Compact Flash adapter, written by Robert Justice <rjustice(at)internode.on.net>
+- Ported to Arduino UNO with SD Card adapter, written by Andrea Ottaviani <andrea.ottaviani.69(at)gmail.com>
+- FAT filesystem support, written by Katherine Stark
+- Daisy chaining is based on SmartportVHD's reverse engineering, written by Cedric Peltier
 
-I solved it by reflashing the firmware using an AVR ISP mkII programmer, which bypasses the
-Arduino's bootloader. As this was not enough, I defer storage init to the first Smartport
-STATUS call, where the computer waits for our answer.
+## Using BurgerDisk
+The firmware will open and present between one and four partitions.
+If a config.txt file exists on the SD card, it will use the first four
+lines as filenames for the partitions to open. An optional fifth line
+containing "debug=1" will turn debug messages on.
 
-## Bug number 2
-
-At that point this firmware works good with a ROM01 Apple IIgs and a ROM4x Apple //c (A2S4000)
-and a ROM3 Apple //c (A2S4000). However! It freezes on the A2S4100 with the Memory Expansion
-Card, because of an over-eager timeout on the Nano. 
-
-# I have an official SPIISD and the same problem, how do I fix it
-
-## For bug number 1
-If you're here because you want your Apple IIc to see your SPIISD (v1 or v2) on cold boot,
-here are your options:
-
-- Hit Ctrl-Open-Apple-Reset one second after cold booting. This re-resets the Smartport bus,
-but this time the SPIISD is booted.
-- Power your SPIISD via an USB adapter, so that it's on before the //c
-- Flash this firmware to your board, using a programmer instead of the USB connection, to
-fix the root of the problem.
-
-*Warning*: If you flash this firmware on an SPIISD v2 board, you will lose the screen and
-buttons functionalities. If you flash this firmware on a v1 board, you will lose the "Eject"
-button that is used to switch the SPIISD's bootable image.
-
-In any case, backup your original firmware, using (via USB connection to the nano):
+For example, this will present `prodos.po` and `total_replay.po`, and turn
+debug on:
 ```
-avrdude -c arduino -P /dev/ttyUSB0 -b 115200 -p m328p -U flash:r:SPIISD.orig.hex
-```
-
-If needed, you can restore it by first using the arduino IDE to reflash the bootloader:
-- Tools / Board : Arduino Nano
-- Tools / Processor : ATmega328P
-- Tools / Programmer: AVR ISP mkII (or whatever your programmer is)
-- Tools : Burn bootloader
-
-Then reflash the firmware using your backup:
-```
-avrdude -c arduino -P /dev/ttyUSB0 -b 115200 -p m328p -U flash:w:SPIISD.orig.hex
-```
-
-## For bug number 2
-
-There is no workaround but to use this firmware.
-
-# Directions for this project
-
-There are mainly two things I want for this project. First, I would like to have my
-firmware conform to my needs (for example, I need only one or two partitions, and
-I dislike seeing S2D1 and S2D2 when I won't use them). This is done.
-
-Second, I want this device to act as a period-correct hard drive: I am not interested
-in switching images dynamically, or to be able to boot any other image than the first
-one. This is done. 
-
-Third, I would like to design a PCB (and extend the firmware) to allow this device
-to be daisy-chainable (before other Smartport devices and before dumb floppy drives).
-This is not done.
-
-Also, I want it to be a good, solid Smartport hard drive implementation base that
-would benefit the community at large: while it is easy to find mass storage
-solutions for the slotted Apple IIs, there are far less options to the //c, and
-as far as I know, only one - the out-of-stock SPIISD v1 - is open-source.
-
-So, if people are interested in such a project, I'm in. I am bad at hardware,
-and while I can wire shit to the correct pins to make prototypes, I have zero
-experience at making PCBs and each time I try to learn it's a nightmare. I'm
-also bad at 3D printing and couldn't design and print an enclosure. But I'm
-quite good at software.
-
-So far, only huge nerds can use this firmware: it requires competency in Arduino
-flashing *and* in what to do to transform gerber files into PCBs: the v1 board
-is out of stock at Kero Mac Mods store, and the PCB is licensed under the CC-BY-NC-SA,
-which prohibits others to step up, have some built and sell them to the community.
-(Or, you could by a v2 board and use this firmware. Still, it's not as easy as
-it should).
-
-If I manage to design a new PCB, it will be MIT-licensed too, so that anyone
-interested could build and sell them. Probably not me, I don't want to turn my
-hobby into work.
-
-# Configuration
-
-The firmware will present between 1 and 4 images as devices to the Apple II.
-Configuring which files are mapped to which devices can be done in two ways.
-
-## The simple way
-
-Put images on the SD card with names: PART1.po, PART2.po, PART3.po, PART4.po.
-
-## The more dynamic way
-
-Put images on the SD card with arbitrary names, and paste them in a `config.txt`
-file:
-
-```
-Total_Replay.hdv
-ProDOS_2.4.3.po
-PART3.po
-PART4.po
-```
-
-## Enabling debug output on the Arduino's serial port
-
-Put `debug=1` in `config.txt` after the images names. If you don't want to present
-four images, put blank lines so that the `debug` line is the fifth:
-
-```
-Total_Replay.hdv
-ProDOS_2.4.3.po
+prodos.po
+total_replay.po
 
 
 debug=1
 ```
 
-# SPIISD DIY KIT
-[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
-<br>
-<img src="SD2SD_PIX/IMG_7010.jpeg" width="520px">
-# What is SPIISD ?
-It is based on an open source project called SmartPortSD. 
-Created by Australian genius [Robert Justice](https://web.archive.org/web/20230222233834/http://www.users.on.net/~rjustice/SmartportCFA/SmartportCFA.htm), SmartPortCFA was ported to Arduino hardware by Italian programmer genius [Andrea Ottaviani](https://github.com/aotta?fbclid=IwAR0_7cMKVhMVrHznB9bIub9ZmrmBlwAM3p6-_CQd0JFW1o736nUNZHyuTdw).  to porting to Arduino hardware. It was improved upon by [Katherine Stark](https://gitlab.com/nyankat/smartportsd) of Canada. She made available its ability to access four ProDOS-formatted 32MB PO files stored on a FAT32-formatted SD card. When she did this successfully, many wanted to build it.
+If no config.txt file exists, the firmware will search for PARTx.po
+files, with x between 1 and 4.
 
-*Got permission from the three geniuses I introduced earlier.<BR><BR>
+## Compatibility notes
+The firmware is compatible with SPIISD v1 and SPIISD v2 boards. It fixes
+two bugs in their firmwares:
+- Too slow init preventing the partitions to be visible by ProDOS after booting
+  from internal floppy,
+- A non-recoverable freeze on A2S4100 Apple //c with the memory expansion board.
+Of course, running this firmware on an SPIISD board will not allow for
+daisy chaining.
+The slow initialization problem has two parts, one of them is fixed in the
+code, the other one depends on the Arduino boot process and this one must
+be fixed *by using an AVR programmer* to upload the firmware.
 
-We differentiated it with a name to distinguish it from other SmartportSD hardware (including unlicensed ones).<BR><BR>
+## Licensing
+This firmware is licensed under the GPL v3.
 
-<BR>
-More details here (My Blog):
-https://ameblo.jp/keroxiee1016/entry-12819341808.html
+The PCB is licensed under CC BY-SA 4.0.
 
-## Flashing Arduino Nano
-
-Oct 15th, 2024: SmartportSD program has been updated to Ver.1.17, version 1.17 has been thoroughly tested with "SPIISD" hardware and has confirmed good performance. Fixed a problem with the Apple IIcPlus, and improved versatility with slower SD cards. Usage is the same as V.1.16.
-
-May 8th, 2024: SmartportSD program has been updated to Ver.1.16 by Wing Yeung from [MFA2 work shop](http://www.mfa2lab.com). version 1.16 has been thoroughly tested with "SPIISD" hardware and has confirmed good performance. This same 1.16 program can work with both "SPIISD DIY KIT" and "SPIISD MINI". *We have not verified SmartportSD compatible devices from other manufacturers. I think they work well if they keep the same schematics.<BR>
-
-- By placing "config.txt" at the root of the SD card, you can place various files without renaming them.<BR>
-- Write 4x file names in "config.txt". SPIISD will only read files with that filename.
-In addition to ".po", ".hdv" and ".2mg" can be used as extensions.<BR>
-- Of course, you can put an unlimited number of images in the root of the SD card, but only the config.txt file will be read.<BR>
-- If you do not place config.txt, you can also place four files from PART1.po as before.<BR>
-
-You can flash your Arduino Nano via ArduinoIDE. Please download and use firmware of ["SmartportSD-1.17" folder](SmartportSD-1.17). If a new folder is created when using the Arduino IDE, please re-insert all the contents of this "SmartportSD-1.17" folder into the new folder. *The name of the ".ino" file should always be the same as the parent folder, so there is usually no problem if you use it as is.<BR>
-<BR>
-The Nano board you should choose is MEGA328P. Please do not buy MEGA168P as it has 38% insufficient capacity and cannot be flashed.<BR>
-<img src="SD2SD_PIX/IMG_7158.jpeg" width="520px"><BR>
-The Arduino IDE settings are as follows,<BR>
-Board: "Arduino Nano"<BR>
-Processor: "ATmega328P(Old Bootloader)"<BR>
-Port: Number of USB port connected to Arduino Nano *In your PC<BR>
-Programmer: "AVRISP mkII"<BR>
-
-## Assemble
-Uploaded on Sep 24, assembly instructions can be found [here](SP2SD_DIY_INST.pdf), You can see which parts should be attached where by looking at our [BOM](SP2SD_NANO_DIY_BOM.csv). 
-<BR>
-<img src="SD2SD_PIX/IMG_6993.jpeg" width="320px">
-<BR>
-The IDC20 connector can be oriented in various ways depending on how you use it, When installing the male IDC20pin connector, be sure to make sure that the part is on the top side. When stacking two PCBs, make sure the hole and ▼ are in the same position. In that case, match the IDC20pin male and female connectors or connect them with a 2X10 pin header.<BR><BR>
-日本語の組み立て説明書は[こちら](SP2SD_DIY_INST_JPN.pdf)から
-
-## DB19 male connector
-
-You can 3D print the base material and pull out the pins from a [DB25 male connector](https://www.amazon.com/PC-Accessories-Connectors-Connector-25-PACK/dp/B073KR622F/ref=sr_1_2_sspa?crid=2ZCRZ8PNIBJ4R&keywords=DB25+connector+male&qid=1693987417&sprefix=db25+connector+mal%2Caps%2C398&sr=8-2-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&psc=1) and insert them, or purchase new pins from [AliExpress](https://www.aliexpress.com/item/1005002617586407.html?spm=a2g0o.order_list.order_list_main.16.55d11802jCHaOW). We have omitted unnecessary pins to make it simple for you to create. I will give out free .STL files that can be 3D printed. <BR><BR> DB19 connector file is [this](KEROS_DB19_V1.zip).
-
-## 3D printed shell case
-
-Our awesome friend [Mr Lurch](https://www.youtube.com/channel/UCMQ28v823w6p1ZnyiZDVwUg) completed the shell case design. This can be used by connecting boards A and B with pin headers without using cables.<BR><BR>
- [Here](https://www.thingiverse.com/thing:6235981) is the case stl files for integrated.<BR>
- [Here](https://www.thingiverse.com/thing:6248598) is the case stl files for cable connection.
-
-
-
-<img src="SD2SD_PIX/featured_preview_ab096b0b-b7fb-4642-bbca-2324291519f1.JPG" width="320px">
-<img src="SD2SD_PIX/large_display_4007bc3e-9274-41ef-b832-ba9b7ebddd8f.JPG" width="200
-px">
-
-
-
-## Supported Apple II computers
-
-<BR>
-<img src="SD2SD_PIX/IMG_6963.jpeg" width="360px">
-
-<BR><BR>
-- Apple IIgs　*Even you set the startup slot to #5 and remove other bootable devices the startup timing does not match, try the shortcut key "Open Apple" + "Control" + "Reset" to reboot. If you are new to IIgs, make sure to release key "Open Apple"　 last and it will reboot easily.<BR>
-- Apple IIc, IIc Plus *In the case of IIc, Smartport cannot be used as is with older ROM 255, so a ROM upgrade is required. See the chapter bellow
-- Apple IIe, IIe Enhanced, IIe Platinum, works well with Grappler Minus card (1) with SoftSP diy ROM V2, V3 and V6-a. It works into the #5 slot and use it via the DiskII card in the #6 slot. In other words, it is a card that connects SmartPort with two cards.<BR>*You can also use it via "Liron" card, BMOW also has a highly functional card called "Yellowstone", which can also be used. <BR>
-- Apple II Plus, works well with GrapplerMinus card with SoftSP diy ROM V2, V3 and V6-a.<BR>
-
-(1) We developed the [Grappler Minus card](https://github.com/kerokero5150/GrapplerMinus/blob/main/README.md), which overcomes timing issues. This is also open source and anyone can create it, but it is not allowed to be sold. It is also available for purchase at our store. <BR><BR>
-If you use SoftSP with the Genuine "Grappler Plus" card, the functionality of SoftSP DIY will be limited due to the unnecessary circuitry of the printer interface. Specifically, it only works with Apple IIe, and only V2 and V3 ROMs can be used.
-
-## Usage
-<BR>
-Use a FAT32(16) formatted MicroSD card. Most of the MicroSD cards currently on sale can be used as is.
-Extension .po files can be used.<BR><BR>
-
-### Usage V.1.17(1.16)
-New firmware allows the use of three file extensions: ".po", ".hdv", ".2mg", each files with a maximum size of 32MB.
-As we have upgraded to V.1.17(1.16), the new method for setting up the SD card is described below. From v1.16 onwards, if "config.txt" is not placed in the root, it will be automatically recognized and converted to the old method. Please refer to “2, Old method” when "config.txt" is not placed.＜BR>
-Place "config.txt" in the root of the SD card, this is a standard text document, which can be created using any text editors. This is the table of contents for loading the specified file into the Apple II. The contents of "config.txt" must have a file name written on each line, and you can specify up to four files to launch. You can add as many files as you like up to the capacity of the SD card. However, SPIISD can only read the four files with the names written in config.txt. The file extensions are either ".po", ".hdv", or ".2mg". SPIISD will read from the first file written (on the first line). Please keep in mind that the file specification must always be 4 lines for 4files.
-
-### Usage up to V.1.15<BR>
-The Apple ProDOS disk image that can be used for SPIISD is a .PO file with a maximum size of 32MB. Place this file at the root of your micro SD card. Up to 4 files can be recognized. The first file name should be “PART1.PO”. As you can imagine, there can place four files, so from the second file on, name the files with regularity, such as "PART2.PO", "PART3.PO", and "PART4.PO".<BR>
-For disk images with the .hdv extension, the catalog structure is the same, so you should be able to use them by simply renaming the file to .po. An APP called CiderPressV4 can convert other file extensions to .po.<BR><BR>
-I think the most popular way to use SPIISD on the IIc is to use TotalReplay, a collection of old appleII games. <BR>
-The IIgs supports GSOS. In this case, you can check all four files at the same time on the OS's finder. If you only have a IIgs, the SPIISD is the device with the best value for money.<BR><BR>
-*If you change the extension from .hdv to .po and it doesn't work, you can use CiderPress to convert it to a .PO file. CiderPressV4 can be done on Windows 7 and up. *For Win98/ME/2K/XP there is an older version.<BR>
-<BR>
-CiderPress V4:<BR>(https://a2ciderpress.com)<BR><BR>
-TotalReplay:<BR>(https://archive.org/details/TotalReplay)<BR><BR>
- 
-
-
-
-## To use Apple IIc's smart port
-For Apple IIc, Smartport will not be enabled if ROM 255 is installed(Probably ROM0 as well). To check the ROM of your IIc, run the following program from the Basic prompt.
-  PRINT PEEK (64447)
-If the output number is "255", the ROM needs to be replaced. The ROM versions that Smartport can use are "3", "4" and ROM"4x". For these numbers, ROM replacement is not necessary.
-
-The replaced ROMs are available [here](https://mirrors.apple2.org.za/Apple%20II%20Documentation%20Project/Computers/Apple%20II/Apple%20IIc/ROM%20Images/).
-There is also the useful hacked [ROM4X](https://github.com/mgcaret/rom4x). This is a fairly new ROM updated in 2018.<BR><BR>
-
-My recommendation is ROM4X.<BR>
-
-If you want to swap the ROM from 255 to another ROM, you need to change the solder jumpers "W1" and "W2". 
-255 is 16KB while other ROMs are 32KB. Enable 32KB by changing Pin27, which is A14, from pull-down to pull-up. 
-See below for solder jumper locations. [External site](https://www.apple2faq.com/apple2faq/apple-iic-rom-upgrade/?fbclid=IwAR3BZfkTRkhG0zg6dHxvxYdH9SbyCvsA-Zr1-_e0wyenW6WFG-cKSsxj_oM)
-
-## To get the SPIISD PCB
-
-You can use [SPSD_DIY_NANO_GERBER.zip](SPSD_DIY_NANO_GERBER.zip)  and uploading it to JLCPCB or PCBWAY as it is.
-
-<BR>
-<img src="SD2SD_PIX/PCB_TOP.png" width="600px">
-
-The [SPIISD DIY kit](https://en.infinityproducts.co.jp/product-page/sp2sd-diykit-bare-pcb-board-a-b) comes complete with all parts, sold in our [store](https://en.infinityproducts.co.jp/shop-1). [SPIISD mini](https://en.infinityproducts.co.jp/product-page/spiisd-mini-for-iic-iicplus-iigs) is a compact hardware with fixed db19. It does not require assembly, so it is recommended for those who want to use it immediately, and for those who want a sense of unity with Apple IIc.
-
-
-
-## Licenses
-
-SmartportSD software licenses are listed [here](SMARTPORTSD_LICENSE.md) under the MIT license.
-Ⓒ2023 Katherine Stark, Robert Justice, Andrea Ottaviani. All rights reserved.
-
-This SPIISD hardware is licensed under a
-[Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0/).
-Ⓒ 2023 Kay Koba, Kero's mac Mods, All rights reserved.
-[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+This means that anyone is welcome to use, modify, distribute and sell hardware
+based on BurgerDisk. Using and modifying does not require you to do anything.
+Distributing and/or selling requires you to provide the source files for the
+firmware and the PCB, under the same licenses.
