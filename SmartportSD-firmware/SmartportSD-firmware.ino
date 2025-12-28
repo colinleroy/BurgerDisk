@@ -422,7 +422,6 @@ void loop() {
       break;
 
     case SP_BUS_ENABLED:
-      SET_LED_HIGH;
       daisy_diskII_disable();
 
       ReceivePacket( (unsigned char*) packet_buffer);
@@ -436,9 +435,10 @@ void loop() {
         AckPacket();
       } else {
         IgnorePacket();
-        SET_LED_LOW;
         break;
       }
+
+      SET_LED_HIGH;
 
       switch (command) {
       case SP_INIT:
