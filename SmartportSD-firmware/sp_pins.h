@@ -116,5 +116,13 @@
 #define DAISY_HDSEL_IS_HIGH    (RD_PORT_DAISY_HDSEL & _BV(PIN_DAISY_HDSEL))
 #define DAISY_HDSEL_IS_LOW     (!(DAISY_HDSEL_IS_HIGH))
 
+#define WR_PORT_LED            PORTC
+#define RD_PORT_LED            PINC
+#define DIR_PORT_LED           DDRC
+#define PIN_LED                4       // A4
+#define SET_LED_OUT            (DIR_PORT_LED |= _BV(PIN_LED))
+#define SET_LED_HIGH           (WR_PORT_LED |= _BV(PIN_LED))
+#define SET_LED_LOW            (WR_PORT_LED &= ~_BV(PIN_LED))
+
 
 #endif

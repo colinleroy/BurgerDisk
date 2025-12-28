@@ -37,7 +37,6 @@
 #include "log.h"
 
 #define PIN_CHIP_SELECT 10      // D10
-#define PIN_LED         18      // A4
 
 #define SPI_CLOCK SD_SCK_MHZ(50)
 #define SD_CONFIG SdSpiConfig(PIN_CHIP_SELECT, DEDICATED_SPI, SPI_CLOCK)
@@ -144,8 +143,8 @@ static void init_storage(void) {
 //Arduino boot setup - serial, pinmodes.
 void setup (void) {
   // LED
-  digitalWrite(PIN_LED, HIGH);
-  pinMode(PIN_LED, OUTPUT);
+  SET_LED_OUT;
+  SET_LED_HIGH;
 
   // Serial init
   Serial.begin(230400);
@@ -174,7 +173,7 @@ void setup (void) {
 
   LOG(F("Ready"));
 
-  digitalWrite(PIN_LED, LOW);
+  SET_LED_LOW;
 }
 
 // Helper to match a Smartport device_id to one of our images
@@ -423,6 +422,7 @@ void loop() {
       break;
 
     case SP_BUS_ENABLED:
+      SET_LED_HIGH;
       daisy_diskII_disable();
 
       ReceivePacket( (unsigned char*) packet_buffer);
@@ -436,6 +436,7 @@ void loop() {
         AckPacket();
       } else {
         IgnorePacket();
+        SET_LED_LOW;
         break;
       }
 
@@ -475,6 +476,7 @@ void loop() {
       }
       // Wait for SP to be disabled
       while(smartport_get_state() == SP_BUS_ENABLED);
+      SET_LED_LOW;
       break;
 
     case SP_BUS_DISABLED:
@@ -500,9 +502,9 @@ void led_err(void)
   LOG(F("Require reboot"));
 
   while (1) {
-    digitalWrite(PIN_LED, HIGH);
+    SET_LED_HIGH;
     delay(500);
-    digitalWrite(PIN_LED, LOW);
+    SET_LED_LOW;
     delay(500);
   }
 }
