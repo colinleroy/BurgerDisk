@@ -302,7 +302,6 @@ static void smartport_answer_status(int partition, unsigned char extended) {
     } else {
       DEBUG(F("Sending DIB"));
       encode_status_dib_reply_packet(devices[partition].device_id, devices[partition].blocks);
-      delay(50);
     }
   } else {
     // just return device status
