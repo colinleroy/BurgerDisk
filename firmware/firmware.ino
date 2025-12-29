@@ -443,9 +443,16 @@ void loop() {
     case SP_BUS_ENABLED:
       daisy_diskII_disable();
 
-      ReceivePacket( (unsigned char*) packet_buffer);
+      // We can come back here after handling a previous smartport packet, as
+      // it happens the bus stays enabled a bit longer. ReceivePacket() will
+      // return with a non-zero code if the smartport bus gets disabled without
+      // receiving anything.
+      if (ReceivePacket( (unsigned char*) packet_buffer) != 0) {
+        // Smartbus is now disabled, we did not get a command. Loop back.
+        break;
+      }
+
       dev_id = packet_buffer[6];
-      //source_id = packet_buffer[7];
       command = (SP_Command) packet_buffer[14];
 
       if (command == SP_INIT && !device_init_done) {
@@ -493,8 +500,6 @@ void loop() {
         LOGN(F("Command not implemented: "), packet_buffer[14], HEX);
         break;
       }
-      // Wait for SP to be disabled
-      while(smartport_get_state() == SP_BUS_ENABLED);
       SET_LED_LOW;
       break;
 

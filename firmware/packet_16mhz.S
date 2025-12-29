@@ -55,6 +55,15 @@ SP_RD_MUTE:
           sbi  _SFR_IO_ADDR(WR_PORT_RD),PIN_RD                       ; Set RD high
           ret
 
+cancel_receive:
+          rcall SP_ACK_OFF
+          rcall SP_ACK_MUTE
+          rcall SP_RD_MUTE
+          ldi  r24,1                               ;setup return value, 1=error
+          clr  r25
+          sei
+          ret
+
 //*****************************************************************************
 // Function: ReceivePacket
 // Parameters: packet_buffer pointer
@@ -76,6 +85,10 @@ ReceivePacket:
 
 1:        sbic _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ   ;1/2 wait for req line to go high
           rjmp start                               ;this indicates host is about to send packet
+
+          sbic _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH1;if phase1 is now down, bus is now disabled
+          sbis _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH3;otherwise, if phase3 is still up, bus is still enabled
+          rjmp cancel_receive
           rjmp 1b                                  ;Keep waiting
 
 start:    ;ldi  r24,'R'                ;for debug, R indicates REQ is high
