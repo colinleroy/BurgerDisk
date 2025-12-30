@@ -427,12 +427,20 @@ void loop() {
   SP_RD_MUTE();
 
   while (1) {
-    partition = -1;
-    smartport_state = smartport_get_state();
+    noInterrupts();
+    daisy_diskII_mirror();
 
     if (device_init_done) {
       daisy_ph3_mirror();
     }
+
+    smartport_state = smartport_get_state();
+    if (smartport_state == SP_BUS_DISABLED) {
+      continue;
+    }
+
+    interrupts();
+    partition = -1;
 
     switch (smartport_state) {
     case SP_BUS_RESET:
@@ -504,9 +512,11 @@ void loop() {
       break;
 
     case SP_BUS_DISABLED:
-      daisy_diskII_mirror();
+      // Nothing more to do here
       break;
     }
+    SP_ACK_MUTE();
+    SP_RD_MUTE();
   }
 }
 #pragma GCC optimize("-Os")
