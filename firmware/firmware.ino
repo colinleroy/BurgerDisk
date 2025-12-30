@@ -428,16 +428,12 @@ void loop() {
 
   while (1) {
     noInterrupts();
-    daisy_diskII_mirror();
 
     if (device_init_done) {
       daisy_ph3_mirror();
     }
 
     smartport_state = smartport_get_state();
-    if (smartport_state == SP_BUS_DISABLED) {
-      continue;
-    }
 
     interrupts();
     partition = -1;
@@ -512,7 +508,7 @@ void loop() {
       break;
 
     case SP_BUS_DISABLED:
-      // Nothing more to do here
+      daisy_diskII_mirror();
       break;
     }
     SP_ACK_MUTE();
