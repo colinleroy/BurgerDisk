@@ -427,15 +427,11 @@ void loop() {
   SP_RD_MUTE();
 
   while (1) {
-    noInterrupts();
-
     if (device_init_done) {
       daisy_ph3_mirror();
     }
 
     smartport_state = smartport_get_state();
-
-    interrupts();
     partition = -1;
 
     switch (smartport_state) {
@@ -511,6 +507,7 @@ void loop() {
       daisy_diskII_mirror();
       break;
     }
+
     SP_ACK_MUTE();
     SP_RD_MUTE();
   }
