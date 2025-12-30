@@ -468,7 +468,7 @@ void loop() {
 
       switch (command) {
       case SP_INIT:
-        //e may not have a dev_id/partition match yet
+        //we may not have a dev_id/partition match yet
         smartport_init(dev_id);
         break;
 
