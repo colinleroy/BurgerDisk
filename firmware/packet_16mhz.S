@@ -192,7 +192,9 @@ AckPacket:
           rjmp finish                                                ;this indicates host has acknowledged ACK
           rjmp 1b
 
-finish:   sei
+finish:   rcall SP_ACK_MUTE
+          rcall SP_RD_MUTE
+          sei
           ret
 
 //*****************************************************************************
@@ -302,12 +304,15 @@ endspkt:  rcall SP_ACK_OFF
 finishs:  ;ldi  r24,'r'                                              ;for debug, r indicates REQ is low
           ;call uart_putc                                            ;output to serial port
           rcall SP_RD_MUTE
+          rcall SP_ACK_MUTE
           clr  r25
           clr  r24                                                   ;return no error
           sei
           ret
 
 error:
+          rcall SP_RD_MUTE
+          rcall SP_ACK_MUTE
           clr  r25
           ldi  r24,1
           sei

@@ -515,8 +515,6 @@ void loop() {
       // Nothing more to do here
       break;
     }
-    SP_ACK_MUTE();
-    SP_RD_MUTE();
   }
 }
 #pragma GCC optimize("-Os")
