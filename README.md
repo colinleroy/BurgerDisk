@@ -188,3 +188,18 @@ For connecting to the computer, you will need:
 For the enclosure, you will need:
 - the enclosure's STL files
 - four [M2 12mm screws](https://aliexpress.com/item/1005007219475077.html)
+
+## Thanks and acknowledgments
+
+Many thanks to Robert Justice, Katherine Stark and Andrea Ottaviani for the
+initial work on a simple SD-based Smartport device.
+
+Many thanks to Cedric Peltier for his work on SmartportVHD, which does support
+daisy-chaining, but is sadly abandoned, and based on a weird-ass development
+board. It was very well documented and helped me a lot implementing daisy-chaining.
+
+Many thanks to Ralph Irving, who spent many hours beta-testing and pinpointing
+bugs I could not have fixed without his help (for lack of hardware).
+
+Thanks also to Steve Chamberlin of [BMOW](https://www.bigmessowires.com/), for
+documenting a lot of their Smartport/FloppyEmu work on their blog.
