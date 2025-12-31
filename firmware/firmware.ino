@@ -1,3 +1,4 @@
+//
 //*****************************************************************************
 // BurgerDisk firmware.
 // This device provides the Smartport-capable Apple II with an SD-card-based
@@ -56,6 +57,7 @@
 #include "sp_low.h"
 #include "sp_vals.h"
 #include "log.h"
+#include "version.h"
 
 #define SPI_CLOCK SD_SCK_MHZ(50)
 #define SD_CONFIG SdSpiConfig(PIN_CHIP_SELECT, DEDICATED_SPI, SPI_CLOCK)
@@ -168,7 +170,7 @@ void setup (void) {
 
   // Serial init
   Serial.begin(230400);
-  LOG(F("BurgerDisk v1.0"));
+  LOG(F("BurgerDisk version " GIT_VERSION));
 
   packet_buffer = (unsigned char *)malloc(605);
 
@@ -508,6 +510,9 @@ void loop() {
       break;
     }
 
+    // I would have preferred to re-mute lines from the assembly funcs,
+    // but this triggers a timing problem with SoftSP cards. Cf commit
+    // 7b9ef299d98dfbd96c21fb1e522ccb702f9b7ec0
     SP_ACK_MUTE();
     SP_RD_MUTE();
   }
