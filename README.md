@@ -174,6 +174,7 @@ For the main board, you will need:
 - one [330 ohms resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
 - one [150 ohms resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
 - one [1N5818 diode](https://aliexpress.com/item/4000055728807.html)
+- two [1N4448 diodes](https://aliexpress.com/item/1005008591345474.html)
 - optionally, [one female DB19 connector](https://www.ebay.com/itm/165875193091) if you want daisy-chaining
 - optionally, [two 15-pin female header](https://aliexpress.com/item/1005006934014275.html) for easy Arduino removal
 - optionally, one 3mm LED, 3V, 20mA, [with](https://aliexpress.com/item/1005007602705761.html) or [without](https://fr.aliexpress.com/item/1005003320296052.html) wires depending on whether you plan on using the enclosure
