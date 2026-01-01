@@ -292,12 +292,9 @@ nxtsbycl:                                                           ;    delay t
 
 endspkt:  rcall SP_ACK_OFF
 
-1:        ldi  r24,5
-          sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                    ;wait for REQ line to go low
+1:        sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                    ;wait for REQ line to go low
           rjmp finishs                                              ;this indicates host has acknowledged ACK
-          dec  r24
-          brne 1b
-          rjmp error
+          rjmp 1b
 
 finishs:  ;ldi  r24,'r'                                              ;for debug, r indicates REQ is low
           ;call uart_putc                                            ;output to serial port
