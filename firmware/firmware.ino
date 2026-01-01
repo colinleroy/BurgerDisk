@@ -400,16 +400,6 @@ static void smartport_init(unsigned char dev_id) {
   DEBUGN(F(" MORE: "), status == 0x80, HEX);
 }
 
-//Not-for-us packet handler
-//Mute lines, and wait until Smartport is disabled again
-static void IgnorePacket(void) {
-  SP_ACK_MUTE();
-  SP_RD_MUTE();
-  while(smartport_get_state() == SP_BUS_ENABLED);
-  interrupts();
-}
-//------------------------------------------------------------------------------
-
 //*****************************************************************************
 // Function: main loop
 // Parameters: none
@@ -463,6 +453,7 @@ void loop() {
         AckPacket();
       } else {
         IgnorePacket();
+        // Smartbus is now disabled, packet has been ignored. Loop back.
         break;
       }
 

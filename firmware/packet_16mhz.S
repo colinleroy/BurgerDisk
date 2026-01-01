@@ -55,7 +55,7 @@ SP_RD_MUTE:
           sbi  _SFR_IO_ADDR(WR_PORT_RD),PIN_RD                       ; Set RD high
           ret
 
-cancel_receive:
+recv_cancel:
           rcall SP_ACK_OFF
           rcall SP_ACK_MUTE
           rcall SP_RD_MUTE
@@ -78,27 +78,25 @@ cancel_receive:
 
 ReceivePacket:
           cli
-          mov  XL,r24                 ;mov buffer pointer into X
+          mov  XL,r24                                                ;move packet buffer pointer into X
           mov  XH,r25
 
           rcall SP_ACK_ON
 
-1:        sbic _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ   ;1/2 wait for req line to go high
-          rjmp start                               ;this indicates host is about to send packet
+recv_wait_ack:
+          sbic _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;1/2 wait for req line to go high
+          rjmp recv_start                                            ;this indicates host is about to send packet
 
-          sbic _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH1;if phase1 is now down, bus is now disabled
-          sbis _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH3;otherwise, if phase3 is still up, bus is still enabled
-          rjmp cancel_receive
-          rjmp 1b                                  ;Keep waiting
+          sbic _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH1                  ;if phase1 is now down, bus is now disabled
+          sbis _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH3                  ;otherwise, if phase3 is still up, bus is still enabled
+          rjmp recv_cancel                                           ;if bus disabled, return with an error
+          rjmp recv_wait_ack                                         ;otherwise, keep waiting
 
-start:    ;ldi  r24,'R'                ;for debug, R indicates REQ is high
-          ;call uart_putc              ;output to serial port
-
+recv_start:
           ldi  r22,1                                                 ;1   remember tx line status when previously sampled
           sbis _SFR_IO_ADDR(RD_PORT_WR),PIN_WR                       ;1/2 wait for txd line to go low
           rjmp 2f                                                    ;2   txd cleared, start of packet data
-          rjmp start                                                 ;2
-                                                                     ;
+          rjmp recv_start                                            ;2
                                                                      ;    wait for half a bit, 2us (28 cycles total) --> 32 cycles for 64Mhz
                                                                      ;    this is so we sample mid point  --> I think this is ok for 16Mhz
 2:        ldi  r24,10                                                ;1   |delay total of 30 cycles
@@ -144,8 +142,8 @@ loadbit:  rol  r23                                                   ;12  ;12  ;
                                      ;                                            2 more loops +2 nops
 
           ldi  r24,15                                                ;1   |delay total of 45 cycles
-3:        dec  r24                                                   ;1   | each loop +3 final loop +2
-          brne 3b                                                    ;1/2 | 1 + 14x3 + 1x2 = 45
+4:        dec  r24                                                   ;1   | each loop +3 final loop +2
+          brne 4b                                                    ;1/2 | 1 + 14x3 + 1x2 = 45
                                                                      ;59  ;59  ;59  ;59
           nop                                                        ;60  ;60  ;60  ;60     ;1
           nop                                                        ;61  ;61  ;61  ;61     ;1
@@ -161,24 +159,25 @@ havebyte:
 wasclr:   sbic _SFR_IO_ADDR(RD_PORT_WR),PIN_WR                       ;21                    ;1/2 now read a bit, wait for transition to 1
           rjmp havesbit                                              ;23                    ;2   now set, lets get the next byte
           dec  r25                                                   ;1
-          breq endpkt                                                ;1/2 we have timed out, must be end of packet
+          breq recv_done                                             ;1/2 we have timed out, must be end of packet
           rjmp wasclr                                                ;2   lets test again
 
 wasset:   sbis _SFR_IO_ADDR(RD_PORT_WR),PIN_WR                       ;22               ;1/2 now read a bit, wait for transition to 0
           rjmp havesbit                                              ;24               ;2   now clr, lets get the next byte
           dec  r25                                                   ;1
-          breq endpkt                                                ;1/2 we have timed out, must be end of packet
+          breq recv_done                                             ;1/2 we have timed out, must be end of packet
           rjmp wasset                                                ;2   lets test again
 
 havesbit:                                                            ;    wait for half a bit, 2us (28 cycles total) --> 32 cycles for 16MHz
                                                                      ;    this is so we sample mid point --> again, i think this was long before, so try as is
           ldi  r24,7                                                 ;1   |delay total of 21 cycles
-3:        dec  r24                                                   ;1   | each loop +3 final loop +2
-          brne 3b                                                    ;1/2 | 1 + 6x3 + 1x2 = 21
+5:        dec  r24                                                   ;1   | each loop +3 final loop +2
+          brne 5b                                                    ;1/2 | 1 + 6x3 + 1x2 = 21
                                                                      ;44  ;45
           rjmp nxtbyte                                               ;46  ;47               ;2   get next byte
 
-endpkt:   clr  r23
+recv_done:
+          clr  r23
           st   x+,r23                                                ;save zero byte in buffer to mark end
 
           clr  r25                                                   ;return no error (for now)
@@ -187,12 +186,30 @@ endpkt:   clr  r23
 
 .global AckPacket
 AckPacket:
-          rcall SP_ACK_OFF
-1:        sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;wait for REQ line to go low
-          rjmp finish                                                ;this indicates host has acknowledged ACK
-          rjmp 1b
+          rcall SP_ACK_OFF                                           ;pull ACK low,
 
-finish:   sei
+ack_wait:
+          sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;wait for REQ line to go low
+          rjmp ack_done                                              ;this indicates host has acknowledged ACK
+          rjmp ack_wait
+
+ack_done:
+          sei
+          ret
+
+.global IgnorePacket
+IgnorePacket:
+          rcall SP_ACK_MUTE
+          rcall SP_RD_MUTE
+
+ignore_wait:
+          sbic _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH1                  ;if phase1 is now down, bus is now disabled
+          sbis _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH3                  ;otherwise, if phase3 is still up, bus is still enabled
+          rjmp ignore_done
+          rjmp ignore_wait
+
+ignore_done:
+          sei
           ret
 
 //*****************************************************************************
@@ -215,17 +232,16 @@ SendPacket:
 
           rcall SP_ACK_ON
 
-1:        sbic _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;wait for req line to go high
-          rjmp contin                                                ;this indicates host is ready to receive packet
-          rjmp 1b
+send_wait_ack:
+          sbic _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;wait for req line to go high
+          rjmp send_start                                            ;this indicates host is ready to receive packet
+          rjmp send_wait_ack
 
-contin:
-;
-;                                                                    ;Totals for loops             ;
-;
+send_start:                                                          ;Totals for loops             ;
+
 nxtsbyte: ld   r23,x+                                               ;59               ;43         ;2   get first byte from buffer
           cpi  r23,0                                                ;60               ;44         ;1   zero marks end of data
-          breq endspkt                                              ;61               ;45         ;1/2
+          breq send_end                                             ;61               ;45         ;1/2
 
           ldi  r25,8                                                ;62               ;46         ;1   8bits to read
                                                                     ;Clr  ;Set
@@ -248,8 +264,8 @@ nxtsbit:  sbrs r23,7                                                ;64(Set) ;64
           rol  r23                                                  ;5    ;1
 
           ldi  r24,13                                               ;1   |delay total of 39 cycles
-3:        dec  r24                                                  ;1   |  each loop +3 final loop +2
-          brne 3b                                                   ;1/2 |  1 + 12x3 + 1x2 = 39
+4:        dec  r24                                                  ;1   |  each loop +3 final loop +2
+          brne 4b                                                   ;1/2 |  1 + 12x3 + 1x2 = 39
                                                                     ;44
 
           rjmp nxtsbit                                              ;46   ;2
@@ -257,8 +273,8 @@ nxtsbit:  sbrs r23,7                                                ;64(Set) ;64
 nxtsbyt1:                                                           ;5          ;    delay to makeup 3us (42 cycles total)-->48 cycles for 16Mhz(6 more)
                                                                     ;                                            2 more loops
           ldi  r24,11                                               ;1   |delay total of 33 cycles
-3:        dec  r24                                                  ;1   | each loop +3 final loop +2
-          brne 3b                                                   ;1/2 | 1 + 10x3 + 1x2 = 33
+5:        dec  r24                                                  ;1   | each loop +3 final loop +2
+          brne 5b                                                   ;1/2 | 1 + 10x3 + 1x2 = 33
                                                                     ;38
           nop                                                       ;39         ;1
           rjmp nxtsbyte                                             ;41         ;2
@@ -270,8 +286,8 @@ sbitclr:  dec  r25                                                  ;2          
                                                                     ;    delay to makeup 4us (56 cycles total)-->64 cycles for 16Mhz(8 more)
                                                                     ;                                            2 more loops +2 nops
           ldi  r24,18                                               ;1   |delay total of 54 cycles
-3:        dec  r24                                                  ;1   | each loop +3 final loop +2
-          brne 3b                                                   ;1/2 | 1 + 17x3 + 1x2 = 54
+6:        dec  r24                                                  ;1   | each loop +3 final loop +2
+          brne 6b                                                   ;1/2 | 1 + 17x3 + 1x2 = 54
                                                                     ;58
           nop                                                       ;59                  ;1
           nop                                                       ;60                ;1
@@ -281,8 +297,8 @@ nxtsbycl:                                                           ;    delay t
                                                                     ;                                            2 more loops +2 nops
                                                                     ;
           ldi  r24,16                                               ;1   |delay total of 48 cycles
-3:        dec  r24                                                  ;1   | each loop +3 final loop +2
-          brne 3b                                                   ;1/2 | 1 + 15x3 + 1x2 = 48
+7:        dec  r24                                                  ;1   | each loop +3 final loop +2
+          brne 7b                                                   ;1/2 | 1 + 15x3 + 1x2 = 48
                                                                     ;52
           nop                                                       ;53                           ;1
           nop                                                       ;54                           ;1
@@ -290,22 +306,17 @@ nxtsbycl:                                                           ;    delay t
           rjmp nxtsbyte                                             ;57                           ;2
 
 
-endspkt:  rcall SP_ACK_OFF
+send_end:
+          rcall SP_ACK_OFF
 
-1:        sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                    ;wait for REQ line to go low
-          rjmp finishs                                              ;this indicates host has acknowledged ACK
-          rjmp 1b
+send_wait_end_ack:
+          sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                    ;wait for REQ line to go low
+          rjmp send_done                                            ;this indicates host has acknowledged ACK
+          rjmp send_wait_end_ack
 
-finishs:  ;ldi  r24,'r'                                              ;for debug, r indicates REQ is low
-          ;call uart_putc                                            ;output to serial port
+send_done:
           rcall SP_RD_MUTE
           clr  r25
           clr  r24                                                   ;return no error
-          sei
-          ret
-
-error:
-          clr  r25
-          ldi  r24,1
           sei
           ret
