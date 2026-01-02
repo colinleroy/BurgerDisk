@@ -24,6 +24,8 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
+// Doc: http://www.applelogic.org/files/GSFIRMWAREREF1.pdf
+//
 //*****************************************************************************
 
 #include <string.h>
@@ -472,30 +474,30 @@ void encode_status_dib_reply_packet (unsigned char device_id, unsigned long bloc
   oddnum=4;
 
   //* write data buffer first (25 bytes) 3 grp7 + 4 odds
-  data[0] = 0xf8; //general status - f8
+  data[0] = 0xf8; //general status - f8 = 11111000
   //number of blocks =0x00ffff = 65525 or 32mb
   data[1] = blocks & 0xff; //block size 1
   data[2] = (blocks >> 8 ) & 0xff; //block size 2
   data[3] = (blocks >> 16 ) & 0xff ; //block size 3
-  data[4] = 0x0b; //ID string length - 11 chars
-  data[5] = 'S';
-  data[6] = 'M';
-  data[7] = 'A';
-  data[8] = 'R';
-  data[9] = 'T';
-  data[10] = 'P';
-  data[11] = 'O';
-  data[12] = 'R';
-  data[13] = 'T';
-  data[14] = 'S';
-  data[15] = 'D';
+  data[4] = 0x0a; //ID string length - 10 chars
+  data[5] = 'B';
+  data[6] = 'u';
+  data[7] = 'r';
+  data[8] = 'g';
+  data[9] = 'e';
+  data[10] = 'r';
+  data[11] = 'D';
+  data[12] = 'i';
+  data[13] = 's';
+  data[14] = 'k';
+  data[15] = ' ';
   data[16] = ' ';
   data[17] = ' ';
   data[18] = ' ';
   data[19] = ' ';
   data[20] = ' ';  //ID string (16 chars total)
   data[21] = 0x02; //Device type    - 0x02  harddisk
-  data[22] = 0x0a; //Device Subtype - 0x0a
+  data[22] = 0x20; //Device Subtype - 0x0a
   data[23] = 0x01; //Firmware version 2 bytes
   data[24] = 0x0f; //
 
@@ -581,28 +583,28 @@ void encode_extended_status_dib_reply_packet (unsigned char device_id, unsigned 
   packet_buffer[17] = (blocks >> 8 ) & 0xff; //block size 2
   packet_buffer[18] = ((blocks >> 16 ) & 0xff) | 0x80 ; //block size 3 - why is the high bit set?
   packet_buffer[19] = ((blocks >> 24 ) & 0xff) | 0x80 ; //block size 4 - why is the high bit set?
-  packet_buffer[20] = 0x8d; //ID string length - 13 chars
-  packet_buffer[21] = 'S';
-  packet_buffer[22] = 'm';  //ID string (16 chars total)
+  packet_buffer[20] = 0x8a; //ID string length - 10 chars
+  packet_buffer[21] = 'B';
+  packet_buffer[22] = 'u';  //ID string (16 chars total)
   packet_buffer[23] = 0x80; //grp2 msb
-  packet_buffer[24] = 'a';
-  packet_buffer[25] = 'r';
-  packet_buffer[26] = 't';
-  packet_buffer[27] = 'p';
-  packet_buffer[28] = 'o';
-  packet_buffer[29] = 'r';
-  packet_buffer[30] = 't';
+  packet_buffer[24] = 'r';
+  packet_buffer[25] = 'g';
+  packet_buffer[26] = 'e';
+  packet_buffer[27] = 'r';
+  packet_buffer[28] = 'D';
+  packet_buffer[29] = 'i';
+  packet_buffer[30] = 's';
   packet_buffer[31] = 0x80; //grp3 msb
-  packet_buffer[32] = ' ';
-  packet_buffer[33] = 'S';
-  packet_buffer[34] = 'D';
+  packet_buffer[32] = 'k';
+  packet_buffer[33] = ' ';
+  packet_buffer[34] = ' ';
   packet_buffer[35] = ' ';
   packet_buffer[36] = ' ';
   packet_buffer[37] = ' ';
   packet_buffer[38] = ' ';
   packet_buffer[39] = 0x80; //odd msb
   packet_buffer[40] = 0x02; //Device type    - 0x02  harddisk
-  packet_buffer[41] = 0x00; //Device Subtype - 0x20
+  packet_buffer[41] = 0x20; //Device Subtype - 0x20
   packet_buffer[42] = 0x01; //Firmware version 2 bytes
   packet_buffer[43]=  0x0f;
   packet_buffer[44] = 0x90; //
