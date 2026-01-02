@@ -133,7 +133,56 @@ must be connected to the "-" side of the LED connector, where the flat is noted
 on the PCB's silkscreen. The LED's anode goes on the other side, identified "+",
 in the square solder pad.
 
-## Building the DB19/IDC20 adapter
+## The main connection cable
+Because of its daisy-chaining capabilities, the cable to plug BurgerDisk to the
+Apple II is more complicated than most DB19-to-IDC20 adapters.
+
+The correct DB19-to-IDC20 adapter for this project is provided in this
+repository.
+
+It replicates the wiring of the **Apple 3.5 drive cable**, so using such a cable
+from a broken floppy drive is also an option. I suppose, but did not verify, that
+it would also work with a Unidisk cable. The necessary wiring is as follows:
+
+```
+Male DB19, seen from front:
+
+1  2  3  4  5  6  7  8  9  10
+ 11 12 13 14 15 16 17 18 19
+
+Female IDC20, seen from front, ==== is the connector's notch:
+
+20  18  16  14  12  10  8  6  4  2
+19  17  15  13  11  9   7  5  3  1
+                ====
+
+Wiring:
+
+DB19 pin      IDC20 pin      line
+1             1              GND
+2             3              GND
+3             5              GND
+4             7              EN35
+5             9              -12V
+6             11             +5V
+7             13             +12V
+8             15             +12V
+9             17             DRV2
+10            20             WRPROT
+11            2              PH0
+12            4              PH1
+13            6              PH2
+14            8              PH3
+15            10             WREQ
+16            12             HDSEL
+17            14             DRV1
+18            16             RDDATA
+19            18             WRDATA
+```
+
+This is the wiring provided by the DB19-to-IDC20 adapter in this repository.
+
+### Assembling the adapter-based cable
 Align the male DB19 connector with the pads on the adapter PCB. Pay attention
 to the alignment, as the DB19 connector will basically be un-desolderable.
 Solder it.
