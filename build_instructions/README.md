@@ -103,7 +103,7 @@ Nano.
 
 Reverse the PCB, and solder the female headers' 30 pins to the PCB.
 
-You can program the Arduino at this point.
+You can [program the Arduino at this point](../firmware/README.md).
 
 ### MicroSD card module
 The MicroSD card module is the only module to be soldered on the bottom side of
