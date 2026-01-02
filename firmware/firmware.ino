@@ -88,6 +88,8 @@ static void log_io_err(const __FlashStringHelper *op, int partition, int block_n
 
 //SD card init and images opening
 static int storage_init_done = 0;
+static int storage_init_error = 0;
+
 static void init_storage(void) {
   if (storage_init_done) {
     return;
@@ -99,8 +101,9 @@ static void init_storage(void) {
   free(packet_buffer);
 
   if (!sdcard.begin(SD_CONFIG)) {
-    LOG(F("Error init card"));
-    led_err();
+    LOG(F("SD card init error."));
+    storage_init_error = 1;
+    return;
   }
 
   SdFile myFile("config.txt", O_READ);
@@ -160,6 +163,10 @@ static void init_storage(void) {
   DEBUGN(F("Free memory now "), freeMemory(), DEC);
 
   storage_init_done = 1;
+
+  if (open_partitions == 0) {
+    storage_init_error = 1;
+  }
 }
 
 //Arduino boot setup - serial, pinmodes.
@@ -426,6 +433,10 @@ void loop() {
       daisy_ph3_mirror();
     }
 
+    if (storage_init_error != 0) {
+      led_err();
+    }
+
     smartport_state = smartport_get_state();
     partition = -1;
 
@@ -437,6 +448,12 @@ void loop() {
 
     case SP_BUS_ENABLED:
       daisy_diskII_disable();
+
+      if (storage_init_error != 0) {
+        // We couldn't init the SD card, so do absolutely nothing else
+        // than disable dumb disk drives.
+        break;
+      }
 
       // We can come back here after handling a previous smartport packet, as
       // it happens the bus stays enabled a bit longer. ReceivePacket() will
@@ -516,22 +533,30 @@ void loop() {
 //*****************************************************************************
 // Function: led_err
 // Parameters: none
-// Returns: nonthing
+// Returns: nothing
 //
-// Description: Flashes status led for show error status
-// Reboot needed
+// Description: Flashes status led to show error status
 //*****************************************************************************
 
 void led_err(void)
 {
-  interrupts();
-  LOG(F("Error - Require reboot"));
+  static unsigned long last_switch = 0;
+  static char last_state = 0;
 
-  while (1) {
-    SET_LED_HIGH;
-    delay(500);
-    SET_LED_LOW;
-    delay(500);
+  // Account for counter rollover
+  if (millis() < last_switch) {
+    last_switch = 0;
+  }
+
+  // Toggle led every 250ms
+  if (millis() - last_switch > 250) {
+    last_switch = millis();
+    last_state = !last_state;
+    if (last_state) {
+      SET_LED_HIGH;
+    } else {
+      SET_LED_LOW;
+    }
   }
 }
 
