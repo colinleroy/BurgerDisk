@@ -7,7 +7,7 @@ all: upload
 
 setup:
 	arduino --install-library $(LIBRARIES)
-	arduino --pref programmer=$(PROGRAMMER)
+	#arduino --pref programmer=$(PROGRAMMER)
 
 version:
 	echo "#define GIT_VERSION \"$(GIT_VERSION)\"" > version.h
