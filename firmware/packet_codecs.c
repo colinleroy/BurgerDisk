@@ -179,20 +179,24 @@ void encode_extended_data_packet (unsigned char source)
 // Description: decode 512 byte data packet for write block command from host
 // decodes the data from the packet_buffer IN-PLACE!
 //*****************************************************************************
+#pragma GCC optimize("-O3")
 int decode_data_packet (void)
 {
-  int grpbyte, grpcount, count;
+  int grpbyte, count;
   unsigned char numgrps, numodd;
   unsigned char checksum = 0, bit0to6, bit7, oddbits, evenbits;
-  unsigned char group_buffer[8];
+  unsigned char *src;
+  unsigned int out_byte, num_final_bytes;
 
   //Handle arbitrary length packets :)
   numodd = packet_buffer[11] & 0x7f;
   numgrps = packet_buffer[12] & 0x7f;
 
   // First, checksum  packet header, because we're about to destroy it
-  for (count = 6; count < 13; count++) // now xor the packet header bytes
-  checksum = checksum ^ packet_buffer[count];
+  for (count = 6; count < 13; count++) {
+    // now xor the packet header bytes
+    checksum ^= packet_buffer[count];
+  }
 
   evenbits = packet_buffer[599] & 0x55;
   oddbits = (packet_buffer[600] & 0x55 ) << 1;
@@ -203,19 +207,21 @@ int decode_data_packet (void)
   }
 
   // 73 grps of 7 in a 512 byte packet
-  for (grpcount = 0; grpcount < numgrps; grpcount++)
-  {
-    memcpy(group_buffer, packet_buffer + 15 + (grpcount * 8), 8);
-    for (grpbyte = 0; grpbyte < 7; grpbyte++) {
-      bit7 = (group_buffer[0] << (grpbyte + 1)) & 0x80;
-      bit0to6 = (group_buffer[grpbyte + 1]) & 0x7f;
-      packet_buffer[1 + (grpcount * 7) + grpbyte] = bit7 | bit0to6;
+  src = packet_buffer + 15;
+  num_final_bytes = 1 + (numgrps * 7);
+  out_byte = 0;
+  checksum ^= packet_buffer[out_byte];
+  while (out_byte < num_final_bytes) {
+    for (grpbyte = 1; grpbyte < 8; grpbyte++) {
+      bit7 = (src[0] << grpbyte) & 0x80;
+      bit0to6 = (src[grpbyte]) & 0x7f;
+      out_byte++;
+      packet_buffer[out_byte] = bit7 | bit0to6;
+      if (out_byte < 512) {
+        checksum ^= packet_buffer[out_byte];
+      }
     }
-  }
-
-  //verify checksum
-  for (count = 0; count < 512; count++) {
-    checksum = checksum ^ packet_buffer[count];
+    src += 8;
   }
 
   if (checksum == (oddbits | evenbits))
@@ -223,6 +229,7 @@ int decode_data_packet (void)
   else
     return 6; //smartport bus error code
 }
+#pragma GCC optimize("-Os")
 
 //*****************************************************************************
 // Function: encode_write_status_packet

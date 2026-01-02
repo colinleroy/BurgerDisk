@@ -341,6 +341,7 @@ static void smartport_read_block(int partition) {
 //Smartport WRITE handler
 static void smartport_write_block(int partition) {
   unsigned long int block_num;
+
   block_num = smartport_get_block_num_from_buf();
 
   DEBUGN(F("WRITE DID "), devices[partition].device_id, HEX);
@@ -361,6 +362,8 @@ static void smartport_write_block(int partition) {
 err:
       status = 6;
     }
+  } else {
+    // Checksum is wrong!
   }
 
   //now return status code to host
