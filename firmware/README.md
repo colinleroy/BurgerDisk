@@ -1,70 +1,69 @@
-# SmartportSD FAT version 1.17
+# Programming the Arduino Nano with BurgerDisk's firmware
 
-This is an enhancement of the [SmartportCFA/SmartportSD](http://www.users.on.net/~rjustice/SmartportCFA/SmartportCFA.htm) project by Robert Justice and Andrea Ottaviani. Instead of relying on four raw disk images written sequentially to an SD card, this version allows you to have up to four files on a FAT or FAT32 formatted SD card instead.
+In order for the Arduino Nano to boot fast enough to answer an Apple //c booting
+from its internal floppy, the Nano **has** to be programmed using an AVR ISP
+programmer. I use an [STK500 AVR ISP programmer](https://aliexpress.com/item/1005006205386137.html).
 
-version 1.17: Improved version by Wing Yeung from [MFA2 work shop](http://www.mfa2lab.com). version 1.16 has been thoroughly tested with "SPIISD" hardware and has confirmed good performance.This same 1.16 program can work with both "SPIISD DIY KIT" and "SPIISD MINI". V1.17 adds support for IIcPlus. Memory allocation has been changed to dynamic allocation.
+Open a terminal, and change to this `firmware/` directory.
 
-*We have not verified SmartportSD compatible devices from other manufacturers. I think they work well if they keep the same schematics.
+## Arduino IDE installation
+Install the Arduino IDE, for example on a Debian-based Linux distribution:
+```
+sudo apt install arduino
+```
 
-# Usage
+Start it:
+```
+arduino .
+```
 
-## Get the programs
+## Arduino IDE configuration
+![The Arduino IDE Tools menu](../build_instructions/pictures/arduino_ide_settings.png "The Arduino IDE Tools menu").
 
-Download or git clone the source to this project. Copy and use the "SmartportSD-firmware" folder as is.
+In `Tools` menu, `Programmer` submenu, select your programmer.
 
-## Get the dependencies
+You can then either continue using the Arduino IDE interactively:
+- In `Tools` menu, `Board` submenu, select `Arduino Nano`.
+- In `Tools` menu, `Processor` submenu, select `Atmega328p`.
+- In `Sketch` menu, `Include Library` submenu, select `Manage Libraries...`.
+  ![Manage Libraries menu item](../build_instructions/pictures/arduino_libraries_manager.png).
+- Search for `SdFat` by Bill Greiman, scroll to it, and install version 2.1.2.
+  ![SdFat installation](../build_instructions/pictures/arduino_sdfat_library.png)
 
-Download the 2.1.2 version of the [SdFat Arduino library](https://github.com/greiman/SdFat/) and install it in your Arduino libraries folder (that location is system-dependent so you'll have to figure out where it is for you, sorry).
+Or, you can quit the Arduino IDE, and in your terminal, run:
+```
+make setup
+```
 
-## Compile and upload the code to the Arduino
+## Flashing the firmware
+**Make sure that the Nano is out of the BurgerDisk PCB, or that the BurgerDisk
+is disconnected from the Apple II, even if the Apple II is turned off, before connecting the programmer. NEVER connect the programmer when the BurgerDisk is
+connected to the Apple II.**
 
-## Wire up the Arduino
+Connect your Arduino Nano to the programmer's 6-pin connector. The red
+wire of the connector must be towards the Nano's `VIN` pin.
+![The Arduino Nano, connected to the programmer](../build_instructions/pictures/arduino_flashing_connection.jpeg "The Arduino Nano, connected to the programmer")
 
-Follow the instructions on [Robert's page](http://www.users.on.net/~rjustice/SmartportCFA/SmartportSD.htm) for the wiring diagram.
+Two options here too:
+- From the Arduino IDE, `Sketch` menu, choose `Upload using programmer`. Wait
+  until the "Done uploading" message.
+  ![Upload using programmer menu item](../build_instructions/pictures/arduino_flashing.png)
+- From the command line, run `make`. Wait for the upload to be done.
 
-### WARNING
+Disconnect the programmer, and you're set.
 
-Don't connect the Arduino USB and the +5V power to the Apple computer at the same time! Doing so could lead to a situation where +5V is backfeeding into the Apple from the Arduino, which is bad.
+## Debugging
+If you need to debug the firmware, you can connect its UART pins to an [UART/USB
+converter](https://aliexpress.com/item/1005008293602159.html). Wire the
+BurgerDisk's UART `GND` pin to the USB converter `GND` pin, and the BurgerDisk's
+UART `TX` pin to the USB converter's `RX` pin.
 
-If you plan on doing development work on this, or just want to watch the Arduino serial console for error messages, disconnect the +5V connection between the Apple II and the Arduino and power it only via the USB port.
+Plug the USB converter in your computer, check its device file (using `dmesg`
+for example), then run:
+```
+minicom -D /dev/ttyUSB0 -8 -b230400
+```
 
-If you use the v1 or v2 PCBs from Kero Mac Mods, there is a diode preventing this
-from happening, so it's possible in this case.
-
-#### Technical details
-The Apple needs more than the 500mA your modern computer's USB power supply can provide to boot up, plus it needs some other voltages as well. You could end up burning out your Arduino, your USB port, your Apple, or all of the above! (The most likely thing to happen is the USB port might shut off, or the Arduino will get hot and annoyed, though).
-
-## Place images on the SD card
-
-You can place unlimited images in the root or subfolders of the SD card. However, only the four files specified in config.txt can be mounted.
-By placing "config.txt" at the root of the SD card, you can place various files without renaming them.
-Write 4x file names in "config.txt". SPIISD will only read files with that filename.
-In addition to ".po", ".hdv" and ".2mg" can be used as extensions.
-If config.txt is not in the root, Name your images PART1.PO through PART4.PO. If you don't have four images that's OK, the missing ones will be skipped.
-
-### NOTE
-
-Images must be unadorned ProDOS-order images. They don't have to be ProDOS file systems though - ISO9660, DOS 3.3 and HFS should work (although they are currently untested).
-
-## Change boot  order, if you want
-
-The eject button, if you have it wired up, will work the same way as it does in Robert's version of the code. Hold the button down while power cycling the Apple (or pressing the Arduino reset button if the USB connection is supplying power) to choose the next of the four images as the new startup disk. Then power cycle (or reset) the Arduino again without the button held down to get ready for the next boot.
-
-### WARNING
-
-Make sure you have a pulldown resistor to ground on the eject button pin (Analog pin 3). If you don't, the Arduino will assume the button is always being held down and keep changing the boot device and never start its normal operation. Ask me how much debugging trouble this caused me!
-
-## Boot the machine!
-
-That's it, turn on the machine and it should boot from PART1.PO!
-
-## BUGS
-
-- The combination of this device, a ROM 03 IIgs, and a CFFA3000 card seems to  prevent booting from this device. If you have this setup, please test it and report back to me.
-- The code for switching boot partitions is probably going to fail if files get renamed so that a previously present boot partition goes away.
-
-Please report bugs or comment on the above via the GitLab issues page for the project.
-
-April 27, 2024, Ver 1.16 edited by Kay Koba, Kero's Mac Mods
-
-(C) SmartportSD Project
+Connect the BurgerDisk to the Apple II, and boot the Apple II. Log messages
+should be visible in Minicom. Remember: **never have the programmer connected
+while the PCB is connected to an Apple II!**
