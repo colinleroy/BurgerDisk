@@ -192,22 +192,6 @@ Insert the IDC-20 connector in the adapter PCB. It must on the top-side of the
 PCB, where the IDC-20 is outlined on the silkscreen. Pay attention to the notch
 position, which should be towards the DB19 connector. Solder it.
 
-## Quick test
-Before plugging things in, it is good to check if nothing is inserted the wrong
-way. Using a multimeter in "continuity" test mode,
-- Verify ground continuity:
-  - between the MicroSD module's GND and the three top-right pins of the IDC20
-  - between the top-right pin of the IDC20 and the 4th top-right pin of the Nano
-  - between the top-right pin of the IDC20 and the three top-most pins of the
-    DB19 connector, front of the PCB
-  - between the top-right pin of the IDC20 and the GND pin of the UART
-- Verify +5V:
-  - between pin 11 of the IDC20 connector (top row, 5th starting from left) and
-    pin 6 of the Daisy DB19 (6th from the top, front side of the PCB)
-  - plug your input cable, and verify continuity between its +5V pin (pin 6, 6th
-    from the top when the DB19 is facing left, front side) and pin 6 of the
-    Daisy DB19 (6th from the top, front side of the PCB)
-
 ## Assembling in the enclosure
 Put the PCB back in the enclosure's bottom, making sure the enclosure notches
 are in the PCB mounting holes and the daisy DB19 connector's chassis sits
@@ -223,3 +207,57 @@ If you're going to use your BurgerDisk with an Apple IIc or IIgs, close the "SPa
 jumper. If you're going to use it with a IIgs, close the "IIgs" jumper.
 Never close these jumpers if you're going to use the BurgerDisk on an Apple II
 with a non-Smartport controller card, **even in conjunction with a SoftSP card**.
+
+## Testing everything
+Before plugging things in, it is good to check if everything is as expected.
+This is not necessary if you're quite certain of your work.
+
+Using a multimeter in "continuity" test mode,
+- Verify ground continuity:
+  - between the MicroSD module's GND and the GND pins of the Daisy In IDC20
+  - between the GND pins of the Daisy In IDC20 and the GD pin of the Nano
+  - between the GND pins of the Daisy In IDC20 and the GND pins of the Daisy
+    out connector
+  - between the GND pins of the Daisy In IDC20 and the GND pin of the UART
+  - between the GND pins of the Daisy In IDC20 and the GND pin of the LED
+- Verify +5V:
+  - between the +5 pin of IDC20 connector (top row, 5th starting from left) and
+    +5 of the Daisy Out DB19 (6th from the top, front side of the PCB)
+  - plug your input cable, and verify continuity between its +5V pin (pin 6, 6th
+    from the top when the DB19 is facing left, front side) and +5 pin of the
+    Daisy DB19 (6th from the top, front side of the PCB)
+  - between +5V pin of the Arduino and +5V of the MicroSD module
+- Arduino:
+  - between Arduino D12 and MicroSD MISO
+  - between Arduino D11 and MicroSD MOSI
+  - between Arduino D10 and MicroSD CS
+  - between Arduino D9 and IIgs jumper bottom pin
+  - between IIgs jumper top pin and IDC20 DR2
+  - between Arduino D8 and Daisy Out P3 (under the PCB)
+  - between Arduino D7 and IDC20 WR
+  - between Arduino D6 and RD 1N4448 cathode (right side)
+  - between Arduino D5 and IDC20 PH3
+  - between Arduino D4 and IDC20 PH2
+  - between Arduino D2 and IDC20 PH1
+  - between Arduino TX and UART jumper top pin
+  - between Arduino D13 and MicroSD SCK
+  - between Arduino A0 and IDC20 DR1
+  - between Arduino A1 and Daisy Out HSL (under the PCB)
+  - between Arduino A2 and Daisy Out DR1 (under the PCB)
+  - between Arduino A3 and Daisy Out DR2
+  - between Arduino A4 and the LED's 150Ω (right side)
+  - between Arduino A5 and WPRT 1N4448 cathode (left side)
+- IDC20:
+  - between DR2 and IIgs jumper top pin
+  - between +12 pins and Daisy Out +12 pins
+  - between -12 pin and Daisy Out -12 pin
+  - between E35 and Daisy Out E35
+  - between WPRT and Daisy Out WPT
+  - between WPRT and WPRT 1N4448 anode (right side)
+  - between RD and Daisy Out RD (under the PCB)
+  - between RD and RD 1N4448 anode (left side)
+  - between WRQ and Daisy Out WRQ (under the PCB)
+- Input cable: 
+  - between each matching pin on the DB19 and IDC20
+  - connect the input cable to the IDC20, and check between GND pins
+    and Daisy Out GND pins
