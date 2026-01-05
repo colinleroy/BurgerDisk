@@ -1,5 +1,7 @@
 # BurgerDisk - a daisy-chainable Smartport hard drive
 
+**Warning - everything in git, and not a release, is not necessarily fully tested.**
+
 This device provides the Smartport-capable Apple II with an SD-card-based
 hard-drive, like the SmartportSD, SPIISD or FloppyEmu projects do.
 

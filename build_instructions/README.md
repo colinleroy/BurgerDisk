@@ -41,8 +41,7 @@ For the enclosure, you will need:
 - four [M2 12mm screws](https://aliexpress.com/item/1005007219475077.html)
 
 ## Printing the enclosure
-You can use the .stl files provided in this repository. If you want to modify
-the enclosure, use the .obj file.
+You can use the .stl files provided in [this repository](../enclosure).
 It is suggested to print the enclosure first, as it will help you align the
 female DB19 of the daisy port.
 
