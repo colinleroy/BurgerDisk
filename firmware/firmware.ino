@@ -94,7 +94,6 @@ static void init_storage(void) {
   if (storage_init_done) {
     return;
   }
-  DEBUGN(F("Free memory before opening images: "), freeMemory(), DEC);
 
   // Not enough RAM for SDFat to open a file if the standard packet_buffer
   // is allocated.
@@ -309,7 +308,6 @@ static void smartport_answer_status(int partition, unsigned char extended) {
     if (extended) {
       LOG(F("Extended status DIB - Not implemented!"));
     } else {
-      DEBUG(F("Sending DIB"));
       encode_status_dib_reply_packet(devices[partition].device_id, devices[partition].blocks);
     }
   } else {
@@ -321,7 +319,7 @@ static void smartport_answer_status(int partition, unsigned char extended) {
     }
   }
   SendPacket( (unsigned char*) packet_buffer);
-  DEBUGN(F("STATUS DID "), devices[partition].device_id, HEX);
+  DEBUG_CMD('S', devices[partition].device_id, status_code == 0x03);
 }
 
 //Smartport READ handler
@@ -329,8 +327,7 @@ static void smartport_read_block(int partition) {
   unsigned long int block_num;
   block_num = smartport_get_block_num_from_buf();
 
-  DEBUGN(F("READ DID "), devices[partition].device_id, HEX);
-  DEBUGN(F(" Block "), block_num, DEC);
+  DEBUG_CMD('R', devices[partition].device_id, block_num);
 
   if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
     log_io_err(F("Seek"), partition, block_num);
@@ -351,8 +348,7 @@ static void smartport_write_block(int partition) {
 
   block_num = smartport_get_block_num_from_buf();
 
-  DEBUGN(F("WRITE DID "), devices[partition].device_id, HEX);
-  DEBUGN(F(" Block "), block_num, DEC);
+  DEBUG_CMD('W', devices[partition].device_id, block_num);
 
   //get write data packet
   ReceivePacket( (unsigned char*) packet_buffer);
@@ -405,9 +401,7 @@ static void smartport_init(unsigned char dev_id) {
   encode_init_reply_packet(dev_id, status);
 
   SendPacket( (unsigned char*) packet_buffer);
-  DEBUGN(F("INIT P "), p, DEC);
-  DEBUGN(F(" DID: "), dev_id, HEX);
-  DEBUGN(F(" MORE: "), status == 0x80, HEX);
+  DEBUG_CMD('I', dev_id, status == 0x80);
 }
 
 //*****************************************************************************
