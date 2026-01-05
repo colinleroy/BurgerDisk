@@ -57,7 +57,11 @@
 #include "sp_low.h"
 #include "sp_vals.h"
 #include "log.h"
+#if __has_include("version.h")
 #include "version.h"
+#else
+#define GIT_VERSION "UNDEFINED VERSION"
+#endif
 
 #define SPI_CLOCK SD_SCK_MHZ(50)
 #define SD_CONFIG SdSpiConfig(PIN_CHIP_SELECT, DEDICATED_SPI, SPI_CLOCK)
