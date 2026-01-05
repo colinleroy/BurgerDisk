@@ -131,7 +131,8 @@ You have options there:
 - solder a 2-pin header on the PCB, and use Dupont connectors
 - solder wires to the LED and to the PCB
 
-Mind that there is a bug in Fritzing that makes the LED solder pads inverted:
+Mind that there is a [bug in Fritzing](https://github.com/fritzing/fritzing-app/issues/4295)
+that makes the LED solder pads inverted:
 contrary to the standard, the square one is *not* the cathode. The cathode
 (short leg of the LED, on the side where there is a small flat on the LED's body)
 must be connected to the "-" side of the LED connector, where the flat is noted
