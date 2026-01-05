@@ -31,6 +31,10 @@ For connecting to the computer, you will need:
   - an [IDC20 cable, 2.54mm pitch](https://aliexpress.com/item/1005003853804182.html), at least 50cm
   - a second [IDC20 connector, male, 2.54mm pitch](https://aliexpress.com/item/1005001400147026.html)
   - one [male DB19 connector](https://www.ebay.com/itm/257181325655)
+- The [Fujinet's DB19/IDC20 adapter](https://github.com/FujiNetWIFI/fujinet-hardware/tree/master/AppleII/DB-19M-Adapter-Male-Rev1)
+can be used, provided that you solder the -12V and +12V pads between the IDC20
+and the DB19, (and the DRV2 pad on the side if connecting to a IIgs):
+![The Fujinet adapter, with required soldering highlighted in green](../build_instructions/pictures/fujinet-db19-adapter.png "The Fujinet adapter, with required soldering highlighted in green")
 
 For the enclosure, you will need:
 - the enclosure's STL files
