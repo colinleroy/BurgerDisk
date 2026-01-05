@@ -55,32 +55,34 @@ static void init_packet_buffer(unsigned char source) {
 //*****************************************************************************
 void encode_data_packet (unsigned char source)
 {
-  int grpbyte, grpcount, count;
+  int count;
+  signed char grpbyte, grpcount;
   unsigned char checksum = 0, grpmsb;
-  unsigned char group_buffer[7];
+  unsigned char *src, *dst;
 
   // Calculate checksum of sector bytes before we destroy them
-    for (count = 0; count < 512; count++) // xor all the data bytes
-    checksum = checksum ^ packet_buffer[count];
+  for (count = 0; count < 512; count++) {
+    // xor all the data bytes
+    checksum ^= packet_buffer[count];
+  }
 
   // Start assembling the packet at the rear and work
   // your way to the front so we don't overwrite data
   // we haven't encoded yet
 
   //grps of 7
-  for (grpcount = 72; grpcount >= 0; grpcount--) //73
-  {
-    memcpy(group_buffer, packet_buffer + 1 + (grpcount * 7), 7);
-    // add group msb byte
+  src = packet_buffer + 1 + (72*7);
+  dst = packet_buffer + 17 + 6 + (72*8);
+  for (grpcount = 72; grpcount >= 0; grpcount --) {
     grpmsb = 0;
-    for (grpbyte = 0; grpbyte < 7; grpbyte++)
-      grpmsb = grpmsb | ((group_buffer[grpbyte] >> (grpbyte + 1)) & (0x80 >> (grpbyte + 1)));
-    packet_buffer[16 + (grpcount * 8)] = grpmsb | 0x80; // set msb to one
-
-    // now add the group data bytes bits 6-0
-    for (grpbyte = 0; grpbyte < 7; grpbyte++)
-      packet_buffer[17 + (grpcount * 8) + grpbyte] = group_buffer[grpbyte] | 0x80;
-
+    for (grpbyte = 6; grpbyte >= 0; grpbyte--) {
+      // compute msb group byte
+      grpmsb = grpmsb | ((src[grpbyte] >> (grpbyte + 1)) & (0x80 >> (grpbyte + 1)));
+      // now add the group data bytes bits 6-0
+      *dst-- = src[grpbyte] | 0x80;
+    }
+    *dst-- = grpmsb | 0x80;
+    src -= 7;
   }
 
   //total number of packet data bytes for 512 data bytes is 584
@@ -97,7 +99,7 @@ void encode_data_packet (unsigned char source)
 
   // xor the packet header bytes
   for (count = 7; count < 14; count++) {
-    checksum = checksum ^ packet_buffer[count];
+    checksum ^= packet_buffer[count];
   }
 
   packet_buffer[600] = checksum | 0xaa;      // 1 c6 1 c4 1 c2 1 c0
@@ -119,9 +121,10 @@ void encode_data_packet (unsigned char source)
 //*****************************************************************************
 void encode_extended_data_packet (unsigned char source)
 {
-  int grpbyte, grpcount, count;
+  int count;
+  signed char grpbyte, grpcount;
   unsigned char checksum = 0, grpmsb;
-  unsigned char group_buffer[7];
+  unsigned char *src, *dst;
 
     // Calculate checksum of sector bytes before we destroy them
     for (count = 0; count < 512; count++) {
@@ -133,20 +136,18 @@ void encode_extended_data_packet (unsigned char source)
   // we haven't encoded yet
 
   //grps of 7
-  for (grpcount = 72; grpcount >= 0; grpcount--) //73
-  {
-    memcpy(group_buffer, packet_buffer + 1 + (grpcount * 7), 7);
-    // add group msb byte
+  src = packet_buffer + 1 + (72*7);
+  dst = packet_buffer + 17 + 6 + (72*8);
+  for (grpcount = 72; grpcount >= 0; grpcount --) {
     grpmsb = 0;
-    for (grpbyte = 0; grpbyte < 7; grpbyte++) {
-      grpmsb = grpmsb | ((group_buffer[grpbyte] >> (grpbyte + 1)) & (0x80 >> (grpbyte + 1)));
+    for (grpbyte = 6; grpbyte >= 0; grpbyte--) {
+      // compute msb group byte
+      grpmsb = grpmsb | ((src[grpbyte] >> (grpbyte + 1)) & (0x80 >> (grpbyte + 1)));
+      // now add the group data bytes bits 6-0
+      *dst-- = src[grpbyte] | 0x80;
     }
-    packet_buffer[16 + (grpcount * 8)] = grpmsb | 0x80; // set msb to one
-
-    // now add the group data bytes bits 6-0
-    for (grpbyte = 0; grpbyte < 7; grpbyte++) {
-      packet_buffer[17 + (grpcount * 8) + grpbyte] = group_buffer[grpbyte] | 0x80;
-    }
+    *dst-- = grpmsb | 0x80;
+    src -= 7;
   }
 
   //total number of packet data bytes for 512 data bytes is 584
