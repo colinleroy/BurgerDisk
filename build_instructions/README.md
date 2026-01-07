@@ -39,6 +39,10 @@ and the DB19, (and the DRV2 pad on the side if connecting to a IIgs):
 For the enclosure, you will need:
 - the enclosure's STL files
 - four [M2 12mm screws](https://aliexpress.com/item/1005007219475077.html)
+- optionally, a [500 grams weight](https://aliexpress.com/item/1005007419997918.html)
+  to make the enclosure heavier and avoid thick-cables-induced levitation. (I
+  found diving belt weights to have the best price-to-weight ratio but you can
+  use whatever you want or have available).
 
 ## Printing the enclosure
 You can use the .stl files provided in [this repository](../enclosure).
@@ -203,8 +207,9 @@ between the enclosure wall and notches. Plug the input cable in, and route it
 out of the enclosure via its dedicated hole in the back.
 
 Put the enclosure's top on the bottom, making sure the notches are aligned so
-that the PCB does not move around. Turn the enclosure on its back, and screw it
-closed with four M2 x 12mm screws.
+that the PCB does not move around. Glue a weight in the front of the bottom part
+if needed. Turn the enclosure on its back, and screw it closed with four
+M2 x 12mm screws.
 
 ## Hardware configuration
 If you're going to use your BurgerDisk with an Apple IIc or IIgs, close the "SPadv"
