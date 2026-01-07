@@ -87,12 +87,12 @@ But,
 ## Licensing
 This firmware is licensed under the GPL v3.
 
-The PCBs are licensed under CC BY-SA 4.0.
+The PCBs and enclosure are licensed under CC BY-SA 4.0.
 
-This means that anyone is welcome to use, modify, distribute and sell hardware
+This means that anyone is welcome to **use, modify, distribute and sell hardware**
 based on BurgerDisk. Using and modifying does not require you to do anything.
-Distributing and/or selling requires you to provide the source files for the
-firmware and the PCBs, under the same licenses. It can just be a link to this
+**Distributing and/or selling requires you to provide the source files for the
+firmware and the PCBs, under the same licenses**. It can just be a link to this
 repository if no modification is made. If modifications are made, think free
 software, and consider submitting pull requests, it could help avoiding
 fragmentation.
