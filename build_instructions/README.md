@@ -31,6 +31,7 @@ For connecting to the computer, you will need:
   - an [IDC20 cable, 2.54mm pitch](https://aliexpress.com/item/1005003853804182.html), at least 50cm
   - a second [IDC20 connector, male, 2.54mm pitch](https://aliexpress.com/item/1005001400147026.html)
   - one [male DB19 connector](https://www.ebay.com/itm/257181325655)
+  - two [M2 16mm screws](https://aliexpress.com/item/33043885403.html)
 - The [Fujinet's DB19/IDC20 adapter](https://github.com/FujiNetWIFI/fujinet-hardware/tree/master/AppleII/DB-19M-Adapter-Male-Rev1)
 can be used, provided that you solder the -12V and +12V pads between the IDC20
 and the DB19, (and the DRV2 pad on the side if connecting to a IIgs):
@@ -38,10 +39,11 @@ and the DB19, (and the DRV2 pad on the side if connecting to a IIgs):
 
 For the enclosure, you will need:
 - the enclosure's STL files
-- four [M2 12mm screws](https://aliexpress.com/item/1005007219475077.html)
+- four [M2 12mm screws](https://aliexpress.com/item/33043885403.html)
+- four [M2 x 5 washers](https://aliexpress.com/item/1005007625630719.html)
 - optionally, a [500 grams weight](https://aliexpress.com/item/1005007419997918.html)
-  to make the enclosure heavier and avoid thick-cables-induced levitation. (I
-  found diving belt weights to have the best price-to-weight ratio but you can
+  (and glue) to make the enclosure heavier and avoid thick-cables-induced levitation.
+  (I found diving belt weights to have the best price-to-weight ratio but you can
   use whatever you want or have available).
 
 ## Printing the enclosure
