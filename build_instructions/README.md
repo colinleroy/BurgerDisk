@@ -21,9 +21,9 @@ revision has not yet been tested, this is work in progress.)
 - one [150 ohms resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
 - one [1N5818 diode](https://aliexpress.com/item/4000055728807.html)
 - two [1N4448 diodes](https://aliexpress.com/item/1005008591345474.html)
+- one [3mm LED, 3V, 20mA](https://fr.aliexpress.com/item/1005003320296052.html)
 - optionally, [one female DB19 connector](https://www.ebay.com/itm/165875193091) if you want daisy-chaining
 - optionally, [two 15-pin female header](https://aliexpress.com/item/1005006934014275.html) for easy Arduino removal
-- optionally, one 3mm LED, 3V, 20mA, [with](https://aliexpress.com/item/1005007602705761.html) or [without](https://fr.aliexpress.com/item/1005003320296052.html) wires depending on whether you plan on using the enclosure
 
 For connecting to the computer, you will need:
 - an Apple 3.5 drive cable or equivalent, or make it yourself using
@@ -39,7 +39,7 @@ and the DB19, (and the DRV2 pad on the side if connecting to a IIgs):
 
 For the enclosure, you will need:
 - the enclosure's STL files
-- four [M2 12mm screws](https://aliexpress.com/item/33043885403.html)
+- four [M2 16mm screws](https://aliexpress.com/item/33043885403.html)
 - four [M2 x 5 washers](https://aliexpress.com/item/1005007625630719.html)
 - optionally, a [500 grams weight](https://aliexpress.com/item/1005007419997918.html)
   (and glue) to make the enclosure heavier and avoid thick-cables-induced levitation.
@@ -48,11 +48,8 @@ For the enclosure, you will need:
 
 ## Printing the enclosure
 You can use the .stl files provided in [this repository](../enclosure).
-It is suggested to print the enclosure first, as it will help you align the
-female DB19 of the daisy port.
-
-Once printed, remove the "covers" in the back of the bottom part so that both
-the MicroSD slot and the DB19 slot are open.
+It is suggested to print the enclosure first, as it will help you solder the
+female DB19 of the daisy out port orthogonally to the PCB.
 
 ## Building the main PCB
 **All elements are to be soldered on the top-side of the PCB**, the side with the
@@ -211,7 +208,7 @@ out of the enclosure via its dedicated hole in the back.
 Put the enclosure's top on the bottom, making sure the notches are aligned so
 that the PCB does not move around. Glue a weight in the front of the bottom part
 if needed. Turn the enclosure on its back, and screw it closed with four
-M2 x 12mm screws.
+M2 x 16mm screws.
 
 ## Hardware configuration
 If you're going to use your BurgerDisk with an Apple IIc or IIgs, close the "SPadv"
