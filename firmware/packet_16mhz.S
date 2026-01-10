@@ -87,6 +87,7 @@ recv_wait_ack:
           sbic _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;1/2 wait for req line to go high
           rjmp recv_start                                            ;this indicates host is about to send packet
 
+          ; Verify that the bus is still enabled!
           sbic _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH1                  ;if phase1 is now down, bus is now disabled
           sbis _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH3                  ;otherwise, if phase3 is still up, bus is still enabled
           rjmp recv_cancel                                           ;if bus disabled, return with an error
@@ -96,6 +97,10 @@ recv_start:
           ldi  r22,1                                                 ;1   remember tx line status when previously sampled
           sbis _SFR_IO_ADDR(RD_PORT_WR),PIN_WR                       ;1/2 wait for txd line to go low
           rjmp 2f                                                    ;2   txd cleared, start of packet data
+
+          sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;Don't wait forever, verify that REQ is still high
+          rjmp recv_cancel                                           ;in this case, return with an error
+
           rjmp recv_start                                            ;2
                                                                      ;    wait for half a bit, 2us (28 cycles total) --> 32 cycles for 64Mhz
                                                                      ;    this is so we sample mid point  --> I think this is ok for 16Mhz
