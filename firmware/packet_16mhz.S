@@ -99,7 +99,7 @@ recv_start:
           rjmp 2f                                                    ;2   txd cleared, start of packet data
 
           sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;Don't wait forever, verify that REQ is still high
-          rjmp recv_cancel                                           ;in this case, return with an error
+          rjmp recv_cancel                                           ;if not, return with an error
 
           rjmp recv_start                                            ;2
                                                                      ;    wait for half a bit, 2us (28 cycles total) --> 32 cycles for 64Mhz
