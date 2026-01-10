@@ -38,7 +38,7 @@ and the DB19, (and the DRV2 pad on the side if connecting to a IIgs):
 ![The Fujinet adapter, with required soldering highlighted in green](../build_instructions/pictures/fujinet-db19-adapter.png "The Fujinet adapter, with required soldering highlighted in green")
 
 For the enclosure, you will need:
-- the enclosure's STL files
+- the [enclosure's STL files](../enclosure/stl/BurgerDisk.stl)
 - four [M2 16mm screws](https://aliexpress.com/item/33043885403.html)
 - four [M2 x 5 washers](https://aliexpress.com/item/1005007625630719.html)
 - optionally, a [500 grams weight](https://aliexpress.com/item/1005007419997918.html)
@@ -47,9 +47,12 @@ For the enclosure, you will need:
   use whatever you want or have available).
 
 ## Printing the enclosure
-You can use the .stl files provided in [this repository](../enclosure).
+You can use the .stl files provided in [this repository](../enclosure/stl/BurgerDisk.stl).
 It is suggested to print the enclosure first, as it will help you solder the
 female DB19 of the daisy out port orthogonally to the PCB.
+So far I print the enclosure at 100% infill, 0.20mm layer height. With my printer
+I don't need support for the overhangs on the slots at the back, but your mileage
+may vary.
 
 ## Building the main PCB
 **All elements are to be soldered on the top-side of the PCB**, the side with the
