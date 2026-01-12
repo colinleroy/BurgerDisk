@@ -9,8 +9,7 @@ Please note that this is work in progress, that the latest PCB revision is untes
 yet, and the enclosure is completely untested.
 
 For the main board, you will need:
-- the [main PCB](https://www.pcbway.com/project/shareproject/BurgerDisk_Apple_II_Smartport_hard_drive_235e6080.html) (Warning! this PCB
-revision has not yet been tested, this is work in progress.)
+- the [main PCB](https://www.pcbway.com/project/shareproject/BurgerDisk_Apple_II_Smartport_hard_drive_235e6080.html) or its [Gerber files](../../../releases/latest/)
 - one [Arduino Nano with an Atmega328p processor](https://aliexpress.com/item/1005006773519913.html)
 - one [STK500 AVR ISP programmer](https://aliexpress.com/item/1005006205386137.html) for uploading the firmware to the Arduino
 - one [microSD module](https://aliexpress.com/item/1005008633757049.html)
@@ -28,6 +27,7 @@ revision has not yet been tested, this is work in progress.)
 For connecting to the computer, you will need:
 - an Apple 3.5 drive cable or equivalent, or make it yourself using
   - the [DB19 to IDC20 PCB](https://www.pcbway.com/project/shareproject/BurgerDisk_DB19_to_IDC20_adapter_d6ce25bb.html)
+    or its [Gerber files](../../../releases/latest)
   - an [IDC20 cable, 2.54mm pitch](https://aliexpress.com/item/1005003853804182.html), at least 50cm
   - a second [IDC20 connector, male, 2.54mm pitch](https://aliexpress.com/item/1005001400147026.html)
   - one [male DB19 connector](https://www.ebay.com/itm/257181325655)
