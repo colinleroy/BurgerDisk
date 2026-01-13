@@ -5,9 +5,6 @@ Mind that the links provided here might be dead by the time you read this, and
 that most of them have options (number of pins, resistor values, etc) that you
 should double-check before buying.
 
-Please note that this is work in progress, that the latest PCB revision is untested
-yet, and the enclosure is completely untested.
-
 For the main board, you will need:
 - the [main PCB](https://www.pcbway.com/project/shareproject/BurgerDisk_Apple_II_Smartport_hard_drive_235e6080.html) or its [Gerber files](../../../releases/latest/)
 - one [Arduino Nano with an Atmega328p processor](https://aliexpress.com/item/1005006773519913.html)
