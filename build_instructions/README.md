@@ -204,22 +204,22 @@ Insert the IDC-20 connector in the adapter PCB. It must on the top-side of the
 PCB, where the IDC-20 is outlined on the silkscreen. Pay attention to the notch
 position, which should be towards the DB19 connector. Solder it.
 
+## Hardware configuration
+If you're going to use your BurgerDisk with an Apple IIc or IIgs, close the "SPadv"
+jumper. If you're going to use it with a IIgs, close the "IIgs" jumper.
+Never close these jumpers if you're going to use the BurgerDisk on an Apple II
+with a non-Smartport controller card, **even in conjunction with a SoftSP card**.
+
 ## Assembling in the enclosure
 Put the PCB back in the enclosure's bottom, making sure the enclosure notches
 are in the PCB mounting holes and the daisy DB19 connector's chassis sits
 between the enclosure wall and notches. Plug the input cable in, and route it
 out of the enclosure via its dedicated hole in the back.
 
-Put the enclosure's top on the bottom, making sure the notches are aligned so
-that the PCB does not move around. Glue a weight in the front of the bottom part
-if needed. Turn the enclosure on its back, and screw it closed with four
-M2 x 16mm screws.
-
-## Hardware configuration
-If you're going to use your BurgerDisk with an Apple IIc or IIgs, close the "SPadv"
-jumper. If you're going to use it with a IIgs, close the "IIgs" jumper.
-Never close these jumpers if you're going to use the BurgerDisk on an Apple II
-with a non-Smartport controller card, **even in conjunction with a SoftSP card**.
+Glue a weight in the front of the bottom part if needed (epoxy works well on PLA
+and lead). Put the enclosure's top on the bottom, making sure the notches are
+aligned so that the PCB does not move around. Turn the enclosure on its back,
+and screw it closed with four M2 x 16mm screws.
 
 ## Testing everything
 Before plugging things in, it is good to check if everything is as expected.
