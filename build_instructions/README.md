@@ -11,7 +11,7 @@ For the main board, you will need:
 - one [STK500 AVR ISP programmer](https://aliexpress.com/item/1005006205386137.html) for uploading the firmware to the Arduino
 - one [microSD module](https://aliexpress.com/item/1005008633757049.html)
 - one [IDC20 connector, male, 2.54mm pitch](https://aliexpress.com/item/1005001400147026.html)
-- three [2-pin male headers, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html)
+- four [2-pin male headers, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html)
 - two [jumpers, 2.54mm pitch](https://aliexpress.com/item/4000583368141.html)
 - one [330 ohms resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
 - one [150 ohms resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
