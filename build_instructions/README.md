@@ -219,7 +219,9 @@ out of the enclosure via its dedicated hole in the back.
 Glue a weight in the front of the bottom part if needed (epoxy works well on PLA
 and lead). Put the enclosure's top on the bottom, making sure the notches are
 aligned so that the PCB does not move around. Turn the enclosure on its back,
-and screw it closed with four M2 x 16mm screws.
+and screw it closed with four M2 x 16mm screws and four small washers. There may
+be some stringing from the 3D printing in the bottom part of the holes, remove
+it with a small screwdriver beforehand.
 
 ## Testing everything
 Before plugging things in, it is good to check if everything is as expected.
