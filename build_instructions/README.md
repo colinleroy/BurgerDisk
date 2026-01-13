@@ -54,6 +54,11 @@ So far I print the enclosure at 100% infill, 0.20mm layer height. With my printe
 I don't need support for the overhangs on the slots at the back, but your mileage
 may vary.
 
+## Assembly video
+If you prefer visual instructions rather than text ones, I have uploaded [an
+assembly video](https://makertube.net/w/vMwgwxywCR59GPpnG2MWhi)
+([mirror](https://www.youtube.com/watch?v=73JgiqIu8tc)).
+
 ## Building the main PCB
 **All elements are to be soldered on the top-side of the PCB**, the side with the
 markings, except for the MicroSD card module.
