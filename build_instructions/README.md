@@ -11,13 +11,14 @@ For the main board, you will need:
 - one [STK500 AVR ISP programmer](https://aliexpress.com/item/1005006205386137.html) for uploading the firmware to the Arduino
 - one [microSD module](https://aliexpress.com/item/1005008633757049.html)
 - one [IDC20 connector, male, 2.54mm pitch](https://aliexpress.com/item/1005001400147026.html)
-- four [2-pin male headers, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html)
-- two [jumpers, 2.54mm pitch](https://aliexpress.com/item/4000583368141.html)
-- one [330 ohms resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
-- one [150 ohms resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
+- one [150Ω resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
+- one [1kΩ resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
+- one [10kΩ resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
+- one [3mm LED, 3V, 20mA](https://fr.aliexpress.com/item/1005003320296052.html)
+- one [1N4732 diode](https://aliexpress.com/item/1005010713189224.html)
 - one [1N5818 diode](https://aliexpress.com/item/4000055728807.html)
 - two [1N4448 diodes](https://aliexpress.com/item/1005008591345474.html)
-- one [3mm LED, 3V, 20mA](https://fr.aliexpress.com/item/1005003320296052.html)
+- two [2-pin male headers, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html)
 - optionally, [one female DB19 connector](https://www.ebay.com/itm/165875193091) if you want daisy-chaining
 - optionally, [two 15-pin female header](https://aliexpress.com/item/1005006934014275.html) for easy Arduino removal
 
@@ -74,7 +75,9 @@ pins (there are 10 on the top, 9 on the bottom in total).
 ### Resistors
 Insert the 150Ω resistor in its spot, marked "150Ω" at the bottom of the PCB.
 
-Insert the 330Ω resistor in its spot at the top-left of the PCB.
+Insert the 1kΩ resistor in its spot at the top-left of the PCB.
+
+Insert the 10kΩ resistor in its spot at the left of the PCB, under the 1kΩ one.
 
 Solder them. Resistors are not polarized, so you can put them either way.
 
@@ -83,16 +86,16 @@ Insert the 1N5818 diode in its spot, marked "1N5818", near the Daisy out port.
 Mind that diodes **are** polarized, so make sure the line on the PCB silkscreen and
 the line on the diode are facing the same way.
 
+Insert the 1N4732A Zener diode in its spot, marked "Z4.7V", on the left of the
+PCB, next to the 10kΩ resistor.
+
 Insert the two 1N4448 diodes in their spots, marked "1N4448". One is at the
 bottom of the PCB, one is right over the IDC20 port. Mind the polarity line too.
 
 Solder them.
 
-### 2-pin headers
-Insert 2-pin male headers in the "IIgs", "SPadv" and "UART" spots. Solder them.
-They might not want to stay upright, so solder one pin, then put your finger on
-the header and re-heat the solder to have the jumpers vertical. You can then
-solder their second pin.
+### 2-pin header
+Insert one 2-pin male headers in the "UART" spot. Solder it.
 
 ### Input IDC-20 connector
 Insert the IDC-20 connector in its spot. Mind the notch position, it must be
@@ -203,12 +206,6 @@ Solder it.
 Insert the IDC-20 connector in the adapter PCB. It must on the top-side of the
 PCB, where the IDC-20 is outlined on the silkscreen. Pay attention to the notch
 position, which should be towards the DB19 connector. Solder it.
-
-## Hardware configuration
-If you're going to use your BurgerDisk with an Apple IIc or IIgs, close the "SPadv"
-jumper. If you're going to use it with a IIgs, close the "IIgs" jumper.
-Never close these jumpers if you're going to use the BurgerDisk on an Apple II
-with a non-Smartport controller card, **even in conjunction with a SoftSP card**.
 
 ## Assembling in the enclosure
 Put the PCB back in the enclosure's bottom, making sure the enclosure notches
