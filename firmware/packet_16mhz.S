@@ -208,9 +208,8 @@ IgnorePacket:
           rcall SP_RD_MUTE
 
 ignore_wait:
-          sbic _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH1                  ;if phase1 is now down, bus is now disabled
-          sbis _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH3                  ;otherwise, if phase3 is still up, bus is still enabled
-          rjmp ignore_done
+          sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;wait for REQ line to go low
+          rjmp ignore_done                                           ;(the other device and computer have finished)
           rjmp ignore_wait
 
 ignore_done:
