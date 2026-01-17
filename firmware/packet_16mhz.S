@@ -193,12 +193,12 @@ recv_done:
 AckPacket:
           rcall SP_ACK_OFF                                           ;pull ACK low,
 
-ack_wait:
+wait_req_low:
           sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;wait for REQ line to go low
-          rjmp ack_done                                              ;this indicates host has acknowledged ACK
-          rjmp ack_wait
+          rjmp req_is_low                                            ;this indicates host has acknowledged ACK
+          rjmp wait_req_low
 
-ack_done:
+req_is_low:
           sei
           ret
 
@@ -206,13 +206,14 @@ ack_done:
 IgnorePacket:
           rcall SP_ACK_MUTE
           rcall SP_RD_MUTE
+          rjmp wait_req_low                                          ;wait for REQ line to go low
 
-ignore_wait:
-          sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;wait for REQ line to go low
-          rjmp ignore_done                                           ;(the other device and computer have finished)
-          rjmp ignore_wait
-
-ignore_done:
+send_cancel:
+          rcall SP_ACK_OFF
+          rcall SP_ACK_MUTE
+          rcall SP_RD_MUTE
+          ldi  r24,1                               ;setup return value, 1=error
+          clr  r25
           sei
           ret
 
@@ -226,7 +227,6 @@ ignore_done:
 //
 //*****************************************************************************
 .global SendPacket
-
 SendPacket:
           cli
           mov  XL,r24                                                ;mov buffer pointer into X
@@ -239,9 +239,16 @@ SendPacket:
 send_wait_ack:
           sbic _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;wait for req line to go high
           rjmp send_start                                            ;this indicates host is ready to receive packet
+
+          ; Verify that the bus is still enabled!
+          sbic _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH1                  ;if phase1 is now down, bus is now disabled
+          sbis _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH3                  ;otherwise, if phase3 is still up, bus is still enabled
+          rjmp send_cancel                                           ;if bus disabled, return with an error
           rjmp send_wait_ack
 
 send_start:                                                          ;Totals for loops             ;
+          sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;Don't wait forever, verify that REQ is still high
+          rjmp send_cancel                                           ;if not, return with an error
 
 nxtsbyte: ld   r23,x+                                               ;59               ;43         ;2   get first byte from buffer
           cpi  r23,0                                                ;60               ;44         ;1   zero marks end of data
