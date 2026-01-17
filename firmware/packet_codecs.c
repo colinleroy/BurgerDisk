@@ -73,7 +73,7 @@ void encode_data_packet (unsigned char source)
   //grps of 7
   src = packet_buffer + 1 + (72*7);
   dst = packet_buffer + 17 + 6 + (72*8);
-  for (grpcount = 72; grpcount >= 0; grpcount --) {
+  for (grpcount = 72; grpcount >= 0; grpcount--) {
     grpmsb = 0;
     for (grpbyte = 6; grpbyte >= 0; grpbyte--) {
       // compute msb group byte
@@ -91,7 +91,7 @@ void encode_data_packet (unsigned char source)
   packet_buffer[15] = packet_buffer[0] | 0x80;
 
   init_packet_buffer(source);
-  packet_buffer[9] = 0x82;  //TYPE - 0x82 = data
+  packet_buffer[9]  = 0x82; //TYPE - 0x82 = data
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0x80; //STAT
   packet_buffer[12] = 0x81; //ODDCNT  - 1 odd byte for 512 byte packet
@@ -248,7 +248,7 @@ void encode_write_status_packet(unsigned char source, unsigned char status)
   unsigned char checksum = 0;
 
   init_packet_buffer(source);
-  packet_buffer[9] = 0x81;  //TYPE
+  packet_buffer[9]  = 0x81; //TYPE
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = status | 0x80; //STAT
   packet_buffer[12] = 0x80; //ODDCNT
@@ -283,7 +283,7 @@ void encode_init_reply_packet (unsigned char source, unsigned char status)
   unsigned char checksum = 0;
 
   init_packet_buffer(source);
-  packet_buffer[9] = 0x80;  //TYPE
+  packet_buffer[9]  = 0x80; //TYPE
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = status; //STAT - data status
 
@@ -335,7 +335,7 @@ void encode_status_reply_packet (unsigned char device_id, unsigned long blocks)
   data[3] = (blocks >> 16 ) & 0xff;
 
   init_packet_buffer(device_id);
-  packet_buffer[9] = 0x81;  //TYPE -status
+  packet_buffer[9]  = 0x81; //TYPE -status
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0x80; //STAT - data status
   packet_buffer[12] = 0x84; //ODDCNT - 4 data bytes
@@ -399,7 +399,7 @@ void encode_extended_status_reply_packet (unsigned char device_id, unsigned long
   data[4] = (blocks >> 24 ) & 0xff;
 
   init_packet_buffer(device_id);
-  packet_buffer[9] = 0xC1;  //TYPE - extended status
+  packet_buffer[9]  = 0xC1; //TYPE - extended status
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0x80; //STAT - data status
   packet_buffer[12] = 0x85; //ODDCNT - 5 data bytes
@@ -434,7 +434,7 @@ void encode_error_reply_packet (unsigned char source)
   unsigned char checksum = 0;
 
   init_packet_buffer(source);
-  packet_buffer[9] = 0x80;  //TYPE -status
+  packet_buffer[9]  = 0x80; //TYPE -status
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0xA1; //STAT - data status - error
   packet_buffer[12] = 0x80; //ODDCNT - 0 data bytes
@@ -475,17 +475,17 @@ void encode_status_dib_reply_packet (unsigned char device_id, unsigned long bloc
   oddnum=4;
 
   //* write data buffer first (25 bytes) 3 grp7 + 4 odds
-  data[0] = 0xf8; //general status - f8 = 11111000
+  data[0]  = 0xf8; //general status - f8 = 11111000
   //number of blocks =0x00ffff = 65525 or 32mb
-  data[1] = blocks & 0xff; //block size 1
-  data[2] = (blocks >> 8 ) & 0xff; //block size 2
-  data[3] = (blocks >> 16 ) & 0xff ; //block size 3
-  data[4] = 0x0a; //ID string length - 10 chars
-  data[5] = 'B';
-  data[6] = 'u';
-  data[7] = 'r';
-  data[8] = 'g';
-  data[9] = 'e';
+  data[1]  = blocks & 0xff; //block size 1
+  data[2]  = (blocks >> 8 ) & 0xff; //block size 2
+  data[3]  = (blocks >> 16 ) & 0xff ; //block size 3
+  data[4]  = 0x0a; //ID string length - 10 chars
+  data[5]  = 'B';
+  data[6]  = 'u';
+  data[7]  = 'r';
+  data[8]  = 'g';
+  data[9]  = 'e';
   data[10] = 'r';
   data[11] = 'D';
   data[12] = 'i';
@@ -538,7 +538,7 @@ void encode_status_dib_reply_packet (unsigned char device_id, unsigned long bloc
   packet_buffer[18] = data[3] | 0x80;;
 
   init_packet_buffer(device_id);
-  packet_buffer[9] = 0x81;  //TYPE -status
+  packet_buffer[9]  = 0x81; //TYPE -status
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0x80; //STAT - data status
   packet_buffer[12] = 0x84; //ODDCNT - 4 data bytes
@@ -572,7 +572,7 @@ void encode_extended_status_dib_reply_packet (unsigned char device_id, unsigned 
   unsigned char checksum = 0;
 
   init_packet_buffer(device_id);
-  packet_buffer[9] = 0x81;  //TYPE -status
+  packet_buffer[9]  = 0x81; //TYPE -status
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0x83; //STAT - data status
   packet_buffer[12] = 0x80; //ODDCNT - 4 data bytes
