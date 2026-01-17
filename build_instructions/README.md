@@ -12,10 +12,10 @@ For the main board, you will need:
 - one [microSD module](https://aliexpress.com/item/1005008633757049.html)
 - one [IDC20 connector, male, 2.54mm pitch](https://aliexpress.com/item/1005001400147026.html)
 - one [150Ω resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
-- one [1kΩ resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
+- one [470Ω resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
 - one [10kΩ resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
 - one [3mm LED, 3V, 20mA](https://fr.aliexpress.com/item/1005003320296052.html)
-- one [1N4732 diode](https://aliexpress.com/item/1005010713189224.html)
+- one [PC817 optocoupler (DIP-4)](https://aliexpress.com/item/1005004609787594.html)
 - one [1N5818 diode](https://aliexpress.com/item/4000055728807.html)
 - two [1N4448 diodes](https://aliexpress.com/item/1005008591345474.html)
 - two [2-pin male headers, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html)
@@ -75,9 +75,11 @@ pins (there are 10 on the top, 9 on the bottom in total).
 ### Resistors
 Insert the 150Ω resistor in its spot, marked "150Ω" at the bottom of the PCB.
 
-Insert the 1kΩ resistor in its spot at the top-left of the PCB.
+Insert the 330Ω resistor in its spot near the top-left of the PCB.
 
-Insert the 10kΩ resistor in its spot at the left of the PCB, under the 1kΩ one.
+Insert the 470Ω resistor in its spot near the 330Ω resistor.
+
+Insert the 10kΩ resistor in its spot at the left of the PCB.
 
 Solder them. Resistors are not polarized, so you can put them either way.
 
@@ -86,13 +88,15 @@ Insert the 1N5818 diode in its spot, marked "1N5818", near the Daisy out port.
 Mind that diodes **are** polarized, so make sure the line on the PCB silkscreen and
 the line on the diode are facing the same way.
 
-Insert the 1N4732A Zener diode in its spot, marked "Z4.7V", on the left of the
-PCB, next to the 10kΩ resistor.
-
 Insert the two 1N4448 diodes in their spots, marked "1N4448". One is at the
 bottom of the PCB, one is right over the IDC20 port. Mind the polarity line too.
 
 Solder them.
+
+### Optocoupler
+Insert the PC817 optocoupler in its spot on the left of the PCB. The small round
+mark on the PC817 is the anode, and goes to the hole with a square solder mask,
+closest to the 470Ω resistor's left side.
 
 ### 2-pin header
 Insert one 2-pin male headers in the "UART" spot. Solder it.
