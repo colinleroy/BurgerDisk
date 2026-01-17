@@ -48,7 +48,7 @@ For the enclosure, you will need:
 You can use the .stl files provided in [this repository](../enclosure/stl/BurgerDisk.stl).
 It is suggested to print the enclosure first, as it will help you solder the
 female DB19 of the daisy out port orthogonally to the PCB.
-So far I print the enclosure at 100% infill, 0.20mm layer height. With my printer
+So far I print the enclosure at 15% infill, 0.20mm layer height. With my printer
 I don't need support for the overhangs on the slots at the back, but your mileage
 may vary.
 
