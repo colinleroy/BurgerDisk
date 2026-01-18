@@ -11,8 +11,10 @@ For the main board, you will need:
 - one [STK500 AVR ISP programmer](https://aliexpress.com/item/1005006205386137.html) for uploading the firmware to the Arduino
 - one [microSD module](https://aliexpress.com/item/1005008633757049.html)
 - one [IDC20 connector, male, 2.54mm pitch](https://aliexpress.com/item/1005001400147026.html)
+- one [470Ω resistor, 1/2W](https://aliexpress.com/item/1005004472952572.html)
 - one [150Ω resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
-- one [470Ω resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
+- one [330Ω resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
+- one [1kΩ resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
 - one [10kΩ resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
 - one [3mm LED, 3V, 20mA](https://fr.aliexpress.com/item/1005003320296052.html)
 - one [PC817 optocoupler (DIP-4)](https://aliexpress.com/item/1005004609787594.html)
@@ -80,6 +82,7 @@ Insert the 330Ω resistor in its spot near the top-left of the PCB.
 Insert the 470Ω resistor in its spot near the 330Ω resistor.
 
 Insert the 10kΩ resistor in its spot at the left of the PCB.
+Insert the 1kΩ resistor in its spot at the left of the PCB, under the 10kΩ one.
 
 Solder them. Resistors are not polarized, so you can put them either way.
 
