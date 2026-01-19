@@ -67,6 +67,10 @@
 #define SD_CONFIG SdSpiConfig(PIN_CHIP_SELECT, DEDICATED_SPI, SPI_CLOCK)
 
 #define MAX_PARTITIONS 4
+
+#define _MAX_FILENAME_LEN 80
+#define _2MG_HEADER_LEN   0x0F
+
 int open_partitions = 0;
 int debug = 0;
 unsigned char *packet_buffer;
@@ -112,29 +116,39 @@ static void init_storage(void) {
   SdFile myFile("config.txt", O_READ);
   // check for open error
   LOG(F("Opening partitions"));
+  open_partitions = 0;
   if (myFile.isOpen()) {
     unsigned char n;
-    packet_buffer = (unsigned char *)malloc(100);
-    for(unsigned char i = 0; i < MAX_PARTITIONS; i++) {
-      n = myFile.fgets((char*)packet_buffer, 100);
+    packet_buffer = (unsigned char *)malloc(_MAX_FILENAME_LEN + _2MG_HEADER_LEN + 1);
+    while (open_partitions < MAX_PARTITIONS) {
+      n = myFile.fgets((char*)packet_buffer, _MAX_FILENAME_LEN - 1);
       if(n > 1) {
         if (packet_buffer[n - 1] == '\n') {
           packet_buffer[n-1] = 0;
         }
         LOG((char*)packet_buffer);
 
-        open_image(devices[i],(char*)packet_buffer);
-        if(!devices[i].sdf.isOpen()){
-          LOG(F("Image open error!"));
-        }
-        else {
+        open_image(devices[open_partitions],(char*)packet_buffer);
+        if(!devices[open_partitions].sdf.isOpen()) {
+          LOG(F(" open error"));
+        } else {
+          if ((packet_buffer[n-4]       == '2')
+           &&((packet_buffer[n-3]&0xdf) == 'M')
+           &&((packet_buffer[n-2]&0xdf) == 'G')) {
+            /* https://gswv.apple2.org.za/a2zine/Docs/DiskImage_2MG_Info.txt */
+            /* Read header after name, check ProDOS sector order */
+            if (devices[open_partitions].sdf.read(packet_buffer+_MAX_FILENAME_LEN, 0x0F) < _2MG_HEADER_LEN
+             || packet_buffer[_MAX_FILENAME_LEN+0x0C] != 0x01) {
+              LOG(F(" not in ProDOS format"));
+              devices[open_partitions].sdf.close();
+              continue;
+            }
+            /* Apply offset */
+            devices[open_partitions].header_offset=packet_buffer[_MAX_FILENAME_LEN+0x08];
+          } else {
+            devices[open_partitions].header_offset=0;
+          }
           open_partitions++;
-          if ((packet_buffer[n-4]=='2')&&((packet_buffer[n-3]&0xdf)=='M')&&((packet_buffer[n-2]&0xdf)=='G')) {
-            devices[i].header_offset=64;
-          }
-          else {
-            devices[i].header_offset=0;
-          }
         }
       } else {
         break;
@@ -142,7 +156,7 @@ static void init_storage(void) {
     }
 
     /* Now get parameters */
-    while (myFile.fgets((char*)packet_buffer, 100) > 0) {
+    while (myFile.fgets((char*)packet_buffer, _MAX_FILENAME_LEN) > 0) {
       if (!strncmp((const char *)packet_buffer, "debug=", 6)) {
         debug = (packet_buffer[6] == '1');
       }
