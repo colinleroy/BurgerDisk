@@ -21,6 +21,8 @@ For the main board, you will need:
 - one [1N5818 diode](https://aliexpress.com/item/4000055728807.html)
 - two [1N4448 diodes](https://aliexpress.com/item/1005008591345474.html)
 - two [2-pin male headers, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html)
+- one [6-pin male header, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html)
+- one [6-pin cable, 2.54mm pitch](https://aliexpress.com/item/4001119232749.html)
 - optionally, [one female DB19 connector](https://www.ebay.com/itm/165875193091) if you want daisy-chaining
 - optionally, [two 15-pin female header](https://aliexpress.com/item/1005006934014275.html) for easy Arduino removal
 
@@ -128,9 +130,12 @@ Reverse the PCB, and solder the female headers' 30 pins to the PCB.
 You can [program the Arduino at this point](../firmware/README.md).
 
 ### MicroSD card module
-The MicroSD card module is the only module to be soldered on the bottom side of
-the PCB. This requires straightening the 6 pins of the module, with a small pair
-of pliers.
+**If you plan on using the enclosure**: Solder the 6-pin male header on the MicroSD
+spot, at the center top of the PCB.
+
+**If you don't plan on using the enclosure**: the MicroSD card module is the only
+module to be soldered on the bottom side of the PCB. This requires straightening
+the 6 pins of the module, with a small pair of pliers.
 
 Position the MicroSD module in its spot from underneath the PCB. Make sure the
 pin markings correspond (GND to GND, etc). There are two connectors on the PCB
@@ -140,7 +145,7 @@ of the PCB.
 Solder them.
 
 ### LED
-If you plan on using the enclosure, connect the LED using about 15 cm of wire.
+**If you plan on using the enclosure**, connect the LED using about 15 cm of wire.
 Otherwise you can connect the LED directly on the PCB.
 
 You have options there:
@@ -217,11 +222,19 @@ position, which should be towards the DB19 connector. Solder it.
 ## Assembling in the enclosure
 Put the PCB back in the enclosure's bottom, making sure the enclosure notches
 are in the PCB mounting holes and the daisy DB19 connector's chassis sits
-between the enclosure wall and notches. Plug the input cable in, and route it
-out of the enclosure via its dedicated hole in the back.
+between the enclosure wall and notches.
+
+Screw the MicroSD module, face up, at the front of the enclosure's bottom; then
+connect it to the PCB using the 6-pin cable. **Mind which way you connect!** the
+6-pin cable will have to make a 180°, as when looking from the front, GND is on
+the **left** on the PCB, while it is on the **right** on the microSD module.
+
+Plug the main input cable in, and route it out of the enclosure via its dedicated
+hole in the back.
 
 Glue a weight in the front of the bottom part if needed (epoxy works well on PLA
-and lead). Put the enclosure's top on the bottom, making sure the notches are
+and lead). Make sure you leave room for the enclosure top's posts.
+Put the enclosure's top on the bottom, making sure the notches are
 aligned so that the PCB does not move around. Turn the enclosure on its back,
 and screw it closed with four M2 x 16mm screws and four small washers. There may
 be some stringing from the 3D printing in the bottom part of the holes, remove
