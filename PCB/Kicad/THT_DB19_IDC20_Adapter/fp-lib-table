@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "DSUB-19-soldertype")(type "KiCad")(uri "${KIPRJMOD}/DSUB-19-soldertype.pretty")(options "")(descr ""))
+)
