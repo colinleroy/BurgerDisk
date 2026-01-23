@@ -4,7 +4,8 @@ SUBDIRS = \
 	THT_SolderTypeDB19
 
 SRCDIR=$(shell pwd)
-OUTDIR=../Gerbers
+TOOLDIR=$(SRCDIR)/tools
+OUTDIR=$(SRCDIR)/../Gerbers
 
 all clean:
 	for dir in $(SUBDIRS); do \
@@ -13,6 +14,10 @@ all clean:
 		mkdir -p $(OUTDIR)/$$dir && \
 		kicad-cli pcb export gerbers -o $(OUTDIR)/$$dir/ $$dir/*pcb && \
 		kicad-cli pcb export drill -o $(OUTDIR)/$$dir/ $$dir/*pcb && \
+		kicad-cli pcb export pos -o $(OUTDIR)/$$dir.jlcpcb_pos.csv --format csv --units mm --side front $$dir/*pcb && \
+		kicad-cli sch export python-bom -o $(OUTDIR)/$$dir/$$dir.bom.xml $$dir/*sch && \
 		cd $(OUTDIR)/$$dir/ && \
+		xsltproc -o $(OUTDIR)/$$dir.jlcpcb_bom.csv $(TOOLDIR)/bom2grouped_csv_jlcpcb.xsl $$dir.bom.xml && \
+		sed -i "s/^Ref,Val.*$$/Designator,Val,Package,Mid X,Mid Y,Rotation,Layer/" $(OUTDIR)/$$dir.jlcpcb_pos.csv && \
 		zip ../$$dir.zip *; \
 	done
