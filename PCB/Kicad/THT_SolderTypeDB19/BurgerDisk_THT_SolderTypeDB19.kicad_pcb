@@ -1291,7 +1291,7 @@
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 6e46ebc9-73d3-4ea9-968d-9e44eb0dd254)
     )
-    (fp_text value "MicroSD module" (at 4.385 14.97 -90) (layer "F.SilkS")
+    (fp_text value "MicroSD module" (at -2.794 10.922) (layer "F.SilkS")
         (effects (font (size 1 1) (thickness 0.15)))
       (tstamp d1303999-8faf-4760-b010-fccf182673f5)
     )
@@ -1816,6 +1816,9 @@
 
   (gr_rect (start 70.866 43.688) (end 164.592 111.252)
     (stroke (width 0.05) (type default)) (fill none) (layer "Edge.Cuts") (tstamp 0d09a5c9-4b38-4e45-a696-092f91273fa3))
+  (gr_text "+5V/GND" (at 141.478 97.282) (layer "F.SilkS") (tstamp 5e49d53c-d01e-4e78-8c53-afbdd73e82be)
+    (effects (font (size 1 1) (thickness 0.2) bold) (justify left bottom))
+  )
   (gr_text "BurgerDisk\nDaisy-chainable Apple II Smartport hard drive\n© Colin Leroy-Mira, 2026 - CC BY-SA\nhttps://github.com/colinleroy/BurgerDisk" (at 73.152 56.896) (layer "F.SilkS") (tstamp 813b8aaa-f3c2-4dc1-a412-aab0d6026ea7)
     (effects (font (size 1.5 1.5) (thickness 0.3) bold) (justify left bottom))
   )
