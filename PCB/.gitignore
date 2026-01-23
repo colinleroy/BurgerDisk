@@ -1,6 +1,7 @@
 *-gerber
 *-backups
 Gerber
+Gerbers
 fp-info-cache
 *.step
 *.lck
