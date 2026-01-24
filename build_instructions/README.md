@@ -36,16 +36,16 @@ For connecting to the computer, you will need:
   - an [IDC20 cable, 2.54mm pitch](https://aliexpress.com/item/1005003853804182.html), at least 50cm
   - a second [IDC20 connector, male, 2.54mm pitch](https://aliexpress.com/item/1005001400147026.html)
   - one [male DB19 connector](https://www.ebay.com/itm/257181325655)
-  - two [M2 16mm screws](https://aliexpress.com/item/33043885403.html)
+  - two [M2 x 12mm screws](https://aliexpress.com/item/33043885403.html)
 - The [Fujinet's DB19/IDC20 adapter](https://github.com/FujiNetWIFI/fujinet-hardware/tree/master/AppleII/DB-19M-Adapter-Male-Rev1)
 can be used, provided that you solder the -12V and +12V pads between the IDC20
-and the DB19, (and the DRV2 pad on the side if connecting to a IIgs):
+and the DB19, and the DRV2 pad on the side:
 ![The Fujinet adapter, with required soldering highlighted in green](../build_instructions/pictures/fujinet-db19-adapter.png "The Fujinet adapter, with required soldering highlighted in green")
 
 For the enclosure, you will need:
 - the [enclosure's STL files](../enclosure/)
-- four [M2 16mm screws](https://aliexpress.com/item/33043885403.html)
-- four [M2 x 5 washers](https://aliexpress.com/item/1005007625630719.html)
+- four [M3 x 12mm wood screws](https://aliexpress.com/item/33043885403.html)
+- two [M2 x 12mm screws](https://aliexpress.com/item/33043885403.html)
 - optionally, a [500 grams weight](https://aliexpress.com/item/1005007419997918.html)
   (and glue) to make the enclosure heavier and avoid thick-cables-induced levitation.
   (I found diving belt weights to have the best price-to-weight ratio but you can
@@ -205,13 +205,17 @@ Insert the IDC-20 connector in the adapter PCB. It must on the top-side of the
 PCB, where the IDC-20 is outlined on the silkscreen. Pay attention to the notch
 position, which should be towards the DB19 connector. Solder it.
 
+Insert the assembled adapter into its enclosure, and screw it shut with two M2
+x 12mm screws.
+
 ## Assembling in the enclosure
 Put the PCB back in the enclosure's bottom, making sure the enclosure notches
 are in the PCB mounting holes and the daisy DB19 connector's chassis sits
 between the enclosure wall and notches.
 
-Screw the (Micro)SD module, face up, at the front of the enclosure's bottom; then
-connect it to the PCB using the 6 or 8-pin cable. **Mind which way you connect!**
+Screw the (Micro)SD module with M2 x 12mm screws, face up, at the front of the
+enclosure's bottom; then connect it to the PCB using the 6 or 8-pin cable.
+**Mind which way you connect!**
 When looking from the front of the enclosure, +5V and GND are on the **right**
 both on the PCB, and on the (micro)SD module.
 
@@ -222,9 +226,9 @@ Glue a weight in the front of the bottom part if needed (epoxy works well on PLA
 and lead). Make sure you leave room for the enclosure top's posts.
 Put the enclosure's top on the bottom, making sure the notches are
 aligned so that the PCB does not move around. Turn the enclosure on its back,
-and screw it closed with four M2 x 16mm screws and four small washers. There may
-be some stringing from the 3D printing in the bottom part of the holes, remove
-it with a small screwdriver beforehand.
+and screw it closed with four M3 x 12mm screws. There may be some stringing from
+the 3D printing in the bottom part of the holes, remove it with a small
+screwdriver beforehand if needed.
 
 ## Testing everything
 Before plugging things in, it is good to check if everything is as expected.
