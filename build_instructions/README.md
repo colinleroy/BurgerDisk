@@ -9,7 +9,6 @@ For the main board, you will need:
 - the [main PCB](https://www.pcbway.com/project/shareproject/BurgerDisk_Apple_II_Smartport_hard_drive_235e6080.html) or its [Gerber files](../../../releases/latest/)
 - one [Arduino Nano with an Atmega328p processor](https://aliexpress.com/item/1005006773519913.html)
 - one [STK500 AVR ISP programmer](https://aliexpress.com/item/1005006205386137.html) for uploading the firmware to the Arduino
-- one [microSD module](https://aliexpress.com/item/1005008633757049.html)
 - one [IDC20 connector, male, 2.54mm pitch](https://aliexpress.com/item/1005001400147026.html)
 - one [470Ω resistor, 1/2W](https://aliexpress.com/item/1005004472952572.html)
 - one [150Ω resistor, 1/4W](https://aliexpress.com/item/32952657927.html)
@@ -21,8 +20,12 @@ For the main board, you will need:
 - one [1N5818 diode](https://aliexpress.com/item/4000055728807.html)
 - two [1N4448 diodes](https://aliexpress.com/item/1005008591345474.html)
 - two [2-pin male headers, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html)
-- one [6-pin male header, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html)
-- one [6-pin cable, 2.54mm pitch](https://aliexpress.com/item/4001119232749.html)
+- one [microSD module ("TF")](https://aliexpress.com/item/1005008633757049.html) or
+  one [full size SD module](https://fr.aliexpress.com/item/1005005377729431.html)
+- one [6-pin male header, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html) for MicroSD, or
+  one [8-pin male header, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html) for full size SD
+- one [6-pin cable, 2.54mm pitch](https://aliexpress.com/item/4001119232749.html) for MicroSD, or
+  one [8-pin cable, 2.54mm pitch](https://aliexpress.com/item/4001119232749.html) for full size SD
 - optionally, [one female DB19 connector](https://www.ebay.com/itm/165875193091) if you want daisy-chaining
 - optionally, [two 15-pin female header](https://aliexpress.com/item/1005006934014275.html) for easy Arduino removal
 
