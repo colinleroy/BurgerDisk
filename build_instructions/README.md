@@ -66,7 +66,7 @@ assembly video](https://makertube.net/w/vMwgwxywCR59GPpnG2MWhi)
 
 ## Building the main PCB
 **All elements are to be soldered on the top-side of the PCB**, the side with the
-markings, except for the MicroSD card module.
+markings, except for the (Micro)SD card module.
 
 ### Daisy DB19
 Align the female DB19 connector with the Daisy out pads on the PCB. Insert both into
@@ -132,20 +132,11 @@ Reverse the PCB, and solder the female headers' 30 pins to the PCB.
 
 You can [program the Arduino at this point](../firmware/README.md).
 
-### MicroSD card module
-**If you plan on using the enclosure**: Solder the 6-pin male header on the MicroSD
-spot, at the center top of the PCB.
+### (Micro)SD card module connector
+Solder the 6-pin male header on the "MicroSD module" spot, or the 8-pin male
+header on the "SD module" spot if you went with full size SD module.
 
-**If you don't plan on using the enclosure**: the MicroSD card module is the only
-module to be soldered on the bottom side of the PCB. This requires straightening
-the 6 pins of the module, with a small pair of pliers.
-
-Position the MicroSD module in its spot from underneath the PCB. Make sure the
-pin markings correspond (GND to GND, etc). There are two connectors on the PCB
-for the MicroSD module, choose the connector so that the module sticks 5mm out
-of the PCB.
-
-Solder them.
+Solder it.
 
 ### LED
 **If you plan on using the enclosure**, connect the LED using about 15 cm of wire.
@@ -155,14 +146,6 @@ You have options there:
 - direct connection to the PCB
 - solder a 2-pin header on the PCB, and use Dupont connectors
 - solder wires to the LED and to the PCB
-
-Mind that there is a [bug in Fritzing](https://github.com/fritzing/fritzing-app/issues/4295)
-that makes the LED solder pads inverted:
-contrary to the standard, the square one is *not* the cathode. The cathode
-(short leg of the LED, on the side where there is a small flat on the LED's body)
-must be connected to the "-" side of the LED connector, where the flat is noted
-on the PCB's silkscreen. The LED's anode goes on the other side, identified "+",
-in the square solder pad.
 
 ## The main connection cable
 Because of its daisy-chaining capabilities, the cable to plug BurgerDisk to the
@@ -227,10 +210,10 @@ Put the PCB back in the enclosure's bottom, making sure the enclosure notches
 are in the PCB mounting holes and the daisy DB19 connector's chassis sits
 between the enclosure wall and notches.
 
-Screw the MicroSD module, face up, at the front of the enclosure's bottom; then
-connect it to the PCB using the 6-pin cable. **Mind which way you connect!** the
-6-pin cable will have to make a 180°, as when looking from the front, GND is on
-the **left** on the PCB, while it is on the **right** on the microSD module.
+Screw the (Micro)SD module, face up, at the front of the enclosure's bottom; then
+connect it to the PCB using the 6 or 8-pin cable. **Mind which way you connect!**
+When looking from the front of the enclosure, +5V and GND are on the **right**
+both on the PCB, and on the (micro)SD module.
 
 Plug the main input cable in, and route it out of the enclosure via its dedicated
 hole in the back.
