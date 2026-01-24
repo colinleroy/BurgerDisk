@@ -18,6 +18,8 @@ all clean:
 		kicad-cli sch export python-bom -o $(OUTDIR)/$$dir/$$dir.bom.xml $$dir/*sch && \
 		cd $(OUTDIR)/$$dir/ && \
 		xsltproc -o $(OUTDIR)/$$dir.jlcpcb_bom.csv $(TOOLDIR)/bom2grouped_csv_jlcpcb.xsl $$dir.bom.xml && \
+		echo >> $(OUTDIR)/$$dir.jlcpcb_bom.csv && \
 		sed -i "s/^Ref,Val.*$$/Designator,Val,Package,Mid X,Mid Y,Rotation,Layer/" $(OUTDIR)/$$dir.jlcpcb_pos.csv && \
+		$(TOOLDIR)/add_nano_headers.sh $(OUTDIR)/$$dir.jlcpcb_bom.csv $(OUTDIR)/$$dir.jlcpcb_pos.csv && \
 		zip ../$$dir.zip *; \
 	done
