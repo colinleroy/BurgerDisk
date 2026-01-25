@@ -20,12 +20,9 @@ For the main board, you will need:
 - one [1N5818 diode](https://aliexpress.com/item/4000055728807.html)
 - two [1N4448 diodes](https://aliexpress.com/item/1005008591345474.html)
 - two [2-pin male headers, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html)
-- one [microSD module ("TF")](https://aliexpress.com/item/1005008633757049.html) or
-  one [full size SD module](https://fr.aliexpress.com/item/1005005377729431.html)
-- one [6-pin male header, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html) for MicroSD, or
-  one [8-pin male header, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html) for full size SD
-- one [6-pin cable, 2.54mm pitch](https://aliexpress.com/item/4001119232749.html) for MicroSD, or
-  one [8-pin cable, 2.54mm pitch](https://aliexpress.com/item/4001119232749.html) for full size SD
+- one [microSD module ("TF")](https://aliexpress.com/item/1005008633757049.html)
+- one [6-pin male header, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html) for MicroSD
+- one [6-pin cable, 2.54mm pitch](https://aliexpress.com/item/4001119232749.html) for MicroSD
 - optionally, [one female DB19 connector](https://www.ebay.com/itm/165875193091) if you want daisy-chaining
 - optionally, [two 15-pin female header](https://aliexpress.com/item/1005006934014275.html) for easy Arduino removal
 
@@ -66,7 +63,7 @@ assembly video](https://makertube.net/w/vMwgwxywCR59GPpnG2MWhi)
 
 ## Building the main PCB
 **All elements are to be soldered on the top-side of the PCB**, the side with the
-markings, except for the (Micro)SD card module.
+markings, except for the MicroSD card module.
 
 ### Daisy DB19
 Align the female DB19 connector with the Daisy out pads on the PCB. Insert both into
@@ -132,11 +129,8 @@ Reverse the PCB, and solder the female headers' 30 pins to the PCB.
 
 You can [program the Arduino at this point](../firmware/README.md).
 
-### (Micro)SD card module connector
-Solder the 6-pin male header on the "MicroSD module" spot, or the 8-pin male
-header on the "SD module" spot if you went with full size SD module.
-
-Solder it.
+### MicroSD card module connector
+Solder the 6-pin male header on the "MicroSD module" spot.
 
 ### LED
 **If you plan on using the enclosure**, connect the LED using about 15 cm of wire.
@@ -213,11 +207,11 @@ Put the PCB back in the enclosure's bottom, making sure the enclosure notches
 are in the PCB mounting holes and the daisy DB19 connector's chassis sits
 between the enclosure wall and notches.
 
-Screw the (Micro)SD module with M2 x 12mm screws, face up, at the front of the
+Screw the MicroSD module with M2 x 12mm screws, face up, at the front of the
 enclosure's bottom; then connect it to the PCB using the 6 or 8-pin cable.
 **Mind which way you connect!**
 When looking from the front of the enclosure, +5V and GND are on the **right**
-both on the PCB, and on the (micro)SD module.
+both on the PCB, and on the MicroSD module.
 
 Plug the main input cable in, and route it out of the enclosure via its dedicated
 hole in the back.
