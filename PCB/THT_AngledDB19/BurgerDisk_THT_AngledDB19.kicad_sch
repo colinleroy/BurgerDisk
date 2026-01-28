@@ -4,6 +4,14 @@
 
   (paper "A4")
 
+  (title_block
+    (title "BurgerDisk PCB - Angled DB19 version")
+    (date "2026-01-28")
+    (rev "v2")
+    (company "Colin Leroy-Mira")
+    (comment 1 "License: CC BY-SA")
+  )
+
   (lib_symbols
     (symbol "Connector:Conn_01x02_Pin" (pin_names (offset 1.016) hide) (in_bom yes) (on_board yes)
       (property "Reference" "J" (at 0 2.54 0)
