@@ -6,7 +6,11 @@ that most of them have options (number of pins, resistor values, etc) that you
 should double-check before buying.
 
 For the main board, you will need:
-- the [main PCB](https://www.pcbway.com/project/shareproject/BurgerDisk_Apple_II_Smartport_hard_drive_235e6080.html) or its [Gerber files](../../../releases/latest/)
+- one female DB19 connector, [solder type](https://www.ebay.com/itm/165875193091) or
+  [angled](https://www.ebay.com/itm/284338436979), for daisy-chaining
+- the main PCB's [Gerber files](../../../releases/latest/). You can get them easily
+  from PCBWay: [for solder type DB19](https://www.pcbway.com/project/shareproject/BurgerDisk_Apple_II_Smartport_hard_drive_235e6080.html), 
+  or [for angled DB19](https://www.pcbway.com/project/shareproject/BurgerDisk_Apple_II_Smartport_hard_drive_Angled_THT_DB19_d37bdb0f.html)
 - one [Arduino Nano with an Atmega328p processor](https://aliexpress.com/item/1005006773519913.html)
 - one [STK500 AVR ISP programmer](https://aliexpress.com/item/1005006205386137.html) for uploading the firmware to the Arduino
 - one [IDC20 connector, male, 2.54mm pitch](https://aliexpress.com/item/1005001400147026.html)
@@ -21,9 +25,9 @@ For the main board, you will need:
 - two [1N4448 diodes](https://aliexpress.com/item/1005008591345474.html)
 - two [2-pin male headers, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html)
 - one [microSD module ("TF")](https://aliexpress.com/item/1005008633757049.html)
-- one [6-pin male header, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html) for MicroSD
-- one [6-pin cable, 2.54mm pitch, 10cm long](https://aliexpress.com/item/4001119232749.html) for MicroSD
-- one [female DB19 connector](https://www.ebay.com/itm/165875193091) for daisy-chaining
+- one [6-pin male header, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html) for the MicroSD module
+- one [6-pin cable, 2.54mm pitch, 10cm long](https://aliexpress.com/item/4001119232749.html) for the MicroSD module
+- one [2-pin cable, 2.54mm pitch, 20cm long](https://aliexpress.com/item/4001119232749.html) for the LED
 - two [15-pin female header](https://aliexpress.com/item/1005006934014275.html) for easy Arduino removal
 
 For connecting to the computer, you will need:
