@@ -27,7 +27,7 @@ The code of this firmware is based on:
 
 ## Building the BurgerDisk
 Full instructions for building your own BurgerDisk are available in the
-[BurgerDisk build instruction page](build_instructions/README.md), or in [video format](https://makertube.net/w/vMwgwxywCR59GPpnG2MWhi) ([mirror](https://www.youtube.com/watch?v=73JgiqIu8tc))
+[BurgerDisk build instruction page](build_instructions/README.md).
 
 ## Using the BurgerDisk
 ### Plugging in

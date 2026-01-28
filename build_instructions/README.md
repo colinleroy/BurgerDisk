@@ -22,9 +22,9 @@ For the main board, you will need:
 - two [2-pin male headers, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html)
 - one [microSD module ("TF")](https://aliexpress.com/item/1005008633757049.html)
 - one [6-pin male header, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html) for MicroSD
-- one [6-pin cable, 2.54mm pitch](https://aliexpress.com/item/4001119232749.html) for MicroSD
-- optionally, [one female DB19 connector](https://www.ebay.com/itm/165875193091) if you want daisy-chaining
-- optionally, [two 15-pin female header](https://aliexpress.com/item/1005006934014275.html) for easy Arduino removal
+- one [6-pin cable, 2.54mm pitch, 10cm long](https://aliexpress.com/item/4001119232749.html) for MicroSD
+- one [female DB19 connector](https://www.ebay.com/itm/165875193091) for daisy-chaining
+- two [15-pin female header](https://aliexpress.com/item/1005006934014275.html) for easy Arduino removal
 
 For connecting to the computer, you will need:
 - an Apple 3.5 drive cable or equivalent, or make it yourself using
@@ -41,7 +41,7 @@ and the DB19, and the DRV2 pad on the side:
 
 For the enclosure, you will need:
 - the [enclosure's STL files](../enclosure/)
-- four [M3 x 12mm wood screws](https://aliexpress.com/item/33043885403.html)
+- four [M3 x 20mm wood screws](https://aliexpress.com/item/33043885403.html)
 - two [M2 x 12mm screws](https://aliexpress.com/item/33043885403.html)
 - optionally, a [500 grams weight](https://aliexpress.com/item/1005007419997918.html)
   (and glue) to make the enclosure heavier and avoid thick-cables-induced levitation.
@@ -50,65 +50,53 @@ For the enclosure, you will need:
 
 ## Printing the enclosure
 You can use the .stl files provided in [this repository](../enclosure/).
-It is suggested to print the enclosure first, as it will help you solder the
-female DB19 of the daisy out port orthogonally to the PCB.
 So far I print the enclosure at 15% infill, 0.20mm layer height. With my printer
 I don't need support for the overhangs on the slots at the back, but your mileage
 may vary.
-
-## Assembly video
-If you prefer visual instructions rather than text ones, I have uploaded [an
-assembly video](https://makertube.net/w/vMwgwxywCR59GPpnG2MWhi)
-([mirror](https://www.youtube.com/watch?v=73JgiqIu8tc)).
 
 ## Building the main PCB
 **All elements are to be soldered on the top-side of the PCB**, the side with the
 markings, except for the MicroSD card module.
 
+![The empty PCB](./pictures/PCB-v2.0.jpeg)
+
 ### Daisy DB19
-Align the female DB19 connector with the Daisy out pads on the PCB. Insert both into
-the enclosure. Make sure the DB19 chassis is stuck between the wall and the
-notches. Make sure the notches on the enclosure are inside the PCB mounting holes.
+Align the female DB19 connector with the Daisy out pads on the PCB. Pay close
+attention to the alignment, as the DB19 will basically be un-desolderable with
+basic equipment. Solder it.
 
-Realign the DB19 with the pads; pay close attention to the alignment, as the
-DB19 will basically be un-desolderable with basic equipment. Solder one pin.
+### Small components: Resistors, diodes and optocoupler
+Insert the 150Ω resistor in its spot, (R2/150).
 
-Remove the PCB and DB19 from the enclosure, and finish soldering the 18 remaining
-pins (there are 10 on the top, 9 on the bottom in total).
+Insert the 330Ω resistor in its spot (R1/330).
 
-### Resistors
-Insert the 150Ω resistor in its spot, marked "150Ω" at the bottom of the PCB.
+Insert the 470Ω resistor in its spot (R3/470).
 
-Insert the 330Ω resistor in its spot near the top-left of the PCB.
+Insert the 10kΩ resistor in its spot (R4/10000).
 
-Insert the 470Ω resistor in its spot near the 330Ω resistor.
+Insert the 1kΩ resistor in its spot (R5/1000).
 
-Insert the 10kΩ resistor in its spot at the left of the PCB.
-Insert the 1kΩ resistor in its spot at the left of the PCB, under the 10kΩ one.
+Resistors are not polarized, so you can put them either way.
 
-Solder them. Resistors are not polarized, so you can put them either way.
+Insert the two 1N4448 diodes in their spots (D1 and D2 / 1N4448). Mind that diodes
+**are** polarized, so make sure the line on the PCB silkscreen and the line on
+the diode are facing the same way.
 
-### Diodes
-Insert the 1N5818 diode in its spot, marked "1N5818", near the Daisy out port.
-Mind that diodes **are** polarized, so make sure the line on the PCB silkscreen and
-the line on the diode are facing the same way.
+Insert the 1N5818 diode in its spot, (D3/1N5818).
 
-Insert the two 1N4448 diodes in their spots, marked "1N4448". One is at the
-bottom of the PCB, one is right over the IDC20 port. Mind the polarity line too.
+Insert the PC817 optocoupler in its spot (U1/PC817). The small round
+mark on the PC817 is the anode, and goes to the hole with a square solder mask.
+
+Make these components stay in place, either by bending their legs or taping them.
 
 Solder them.
 
-### Optocoupler
-Insert the PC817 optocoupler in its spot on the left of the PCB. The small round
-mark on the PC817 is the anode, and goes to the hole with a square solder mask,
-closest to the 470Ω resistor's left side.
-
-### 2-pin header
-Insert one 2-pin male headers in the "UART" spot. Solder it.
+### 2-pin headers
+Insert one 2-pin male headers in the "UART" and "LED" spots. Solder them.
 
 ### Input IDC-20 connector
 Insert the IDC-20 connector in its spot. Mind the notch position, it must be
-towards the top of the PCB. Solder it.
+towards the bottom of the PCB. Solder it.
 
 ### Arduino Nano
 Solder the Nano's 6-pin header for programming on top of the Nano. The top of
@@ -132,14 +120,11 @@ You can [program the Arduino at this point](../firmware/README.md).
 ### MicroSD card module connector
 Solder the 6-pin male header on the "MicroSD module" spot.
 
-### LED
-**If you plan on using the enclosure**, connect the LED using about 15 cm of wire.
-Otherwise you can connect the LED directly on the PCB.
+Your PCB now looks like this:
+![The assembled PCB](./pictures/pcb-v2.0-soldered.jpeg)
 
-You have options there:
-- direct connection to the PCB
-- solder a 2-pin header on the PCB, and use Dupont connectors
-- solder wires to the LED and to the PCB
+### LED
+Solder the LED to about 15 cm of Dupont wire connectors.
 
 ## The main connection cable
 Because of its daisy-chaining capabilities, the cable to plug BurgerDisk to the
@@ -203,9 +188,18 @@ Insert the assembled adapter into its enclosure, and screw it shut with two M2
 x 12mm screws.
 
 ## Assembling in the enclosure
-Put the PCB back in the enclosure's bottom, making sure the enclosure notches
-are in the PCB mounting holes and the daisy DB19 connector's chassis sits
-between the enclosure wall and notches.
+Put washers on the enclosure mounting posts: 2mm if you are using the angled
+DB19 female connector, or 9mm (2 + 7) if you're using the "solder type" DB19
+connector.
+
+![The washers](./pictures/enclosure-washers.jpeg)
+
+Put the PCB in the enclosure's bottom, making sure the enclosure notches
+are in the PCB mounting holes.
+
+![The BurgerDisk assembly](./pictures/pcb-v2.0-in-enclosure.jpeg)
+
+If using the angled DB19, put the 7mm washers on top of the PCB.
 
 Screw the MicroSD module with M2 x 12mm screws, face up, at the front of the
 enclosure's bottom; then connect it to the PCB using the 6 or 8-pin cable.
@@ -214,13 +208,13 @@ When looking from the front of the enclosure, +5V and GND are on the **right**
 both on the PCB, and on the MicroSD module.
 
 Plug the main input cable in, and route it out of the enclosure via its dedicated
-hole in the back.
+slot in the back.
 
 Glue a weight in the front of the bottom part if needed (epoxy works well on PLA
 and lead). Make sure you leave room for the enclosure top's posts.
 Put the enclosure's top on the bottom, making sure the notches are
 aligned so that the PCB does not move around. Turn the enclosure on its back,
-and screw it closed with four M3 x 12mm screws. There may be some stringing from
+and screw it closed with four M3 x 20mm screws. There may be some stringing from
 the 3D printing in the bottom part of the holes, remove it with a small
 screwdriver beforehand if needed.
 
