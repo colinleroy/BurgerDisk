@@ -5,7 +5,7 @@ SUBDIRS = \
 
 SRCDIR=$(shell pwd)
 TOOLDIR=$(SRCDIR)/tools
-OUTDIR=$(SRCDIR)/../Gerbers
+OUTDIR=$(SRCDIR)/Gerbers
 
 all clean:
 	for dir in $(SUBDIRS); do \
