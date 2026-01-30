@@ -1,6 +1,6 @@
 PROGRAMMER := arduino:avrispmkii
 BOARD := arduino:avr:nano:cpu=atmega328
-LIBRARIES := SdFat:2.1.2
+LIBRARIES := SdFat:2.3.0
 GIT_VERSION := $(shell git describe --match=nervermatchanything --always --abbrev=8 --dirty)
 
 all: upload
