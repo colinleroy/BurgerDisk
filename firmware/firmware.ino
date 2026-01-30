@@ -355,7 +355,7 @@ static void smartport_read_block(int partition) {
   if (!devices[partition].sdf.read((unsigned char*) packet_buffer, 512)) {
     log_io_err(F("Read"), partition, block_num);
   }
-  encode_data_packet(devices[partition].device_id);
+  encode_data_packet(devices[partition].device_id, 0);
 
   SendPacket( (unsigned char*) packet_buffer);
 }

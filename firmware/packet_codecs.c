@@ -53,7 +53,7 @@ static void init_packet_buffer(unsigned char source) {
 // requires the data to be in the packet buffer, and builds the smartport
 // packet IN PLACE in the packet buffer
 //*****************************************************************************
-void encode_data_packet (unsigned char source)
+void encode_data_packet (unsigned char source, unsigned char extended)
 {
   int count;
   signed char grpbyte, grpcount;
@@ -91,7 +91,7 @@ void encode_data_packet (unsigned char source)
   packet_buffer[15] = packet_buffer[0] | 0x80;
 
   init_packet_buffer(source);
-  packet_buffer[9]  = 0x82; //TYPE - 0x82 = data
+  packet_buffer[9]  = extended ? 0xC2 : 0x82; //TYPE - 0x82 = data / C2 = extended
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0x80; //STAT
   packet_buffer[12] = 0x81; //ODDCNT  - 1 odd byte for 512 byte packet
@@ -102,70 +102,6 @@ void encode_data_packet (unsigned char source)
     checksum ^= packet_buffer[count];
   }
 
-  packet_buffer[600] = checksum | 0xaa;      // 1 c6 1 c4 1 c2 1 c0
-  packet_buffer[601] = checksum >> 1 | 0xaa; // 1 c7 1 c5 1 c3 1 c1
-
-  //end bytes
-  packet_buffer[602] = 0xc8;  //pkt end
-  packet_buffer[603] = 0x00;  //mark the end of the packet_buffer
-}
-
-//*****************************************************************************
-// Function: encode_extended_data_packet
-// Parameters: source id
-// Returns: none
-//
-// Description: encode 512 byte data packet for read block command from host
-// requires the data to be in the packet buffer, and builds the smartport
-// packet IN PLACE in the packet buffer
-//*****************************************************************************
-void encode_extended_data_packet (unsigned char source)
-{
-  int count;
-  signed char grpbyte, grpcount;
-  unsigned char checksum = 0, grpmsb;
-  unsigned char *src, *dst;
-
-    // Calculate checksum of sector bytes before we destroy them
-    for (count = 0; count < 512; count++) {
-      checksum = checksum ^ packet_buffer[count];
-    }
-
-  // Start assembling the packet at the rear and work
-  // your way to the front so we don't overwrite data
-  // we haven't encoded yet
-
-  //grps of 7
-  src = packet_buffer + 1 + (72*7);
-  dst = packet_buffer + 17 + 6 + (72*8);
-  for (grpcount = 72; grpcount >= 0; grpcount --) {
-    grpmsb = 0;
-    for (grpbyte = 6; grpbyte >= 0; grpbyte--) {
-      // compute msb group byte
-      grpmsb = grpmsb | ((src[grpbyte] >> (grpbyte + 1)) & (0x80 >> (grpbyte + 1)));
-      // now add the group data bytes bits 6-0
-      *dst-- = src[grpbyte] | 0x80;
-    }
-    *dst-- = grpmsb | 0x80;
-    src -= 7;
-  }
-
-  //total number of packet data bytes for 512 data bytes is 584
-  //odd byte
-  packet_buffer[14] = ((packet_buffer[0] >> 1) & 0x40) | 0x80;
-  packet_buffer[15] = packet_buffer[0] | 0x80;
-
-  init_packet_buffer(source);
-  packet_buffer[9] = 0xC2;  //TYPE - 0xC2 = extended data
-  packet_buffer[10] = 0x80; //AUX
-  packet_buffer[11] = 0x80; //STAT
-  packet_buffer[12] = 0x81; //ODDCNT  - 1 odd byte for 512 byte packet
-  packet_buffer[13] = 0xC9; //GRP7CNT - 73 groups of 7 bytes for 512 byte packet
-
-  // now xor the packet header bytes
-  for (count = 7; count < 14; count++) {
-    checksum = checksum ^ packet_buffer[count];
-  }
   packet_buffer[600] = checksum | 0xaa;      // 1 c6 1 c4 1 c2 1 c0
   packet_buffer[601] = checksum >> 1 | 0xaa; // 1 c7 1 c5 1 c3 1 c1
 

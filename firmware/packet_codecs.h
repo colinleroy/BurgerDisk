@@ -3,7 +3,7 @@
 
 extern "C" {
 
-void encode_data_packet (unsigned char source);   //encode smartport 512 byte data packet
+void encode_data_packet (unsigned char source, unsigned char extended);   //encode smartport 512 byte data packet
 int  decode_data_packet (void);                   //decode smartport 512 byte data packet
 void encode_write_status_packet(unsigned char source, unsigned char status);
 void encode_init_reply_packet (unsigned char source, unsigned char status);
