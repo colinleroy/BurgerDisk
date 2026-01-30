@@ -71,21 +71,18 @@ void encode_data_packet (unsigned char source, unsigned char extended)
   // we haven't encoded yet
 
   //grps of 7
-  src = packet_buffer + 1 + (72*7);
-  dst = packet_buffer + 17 + 6 + (72*8);
-  for (grpcount = 72; grpcount >= 0; grpcount--) {
+  src = packet_buffer + (73*7);
+  dst = packet_buffer + 16 + 7 + (72*8);
+  for (grpcount = 73; grpcount > 0; grpcount--) {
     grpmsb = 0;
-    for (grpbyte = 6; grpbyte >= 0; grpbyte--) {
+    for (grpbyte = 7; grpbyte > 0; grpbyte--) {
       // compute msb group byte
-      grpmsb = grpmsb | ((src[grpbyte] >> (grpbyte + 1)) & (0x80 >> (grpbyte + 1)));
+      grpmsb = grpmsb | ((*src >> (grpbyte)) & (0x80 >> (grpbyte)));
       // now add the group data bytes bits 6-0
-      *dst-- = src[grpbyte] | 0x80;
+      *dst-- = *(src--) | 0x80;
     }
     *dst-- = grpmsb | 0x80;
-    src -= 7;
   }
-
-  //total number of packet data bytes for 512 data bytes is 584
   //odd byte
   packet_buffer[14] = ((packet_buffer[0] >> 1) & 0x40) | 0x80;
   packet_buffer[15] = packet_buffer[0] | 0x80;
