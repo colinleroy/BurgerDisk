@@ -29,6 +29,7 @@
 //*****************************************************************************
 
 #include <string.h>
+#include "sp_vals.h"
 
 extern unsigned char *packet_buffer;
 
@@ -415,19 +416,19 @@ void encode_status_dib_reply_packet (unsigned char device_id, unsigned long bloc
   data[3]  = (blocks >> 16 ) & 0xff ; //block size 3
   data[4]  = 0x0a; //ID string length - 10 chars
   data[5]  = 'B';
-  data[6]  = 'u';
-  data[7]  = 'r';
-  data[8]  = 'g';
-  data[9]  = 'e';
-  data[10] = 'r';
+  data[6]  = 'U';
+  data[7]  = 'R';
+  data[8]  = 'G';
+  data[9]  = 'E';
+  data[10] = 'R';
   data[11] = 'D';
-  data[12] = 'i';
-  data[13] = 's';
-  data[14] = 'k';
+  data[12] = 'I';
+  data[13] = 'S';
+  data[14] = 'K';
   data[15] = ' ';
-  data[16] = ' ';
-  data[17] = ' ';
-  data[18] = ' ';
+  data[16] = '(';
+  data[17] = identifier;
+  data[18] = ')';
   data[19] = ' ';
   data[20] = ' ';  //ID string (16 chars total)
   data[21] = 0x02; //Device type    - 0x02  harddisk

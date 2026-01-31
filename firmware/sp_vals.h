@@ -21,4 +21,6 @@ typedef enum _SP_Command {
   SP_EXT_INIT   = 0xC5
 } SP_Command;
 
+extern unsigned char identifier;
+
 #endif

@@ -74,6 +74,7 @@
 int open_partitions = 0;
 int debug = 0;
 unsigned char *packet_buffer;
+unsigned char identifier = '0';
 
 // We need to remember several things about a device, not just its ID
 struct device {
@@ -407,7 +408,10 @@ static void smartport_init(unsigned char dev_id) {
   number_partitions_initialised++;
 
   // now we have time to init our partitions before acking
-  init_storage();
+  if (!storage_init_done) {
+    identifier = (dev_id &~ 0x80) + '0';
+    init_storage();
+  }
 
   if (number_partitions_initialised < open_partitions) { //are all init'd yet
     status = 0x80;
