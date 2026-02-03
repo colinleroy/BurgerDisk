@@ -2,7 +2,9 @@ SUBDIRS = \
 	THT_AngledDB19 \
 	THT_DB19_IDC20_Adapter \
 	THT_SolderTypeDB19 \
-	Small
+	Small-Angled \
+	Small-SolderType \
+	Smallest \
 
 SRCDIR=$(shell pwd)
 TOOLDIR=$(SRCDIR)/tools

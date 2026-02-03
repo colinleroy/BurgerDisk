@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "DSUB-19-angled")(type "KiCad")(uri "${KIPRJMOD}/DSUB-19-angled.kicad_sym")(options "")(descr ""))
+)
