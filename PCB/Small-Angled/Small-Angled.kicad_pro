@@ -466,7 +466,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "Small.kicad_pro",
+    "filename": "Small-Angled.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -665,7 +665,7 @@
   "sheets": [
     [
       "596d0583-1d97-453e-b84c-75eed809afa2",
-      ""
+      "Root"
     ]
   ],
   "text_variables": {}
