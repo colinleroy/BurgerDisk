@@ -22,7 +22,7 @@ For the main board, you will need:
 - one [3mm LED, 3V, 20mA](https://fr.aliexpress.com/item/1005003320296052.html)
 - one [PC817 optocoupler (DIP-4)](https://aliexpress.com/item/1005004609787594.html)
 - one [1N5818 diode](https://aliexpress.com/item/4000055728807.html)
-- two [1N4448 diodes](https://aliexpress.com/item/1005008591345474.html)
+- one [1N4448 diode](https://aliexpress.com/item/1005008591345474.html)
 - two [2-pin male headers, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html)
 - one [microSD module ("TF")](https://aliexpress.com/item/1005008633757049.html)
 - one [6-pin male header, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html) for the MicroSD module
@@ -82,9 +82,13 @@ Insert the 1kΩ resistor in its spot (R5/1000).
 
 Resistors are not polarized, so you can put them either way.
 
-Insert the two 1N4448 diodes in their spots (D1 and D2 / 1N4448). Mind that diodes
-**are** polarized, so make sure the line on the PCB silkscreen and the line on
-the diode are facing the same way.
+Insert the 1N4448 diode in its spots (D2 / 1N4448). **Errata**: early PCBs had 
+two 1N4448 diodes, but one of them broke SoftSP card compatibility. If you have
+two 1N4448 spots, D1 and D2, only populate D2, and use a piece of wire or 
+component leg to connect D1 holes.**
+Mind that diodes **are** polarized, so make
+sure the line on the PCB silkscreen and the line on the diode are facing the same
+way.
 
 Insert the 1N5818 diode in its spot, (D3/1N5818).
 
@@ -249,7 +253,6 @@ Using a multimeter in "continuity" test mode,
   - between IIgs jumper top pin and IDC20 DR2
   - between Arduino D8 and Daisy Out P3 (under the PCB)
   - between Arduino D7 and IDC20 WR
-  - between Arduino D6 and RD 1N4448 cathode (right side)
   - between Arduino D5 and IDC20 PH3
   - between Arduino D4 and IDC20 PH2
   - between Arduino D2 and IDC20 PH1
