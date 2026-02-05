@@ -298,12 +298,14 @@ static inline void daisy_diskII_disable(void) {
 //Smartport RESET handler
 static unsigned char number_partitions_initialised = 0;
 static unsigned char device_init_done = 0;
+static unsigned char never_got_reset = 1;
 static void smartport_device_reset(void) {
   LOG(F("RESET"));
 
   //reset number of partitions init'd
   number_partitions_initialised = 0;
   device_init_done = 0;
+  never_got_reset = 0;
 
   //clear device_id table
   for (int partition = 0; partition < MAX_PARTITIONS; partition++) {
@@ -445,7 +447,7 @@ void loop() {
   SP_RD_MUTE();
 
   while (1) {
-    if (device_init_done) {
+    if (device_init_done || never_got_reset) {
       daisy_ph3_mirror();
     }
 
