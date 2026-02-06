@@ -5621,7 +5621,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "DSUB-19-angled:DSUB-19_Female_Horizontal_P2.77x2.84mm_EdgePinOffset4.94mm_Housed_MountingHolesOffset7.48mm"
+		(property "Footprint" "DSUB-19-angled:DSUB-19_Female_Horizontal_MXS82009-8251-9246"
 			(at 236.22 116.84 0)
 			(effects
 				(font

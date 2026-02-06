@@ -1,4 +1,4 @@
-(footprint "DSUB-19_Female_Horizontal_P2.77x2.84mm_EdgePinOffset4.94mm_Housed_MountingHolesOffset7.48mm"
+(footprint "DSUB-19_Female_Horizontal_MXS82009-8251-9246"
 	(version 20241229)
 	(generator "pcbnew")
 	(generator_version "9.0")
@@ -16,7 +16,7 @@
 			)
 		)
 	)
-	(property "Value" "DSUB-19_Female_Horizontal_P2.77x2.84mm_EdgePinOffset4.94mm_Housed_MountingHolesOffset7.48mm"
+	(property "Value" "DSUB-19_Female_Horizontal_MXS82009-8251-9246"
 		(at -27.96 19.03 0)
 		(layer "F.Fab")
 		(uuid "09e972ab-c3a7-4682-96a1-92cb322ea666")
