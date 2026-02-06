@@ -81,6 +81,9 @@ ReceivePacket:
           mov  XL,r24                                                ;move packet buffer pointer into X
           mov  XH,r25
 
+          adiw x,5                    ;set start pos for packet beginning byte (0xC3)
+          clr  r19                    ;clear start of packet found flag (r19)
+
           rcall SP_ACK_ON
 
 recv_wait_ack:
@@ -156,8 +159,13 @@ loadbit:  rol  r23                                                   ;12  ;12  ;
           rjmp nxtbit                                                ;64  ;64  ;64  ;64     ;2   get next bit. --> 64 cycles = 4us for 16Mhz
                                                                      ;--------------------------------------
 havebyte:
-          st   x+,r23                                                ;17                    ;2   save byte in buffer
-          ldi  r25,100 ;era 100!!!!!!!!!                             ;18                    ;1   timeout counter if we are at the end
+          cpi  r19,1                                                 ;check flag (r19) to see if we have received the start byte
+          breq pktstrtd                                              ;yes, hop around the start byte check and continue (3 cycles)
+          cpi  r23,0xC3                                              ;else see if its the packet start byte (these cycles are ignored)
+          brne getnext                                               ;no, must be sync byte, skip and go get next byte
+          ldi  r19,1                                                 ;yes, set r19=1 as flag to say we have received the start of the packet
+pktstrtd: st   x+,r23                                                ;17                    ;2   save byte in buffer
+getnext:  ldi  r25,100 ;era 100!!!!!!!!!                             ;18                    ;1   timeout counter if we are at the end
           cpi  r22,1                                                 ;19                    ;1   check for status of last bit
           breq wasset                                                ;20  ;21               ;1/2
 
@@ -175,9 +183,9 @@ wasset:   sbis _SFR_IO_ADDR(RD_PORT_WR),PIN_WR                       ;22        
 
 havesbit:                                                            ;    wait for half a bit, 2us (28 cycles total) --> 32 cycles for 16MHz
                                                                      ;    this is so we sample mid point --> again, i think this was long before, so try as is
-          ldi  r24,7                                                 ;1   |delay total of 21 cycles
+          ldi  r24,6                                                 ;1   |delay total of 18 cycles
 5:        dec  r24                                                   ;1   | each loop +3 final loop +2
-          brne 5b                                                    ;1/2 | 1 + 6x3 + 1x2 = 21
+          brne 5b                                                    ;1/2 | 1 + 5x3 + 1x2 = 18
                                                                      ;44  ;45
           rjmp nxtbyte                                               ;46  ;47               ;2   get next byte
 
