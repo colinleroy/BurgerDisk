@@ -82,13 +82,17 @@ Insert the 1kΩ resistor in its spot (R5/1000).
 
 Resistors are not polarized, so you can put them either way.
 
-Insert the 1N4448 diode in its spots (D2 / 1N4448). **Errata**: early PCBs had 
-two 1N4448 diodes, but one of them broke SoftSP card compatibility. If you have
-two 1N4448 spots, D1 and D2, only populate D2, and use a piece of wire or 
-component leg to connect D1 holes.**
-Mind that diodes **are** polarized, so make
-sure the line on the PCB silkscreen and the line on the diode are facing the same
-way.
+Insert the 1N4448 diode in its spot (D2 / 1N4448).
+
+**Errata**: early PCBs, including some in the Kickstarter, had two 1N4448 diodes,
+but one of them broke SoftSP card compatibility. If you have two 1N4448 spots,
+D1 and D2, only populate D2, and use a piece of wire or a component leg to
+connect D1 as a simple trace:**
+
+![The D1 bodge](./pictures/D1_errata.png)
+
+Mind that diodes **are** polarized, so make sure the line on the PCB silkscreen
+and the line on the diode are facing the same way.
 
 Insert the 1N5818 diode in its spot, (D3/1N5818).
 
