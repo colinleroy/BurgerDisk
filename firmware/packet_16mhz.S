@@ -169,6 +169,8 @@ getnext:  ldi  r25,100 ;era 100!!!!!!!!!                             ;18        
           cpi  r22,1                                                 ;19                    ;1   check for status of last bit
           breq wasset                                                ;20  ;21               ;1/2
 
+          ; At that point we'll start a new byte, so will always have a transition.
+
 wasclr:   sbic _SFR_IO_ADDR(RD_PORT_WR),PIN_WR                       ;21                    ;1/2 now read a bit, wait for transition to 1
           rjmp havesbit                                              ;23                    ;2   now set, lets get the next byte
           dec  r25                                                   ;1
@@ -181,11 +183,12 @@ wasset:   sbis _SFR_IO_ADDR(RD_PORT_WR),PIN_WR                       ;22        
           breq recv_done                                             ;1/2 we have timed out, must be end of packet
           rjmp wasset                                                ;2   lets test again
 
+          ; Resync
 havesbit:                                                            ;    wait for half a bit, 2us (28 cycles total) --> 32 cycles for 16MHz
                                                                      ;    this is so we sample mid point --> again, i think this was long before, so try as is
-          ldi  r24,6                                                 ;1   |delay total of 18 cycles
+          ldi  r24,7                                                 ;1   |delay total of 21 cycles
 5:        dec  r24                                                   ;1   | each loop +3 final loop +2
-          brne 5b                                                    ;1/2 | 1 + 5x3 + 1x2 = 18
+          brne 5b                                                    ;1/2 | 1 + 6x3 + 1x2 = 21
                                                                      ;44  ;45
           rjmp nxtbyte                                               ;46  ;47               ;2   get next byte
 
