@@ -27,5 +27,4 @@ OTHER_Y=$(echo "print(\"{:0.6f}\".format($Y+$NANO_PIN_SPACING))"|python3)
 echo "\"A2\",\"Nano_conn_1\",\"Nano connector 1\",$X,$Y,0.000000,top" >> $INPUT_POS_FILE
 echo "\"A3\",\"Nano_conn_2\",\"Nano connector 2\",$X,$OTHER_Y,0.000000,top" >> $INPUT_POS_FILE
 
-echo '"Nano connector 1","A2","Connector_PinSocket_2.54mm:PinHeader_1x15_P2.54mm_Vertical","C25503121"' >> $INPUT_BOM_FILE
-echo '"Nano connector 2","A3","Connector_PinSocket_2.54mm:PinHeader_1x15_P2.54mm_Vertical","C25503121"' >> $INPUT_BOM_FILE
+echo '"Nano connector 1","A2,A3","Connector_PinSocket_2.54mm:PinHeader_1x15_P2.54mm_Vertical","C25503121"' >> $INPUT_BOM_FILE
