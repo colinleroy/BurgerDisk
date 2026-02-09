@@ -60,7 +60,7 @@ may vary.
 
 ## Building the main PCB
 **All elements are to be soldered on the top-side of the PCB**, the side with the
-markings, except for the MicroSD card module.
+markings.
 
 ![The empty PCB](./pictures/PCB-v2.0.jpeg)
 
