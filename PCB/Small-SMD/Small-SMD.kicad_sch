@@ -6528,6 +6528,28 @@
 			)
 		)
 	)
+	(global_label "GND"
+		(shape input)
+		(at -50.8 55.88 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "78b748d3-f717-4ac1-b84a-49d1ce3bbf52")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at -57.6557 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+				(hide yes)
+			)
+		)
+	)
 	(global_label "TX"
 		(shape input)
 		(at 222.25 30.48 180)
