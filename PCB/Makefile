@@ -2,7 +2,9 @@ SUBDIRS = \
 	THT_AngledDB19 \
 	THT_DB19_IDC20_Adapter \
 	THT_SolderTypeDB19 \
-	Small-SMD
+	Small-SMD \
+	Small-atmega-SMD \
+	Smallest
 
 SRCDIR=$(shell pwd)
 TOOLDIR=$(SRCDIR)/tools
@@ -15,7 +17,7 @@ all clean:
 		mkdir -p $(OUTDIR)/$$dir && \
 		kicad-cli pcb export gerbers -o $(OUTDIR)/$$dir/ $$dir/*pcb && \
 		kicad-cli pcb export drill -o $(OUTDIR)/$$dir/ $$dir/*pcb && \
-		kicad-cli pcb export pos -o $(OUTDIR)/$$dir.jlcpcb_pos.csv --format csv --units mm --side front $$dir/*pcb && \
+		kicad-cli pcb export pos -o $(OUTDIR)/$$dir.jlcpcb_pos.csv --format csv --units mm --side both $$dir/*pcb && \
 		kicad-cli sch export python-bom -o $(OUTDIR)/$$dir/$$dir.bom.xml $$dir/*sch && \
 		cd $(OUTDIR)/$$dir/ && \
 		xsltproc -o $(OUTDIR)/$$dir.jlcpcb_bom.csv $(TOOLDIR)/bom2grouped_csv_jlcpcb.xsl $$dir.bom.xml && \
