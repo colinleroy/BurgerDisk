@@ -4,7 +4,7 @@ SUBDIRS = \
 	THT_SolderTypeDB19 \
 	Small-SMD \
 	Small-atmega-SMD \
-	Smallest
+	DominoDisk	
 
 SRCDIR=$(shell pwd)
 TOOLDIR=$(SRCDIR)/tools
