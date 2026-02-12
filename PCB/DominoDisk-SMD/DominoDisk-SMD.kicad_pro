@@ -58,16 +58,7 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [
-        [
-          "silk_edge_clearance|99499571|64900000|9c98f84d-8b87-4a68-be35-d73c53fea228|65f5b76c-09b7-49de-9355-241ae17907e1",
-          ""
-        ],
-        [
-          "silk_edge_clearance|99509271|49400000|9c98f84d-8b87-4a68-be35-d73c53fea228|24988da5-5be2-4900-aee2-8da20154aa0d",
-          ""
-        ]
-      ],
+      "drc_exclusions": [],
       "meta": {
         "version": 2
       },
@@ -148,7 +139,7 @@
         "min_track_width": 0.0,
         "min_via_annular_width": 0.1,
         "min_via_diameter": 0.5,
-        "solder_mask_to_copper_clearance": 0.0,
+        "solder_mask_to_copper_clearance": 0.005,
         "use_height_for_length_calcs": true
       },
       "teardrop_options": [
@@ -473,7 +464,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "Smallest.kicad_pro",
+    "filename": "DominoDisk-SMD.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -547,7 +538,7 @@
       "plot": "",
       "pos_files": "",
       "specctra_dsn": "",
-      "step": "",
+      "step": "../../../../../Downloads/DominoDisk-SMD.step",
       "svg": "",
       "vrml": ""
     },

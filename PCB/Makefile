@@ -1,10 +1,11 @@
 SUBDIRS = \
-	THT_AngledDB19 \
-	THT_DB19_IDC20_Adapter \
-	THT_SolderTypeDB19 \
+	BurgerDisk-THT-AngledDB19 \
+	BurgerDisk-THT-SolderTypeDB19 \
+	DominoDisk-SMD \
+	DominoDisk-THT \
 	Small-SMD \
 	Small-atmega-SMD \
-	DominoDisk	
+	DB19-IDC20-Adapter
 
 SRCDIR=$(shell pwd)
 TOOLDIR=$(SRCDIR)/tools
@@ -24,5 +25,7 @@ all clean:
 		echo >> $(OUTDIR)/$$dir.jlcpcb_bom.csv && \
 		sed -i "s/^Ref,Val.*$$/Designator,Val,Package,Mid X,Mid Y,Rotation,Layer/" $(OUTDIR)/$$dir.jlcpcb_pos.csv && \
 		$(TOOLDIR)/add_nano_headers.sh $(OUTDIR)/$$dir.jlcpcb_bom.csv $(OUTDIR)/$$dir.jlcpcb_pos.csv && \
-		zip ../$$dir.zip *; \
+		zip ../$$dir.zip * && \
+		cd .. && \
+		rm -rf $(OUTDIR)/$$dir; \
 	done
