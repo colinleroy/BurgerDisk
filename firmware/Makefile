@@ -9,6 +9,9 @@ setup:
 	arduino --install-library $(LIBRARIES)
 	#arduino --pref programmer=$(PROGRAMMER)
 
+fuse:
+	avrdude -v -p m328p -c avrisp2 -U lfuse:w:0xFF:m -U hfuse:w:0xDA:m -U efuse:w:0xFD:m
+
 version:
 	echo "#define GIT_VERSION \"$(GIT_VERSION)\"" > version.h
 
