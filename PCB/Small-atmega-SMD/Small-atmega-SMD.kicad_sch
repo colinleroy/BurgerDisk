@@ -10362,7 +10362,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_IDC:IDC-Header_2x10_P2.54mm_Vertical"
+		(property "Footprint" "Connector_IDC:IDC-Header_2x10_P2.54mm_Horizontal"
 			(at 33.02 31.75 0)
 			(effects
 				(font
