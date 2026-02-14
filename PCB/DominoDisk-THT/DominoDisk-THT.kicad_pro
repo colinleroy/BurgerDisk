@@ -51,8 +51,51 @@
           "min_clearance": 0.5
         }
       },
-      "diff_pair_dimensions": [],
-      "drc_exclusions": [],
+      "diff_pair_dimensions": [
+        {
+          "gap": 0.0,
+          "via_gap": 0.0,
+          "width": 0.0
+        }
+      ],
+      "drc_exclusions": [
+        [
+          "courtyards_overlap|103484848|69376600|5bc7872b-4e0e-47dd-b1b6-683caa0976fc|91561752-90d3-4e35-92be-832b3881b141",
+          ""
+        ],
+        [
+          "courtyards_overlap|117585000|59673000|91561752-90d3-4e35-92be-832b3881b141|a4835d38-e766-493c-aa9b-31cb865b2c02",
+          ""
+        ],
+        [
+          "courtyards_overlap|79024600|63374200|1aadbb9a-c123-4fff-8457-57c33b4b0b5a|91561752-90d3-4e35-92be-832b3881b141",
+          ""
+        ],
+        [
+          "courtyards_overlap|82553600|63928200|5daad94e-1355-4e9e-bb99-0dc17aab4ca4|91561752-90d3-4e35-92be-832b3881b141",
+          ""
+        ],
+        [
+          "courtyards_overlap|89564180|63872800|2383e0b0-6894-4eb9-b4e8-c126651c3206|91561752-90d3-4e35-92be-832b3881b141",
+          ""
+        ],
+        [
+          "courtyards_overlap|91672200|63902800|91561752-90d3-4e35-92be-832b3881b141|f52c01f3-8615-4597-a321-93b92212760e",
+          ""
+        ],
+        [
+          "courtyards_overlap|94847200|63902800|91561752-90d3-4e35-92be-832b3881b141|ba33f771-760e-4640-95c7-35940cc834da",
+          ""
+        ],
+        [
+          "courtyards_overlap|98980200|62178800|91561752-90d3-4e35-92be-832b3881b141|aa69acd8-a53a-48a2-b5a8-825ebe15c053",
+          ""
+        ],
+        [
+          "courtyards_overlap|99031000|64875200|239d7744-0ebd-4ad1-85f5-8523f17d1c63|91561752-90d3-4e35-92be-832b3881b141",
+          ""
+        ]
+      ],
       "meta": {
         "version": 2
       },
@@ -181,7 +224,9 @@
           "td_width_to_size_filter_ratio": 0.9
         }
       ],
-      "track_widths": [],
+      "track_widths": [
+        0.0
+      ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
           "corner_radius_percentage": 80,
@@ -208,7 +253,12 @@
           "spacing": 0.6
         }
       },
-      "via_dimensions": [],
+      "via_dimensions": [
+        {
+          "diameter": 0.0,
+          "drill": 0.0
+        }
+      ],
       "zones_allow_external_fillets": false
     },
     "ipc2581": {
@@ -460,7 +510,7 @@
     "classes": [
       {
         "bus_width": 12,
-        "clearance": 0.1,
+        "clearance": 0.15,
         "diff_pair_gap": 0.25,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.2,
@@ -478,7 +528,7 @@
       },
       {
         "bus_width": 12,
-        "clearance": 0.15,
+        "clearance": 0.2,
         "diff_pair_gap": 0.25,
         "diff_pair_width": 0.2,
         "line_style": 0,
@@ -488,7 +538,7 @@
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 0,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.4,
+        "track_width": 0.5,
         "via_diameter": 0.8,
         "via_drill": 0.4,
         "wire_width": 6

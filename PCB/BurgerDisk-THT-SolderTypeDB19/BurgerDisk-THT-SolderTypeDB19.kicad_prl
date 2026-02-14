@@ -1,8 +1,8 @@
 {
   "board": {
     "active_layer": 0,
-    "active_layer_preset": "All Layers",
-    "auto_track_width": true,
+    "active_layer_preset": "",
+    "auto_track_width": false,
     "hidden_netclasses": [],
     "hidden_nets": [],
     "high_contrast_mode": 0,
@@ -58,7 +58,7 @@
     "ssh_key": ""
   },
   "meta": {
-    "filename": "BurgerDisk_THT_SolderTypeDB19.kicad_prl",
+    "filename": "BurgerDisk-THT-SolderTypeDB19.kicad_prl",
     "version": 5
   },
   "net_inspector_panel": {
