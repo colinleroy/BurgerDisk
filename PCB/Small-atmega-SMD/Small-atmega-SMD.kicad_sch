@@ -5035,17 +5035,6 @@
 		)
 		(uuid "0e73e1d1-a825-4166-911d-56739592c5c9")
 	)
-	(text "HEADER"
-		(exclude_from_sim no)
-		(at -31.75 76.2 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left bottom)
-		)
-		(uuid "14e14a5b-6ece-43e8-922f-5d59d6632929")
-	)
 	(text "VOLTAGE REGULATOR\n"
 		(exclude_from_sim no)
 		(at -112.395 69.85 0)
@@ -5508,16 +5497,6 @@
 		)
 		(uuid "2e92a14f-d823-492c-ac1d-e0e1990c24e4")
 	)
-	(polyline
-		(pts
-			(xy -48.26 72.39) (xy -6.35 72.39)
-		)
-		(stroke
-			(width 0)
-			(type dash)
-		)
-		(uuid "2f4a56ee-2173-4aed-a62b-4698bd3eda1f")
-	)
 	(wire
 		(pts
 			(xy -127 35.56) (xy -119.38 35.56)
@@ -5748,16 +5727,6 @@
 		)
 		(uuid "580805cf-28ed-4f06-b844-5fba5f1c75f2")
 	)
-	(polyline
-		(pts
-			(xy -6.35 106.68) (xy -6.35 72.39)
-		)
-		(stroke
-			(width 0)
-			(type dash)
-		)
-		(uuid "58124e21-a8b7-426c-94c8-d45e830b5d37")
-	)
 	(wire
 		(pts
 			(xy 137.16 110.49) (xy 142.24 110.49)
@@ -5887,16 +5856,6 @@
 			(type solid)
 		)
 		(uuid "79e07187-04cb-413b-9a76-f653fdd1b57f")
-	)
-	(polyline
-		(pts
-			(xy -48.26 106.68) (xy -6.35 106.68)
-		)
-		(stroke
-			(width 0)
-			(type dash)
-		)
-		(uuid "7c34dc41-1cac-42e8-b326-f2bcd3cee1c9")
 	)
 	(wire
 		(pts
@@ -6227,16 +6186,6 @@
 			(type default)
 		)
 		(uuid "cc4ce8fa-113e-4d8f-86fc-b6363e4be432")
-	)
-	(polyline
-		(pts
-			(xy -48.26 72.39) (xy -48.26 106.68)
-		)
-		(stroke
-			(width 0)
-			(type dash)
-		)
-		(uuid "cedeb63f-2ed7-4bae-ac4c-652464458816")
 	)
 	(wire
 		(pts
