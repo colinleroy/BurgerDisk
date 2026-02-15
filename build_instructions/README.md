@@ -37,7 +37,7 @@ For connecting to the computer, you will need:
   - an [IDC20 cable, 2.54mm pitch](https://aliexpress.com/item/1005003853804182.html), at least 50cm
   - a second [IDC20 connector, male, 2.54mm pitch](https://aliexpress.com/item/1005001400147026.html)
   - one [male DB19 connector](https://www.ebay.com/itm/257181325655)
-  - two [M2 x 12mm screws](https://aliexpress.com/item/33043885403.html)
+  - two [M2 x 12 or 14mm screws](https://aliexpress.com/item/1005006960903249.html)
 - The [Fujinet's DB19/IDC20 adapter](https://github.com/FujiNetWIFI/fujinet-hardware/tree/master/AppleII/DB-19M-Adapter-Male-Rev1)
 can be used, provided that you solder the -12V and +12V pads between the IDC20
 and the DB19, and the DRV2 pad on the side:
@@ -46,7 +46,7 @@ and the DB19, and the DRV2 pad on the side:
 For the enclosure, you will need:
 - the [enclosure's STL files](../enclosure/)
 - four [M3 x 20mm wood screws](https://aliexpress.com/item/33043885403.html)
-- two [M2 x 12mm screws](https://aliexpress.com/item/33043885403.html)
+- two [M2 x 6 to 10mm screws](https://aliexpress.com/item/33043885403.html)
 - optionally, a [500 grams weight](https://aliexpress.com/item/1005007419997918.html)
   (and glue) to make the enclosure heavier and avoid thick-cables-induced levitation.
   (I found diving belt weights to have the best price-to-weight ratio but you can
@@ -87,7 +87,7 @@ Insert the 1N4448 diode in its spot (D2 / 1N4448).
 **Errata**: early PCBs, including some in the Kickstarter, had two 1N4448 diodes,
 but one of them broke SoftSP card compatibility. If you have two 1N4448 spots,
 D1 and D2, only populate D2, and use a piece of wire or a component leg to
-connect D1 as a simple trace:**
+connect D1 as a simple trace:
 
 ![The D1 bodge](./pictures/D1_errata.png)
 
@@ -119,11 +119,8 @@ it is easy to replace if necessary.
 
 Assemble the Nano's two 15-pin connector with the 15-pin female connectors.
 Insert these on the PCB, in the "NANO" spot, with the female headers towards
-the PCB. 
-
-Insert the Nano on top of its 15-pins connectors. Make sure the USB port is
-facing left, over the "USB conn" marking on the PCB. Solder the 30 pins to the
-Nano.
+the PCB. Make sure the USB port is facing right, over the "USB conn" marking
+on the PCB. Solder the 30 pins to the Nano.
 
 Reverse the PCB, and solder the female headers' 30 pins to the PCB.
 
@@ -197,7 +194,7 @@ PCB, where the IDC-20 is outlined on the silkscreen. Pay attention to the notch
 position, which should be towards the DB19 connector. Solder it.
 
 Insert the assembled adapter into its enclosure, and screw it shut with two M2
-x 12mm screws.
+x 12 (or 14) mm screws.
 
 ## Assembling in the enclosure
 Put washers on the enclosure mounting posts: 2mm if you are using the angled
@@ -213,7 +210,7 @@ are in the PCB mounting holes.
 
 If using the angled DB19, put the 7mm washers on top of the PCB.
 
-Screw the MicroSD module with M2 x 12mm screws, face up, at the front of the
+Screw the MicroSD module with M2 x 6 to 10mm screws, face up, at the front of the
 enclosure's bottom; then connect it to the PCB using the 6 or 8-pin cable.
 **Mind which way you connect!**
 When looking from the front of the enclosure, +5V and GND are on the **right**
