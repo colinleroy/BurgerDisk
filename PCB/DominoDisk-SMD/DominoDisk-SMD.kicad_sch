@@ -8774,7 +8774,7 @@
 				)
 			)
 		)
-		(property "Value" "100nF"
+		(property "Value" "100n"
 			(at 25.7048 118.11 90)
 			(effects
 				(font
@@ -8809,7 +8809,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C28233"
+		(property "LCSC" " C1590"
 			(at 29.21 118.11 90)
 			(effects
 				(font
@@ -9922,7 +9922,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "10K"
+		(property "Value" "10k"
 			(at 108.4072 147.193 0)
 			(effects
 				(font
@@ -9958,7 +9958,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C17414"
+		(property "LCSC" " C177337"
 			(at 106.68 146.05 0)
 			(effects
 				(font
