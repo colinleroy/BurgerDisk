@@ -3590,7 +3590,7 @@
 				)
 			)
 		)
-		(property "Value" "100nF"
+		(property "Value" "100n"
 			(at 0 1.43 0)
 			(layer "F.Fab")
 			(uuid "f18ca8f9-d2ed-4d98-964b-abb153376778")
@@ -3625,7 +3625,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C28233"
+		(property "LCSC" "C1590"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -8179,7 +8179,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C17414"
+		(property "LCSC" "C15401"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
