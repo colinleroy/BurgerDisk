@@ -2423,22 +2423,20 @@
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "U"
-				(at -12.7 36.83 0)
+			(property "Reference" "U3"
+				(at 0 -43.18 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
-					(justify left bottom)
 				)
 			)
-			(property "Value" "MCU_Microchip_ATmega_ATmega328P-AU"
-				(at 2.54 -36.83 0)
+			(property "Value" "ATmega328P-AU"
+				(at 0 -45.72 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
-					(justify left top)
 				)
 			)
 			(property "Footprint" "Package_QFP:TQFP-32_7x7mm_P0.8mm"
@@ -2451,7 +2449,7 @@
 					(hide yes)
 				)
 			)
-			(property "Datasheet" ""
+			(property "Datasheet" "http://ww1.microchip.com/downloads/en/DeviceDoc/ATmega328_P%20AVR%20MCU%20with%20picoPower%20Technology%20Data%20Sheet%2040001984A.pdf"
 				(at 0 0 0)
 				(effects
 					(font
@@ -2461,6 +2459,14 @@
 				)
 			)
 			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "LCSC" "C14877"
 				(at 0 0 0)
 				(effects
 					(font
@@ -2602,7 +2608,7 @@
 						)
 					)
 				)
-				(pin power_in line
+				(pin passive line
 					(at 0 -38.1 90)
 					(length 2.54)
 					(name "GND"
@@ -9614,7 +9620,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "MICROSD-HYC77-TF09-200:MICROSD-HYC77-TF09-200"
+		(property "Footprint" "HYC04-TF09-200:MICROSD-HYC77-TF09-200"
 			(at -86.36 54.61 0)
 			(effects
 				(font

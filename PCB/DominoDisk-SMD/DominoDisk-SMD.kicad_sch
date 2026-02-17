@@ -9759,7 +9759,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "MICROSD-HYC77-TF09-200:MICROSD-HYC77-TF09-200"
+		(property "Footprint" "HYC04-TF09-200:MICROSD-HYC77-TF09-200"
 			(at 269.24 50.8 0)
 			(effects
 				(font

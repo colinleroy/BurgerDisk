@@ -530,7 +530,7 @@
       "plot": "",
       "pos_files": "",
       "specctra_dsn": "",
-      "step": "",
+      "step": "Small-atmega-SMD.step",
       "svg": "",
       "vrml": ""
     },
