@@ -37,9 +37,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 0.8,
-          "height": 1.27,
-          "width": 2.54
+          "drill": 2.2,
+          "height": 2.2,
+          "width": 2.2
         },
         "silk_line_width": 0.1,
         "silk_text_italic": false,
@@ -51,20 +51,46 @@
           "min_clearance": 0.5
         }
       },
-      "diff_pair_dimensions": [
-        {
-          "gap": 0.0,
-          "via_gap": 0.0,
-          "width": 0.0
-        }
-      ],
+      "diff_pair_dimensions": [],
       "drc_exclusions": [
         [
-          "courtyards_overlap|101252652|70842283|3e82d0ff-5e89-4db6-85db-281388a52dee|8054ffd7-695e-4998-8583-2053a1df4878",
+          "courtyards_overlap|124316000|101973500|91cbeeb0-d661-41b7-af5a-b96837a446be|fad2a85c-e29d-45c3-bbd0-92b0a2964b27",
           ""
         ],
         [
-          "courtyards_overlap|102745925|65378000|204e7943-4e72-4209-b0a3-244689c9141a|3e82d0ff-5e89-4db6-85db-281388a52dee",
+          "courtyards_overlap|124316000|106271800|7104ab5d-93b2-4e66-adba-0277b642a9db|91cbeeb0-d661-41b7-af5a-b96837a446be",
+          ""
+        ],
+        [
+          "courtyards_overlap|126681400|106284800|62a99374-6c0c-4ae9-b331-39c302dc46a7|91cbeeb0-d661-41b7-af5a-b96837a446be",
+          ""
+        ],
+        [
+          "courtyards_overlap|128997857|102056200|81092cfd-5b95-4490-b244-a7fd3980af69|91cbeeb0-d661-41b7-af5a-b96837a446be",
+          ""
+        ],
+        [
+          "courtyards_overlap|129436600|107809200|91cbeeb0-d661-41b7-af5a-b96837a446be|fa8d5c68-5099-4aeb-a025-12e3f02e3fee",
+          ""
+        ],
+        [
+          "courtyards_overlap|133526000|107783800|072264d5-b722-4eff-8a91-a9b37d7f9976|91cbeeb0-d661-41b7-af5a-b96837a446be",
+          ""
+        ],
+        [
+          "courtyards_overlap|137781200|101966200|772e7fa1-5986-4fb2-b239-8c916f781aff|91cbeeb0-d661-41b7-af5a-b96837a446be",
+          ""
+        ],
+        [
+          "courtyards_overlap|137844000|107834600|362d1c8c-12ba-43d2-9a0e-91d23b247674|91cbeeb0-d661-41b7-af5a-b96837a446be",
+          ""
+        ],
+        [
+          "courtyards_overlap|139381400|101966200|67a29321-e0ed-4880-8711-13f7837a6a3b|91cbeeb0-d661-41b7-af5a-b96837a446be",
+          ""
+        ],
+        [
+          "courtyards_overlap|140606000|109901300|204e7943-4e72-4209-b0a3-244689c9141a|91cbeeb0-d661-41b7-af5a-b96837a446be",
           ""
         ]
       ],
@@ -75,7 +101,7 @@
         "annular_width": "error",
         "clearance": "error",
         "connection_width": "warning",
-        "copper_edge_clearance": "ignore",
+        "copper_edge_clearance": "error",
         "copper_sliver": "warning",
         "courtyards_overlap": "error",
         "creepage": "error",
@@ -114,7 +140,7 @@
         "silk_overlap": "warning",
         "skew_out_of_range": "error",
         "solder_mask_bridge": "error",
-        "starved_thermal": "ignore",
+        "starved_thermal": "error",
         "text_height": "warning",
         "text_on_edge_cuts": "error",
         "text_thickness": "warning",
@@ -195,9 +221,7 @@
           "td_width_to_size_filter_ratio": 0.9
         }
       ],
-      "track_widths": [
-        0.0
-      ],
+      "track_widths": [],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
           "corner_radius_percentage": 80,
@@ -224,12 +248,7 @@
           "spacing": 0.6
         }
       },
-      "via_dimensions": [
-        {
-          "diameter": 0.0,
-          "drill": 0.0
-        }
-      ],
+      "via_dimensions": [],
       "zones_allow_external_fillets": false
     },
     "ipc2581": {
@@ -473,14 +492,14 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "DominoDisk-SMD.kicad_pro",
+    "filename": "SD-module.kicad_pro",
     "version": 3
   },
   "net_settings": {
     "classes": [
       {
         "bus_width": 12,
-        "clearance": 0.15,
+        "clearance": 0.2,
         "diff_pair_gap": 0.25,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.2,
@@ -502,25 +521,11 @@
         "diff_pair_width": 0.2,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
-        "name": "3V3",
+        "name": "Power",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 0,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.3,
-        "via_diameter": 0.7,
-        "via_drill": 0.3
-      },
-      {
-        "clearance": 0.2,
-        "diff_pair_gap": 0.25,
-        "diff_pair_width": 0.2,
-        "microvia_diameter": 0.3,
-        "microvia_drill": 0.1,
-        "name": "Power",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 1,
-        "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.6,
+        "track_width": 0.4,
         "via_diameter": 0.8,
         "via_drill": 0.3
       }
@@ -550,10 +555,6 @@
       {
         "netclass": "Power",
         "pattern": "GND"
-      },
-      {
-        "netclass": "3V3",
-        "pattern": "3V3"
       }
     ]
   },
@@ -565,7 +566,7 @@
       "plot": "",
       "pos_files": "",
       "specctra_dsn": "",
-      "step": "../../../../../Downloads/DominoDisk-SMD.stl",
+      "step": "Small-atmega-SMD.step",
       "svg": "",
       "vrml": ""
     },

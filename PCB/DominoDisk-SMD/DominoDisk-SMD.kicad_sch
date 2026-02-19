@@ -10994,7 +10994,7 @@
 				)
 			)
 		)
-		(property "Value" "TXB0104QPWRQ1"
+		(property "Value" "TXB0104PWR"
 			(at 245.11 149.86 0)
 			(effects
 				(font
@@ -11028,7 +11028,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C527571"
+		(property "LCSC" "C60708"
 			(at 245.11 138.43 0)
 			(effects
 				(font
