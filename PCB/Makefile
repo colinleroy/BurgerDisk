@@ -2,20 +2,24 @@ SUBDIRS = \
 	BurgerDisk-THT-AngledDB19 \
 	BurgerDisk-THT-SolderTypeDB19 \
 	DominoDisk-SMD \
+	DominoDisk-SMD-Angled \
 	DominoDisk-THT \
-	Small-SMD \
 	Small-atmega-SMD \
+	MicroSD-module \
+	SD-module \
 	DB19-IDC20-Adapter
 
 SRCDIR=$(shell pwd)
 TOOLDIR=$(SRCDIR)/tools
 OUTDIR=$(SRCDIR)/Gerbers
 
-all clean:
+all:
 	for dir in $(SUBDIRS); do \
-		cd $(SRCDIR); \
+		cd $(SRCDIR) && \
 		rm -rf $(OUTDIR)/$$dir $(OUTDIR)/$$dir.zip && \
 		mkdir -p $(OUTDIR)/$$dir && \
+		echo "Making $$dir" && \
+		kicad-cli pcb drc --severity-error --exit-code-violations $$dir/*pcb && \
 		kicad-cli pcb export gerbers -o $(OUTDIR)/$$dir/ $$dir/*pcb && \
 		kicad-cli pcb export drill -o $(OUTDIR)/$$dir/ $$dir/*pcb && \
 		kicad-cli pcb export pos -o $(OUTDIR)/$$dir.jlcpcb_pos.csv --format csv --units mm --side both $$dir/*pcb && \
@@ -27,5 +31,5 @@ all clean:
 		$(TOOLDIR)/add_nano_headers.sh $(OUTDIR)/$$dir.jlcpcb_bom.csv $(OUTDIR)/$$dir.jlcpcb_pos.csv && \
 		zip ../$$dir.zip * && \
 		cd .. && \
-		rm -rf $(OUTDIR)/$$dir; \
+		rm -rf $(OUTDIR)/$$dir || exit 1; \
 	done

@@ -1759,7 +1759,7 @@
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "U3"
+			(property "Reference" "U2"
 				(at 0 -43.18 0)
 				(effects
 					(font
