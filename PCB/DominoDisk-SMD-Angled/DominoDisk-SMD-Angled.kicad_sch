@@ -1759,7 +1759,7 @@
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "U3"
+			(property "Reference" "U2"
 				(at 0 -43.18 0)
 				(effects
 					(font
@@ -2442,7 +2442,7 @@
 					(justify left)
 				)
 			)
-			(property "Footprint" "db19:DSUB-19_Female_EdgeMount_Pitch2.77mm"
+			(property "Footprint" "DSUB-19-angled:DSUB-19_Female_Horizontal_MXS82009-8251-9246"
 				(at 0 -7.62 0)
 				(effects
 					(font
@@ -3273,7 +3273,7 @@
 					)
 				)
 				(pin passive line
-					(at 6.35 19.05 180)
+					(at 6.35 16.51 180)
 					(length 2.54)
 					(name ""
 						(effects
@@ -7152,28 +7152,6 @@
 			)
 		)
 	)
-	(global_label "GND"
-		(shape input)
-		(at 160.02 31.75 270)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "3958b102-b9fb-42d9-ac2d-918ca93a5f4a")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 160.02 38.6057 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-				(hide yes)
-			)
-		)
-	)
 	(global_label "LED"
 		(shape input)
 		(at 68.58 148.59 0)
@@ -8572,6 +8550,28 @@
 			)
 		)
 	)
+	(global_label "GND"
+		(shape input)
+		(at 160.02 34.29 270)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "eee54979-682d-4283-b49e-16fd04c8f3d9")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 160.02 41.1457 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+				(hide yes)
+			)
+		)
+	)
 	(global_label "SCLK_L"
 		(shape input)
 		(at 260.35 38.1 180)
@@ -9062,7 +9062,7 @@
 			(uuid "2217607c-832a-46d0-84b1-0a96e2680755")
 		)
 		(pin "0"
-			(uuid "53db652e-ca20-4dab-896e-3b7f1cb40f52")
+			(uuid "c84800e5-51b8-44c8-8294-6d4aea287400")
 		)
 		(instances
 			(project "BurgerDisk_THT_AngledDB19"
@@ -10113,7 +10113,6 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "7ae6cd66-4ecf-4f94-b312-3f1fffc57127")
 		(property "Reference" "D3"
 			(at 122.2375 154.94 90)
@@ -10151,15 +10150,15 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
-			(at 121.92 158.75 0)
+		(property "Description" "Blue LED, 20mA 3.3V"
+			(at 121.666 162.814 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "LCSC" "C2288"
+		(property "LCSC" "C965807"
 			(at 121.92 158.75 0)
 			(effects
 				(font
@@ -10443,7 +10442,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "150"
+		(property "Value" "100"
 			(at 115.57 156.21 0)
 			(effects
 				(font
@@ -10478,7 +10477,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C177290"
+		(property "LCSC" "C22369795"
 			(at 114.3 158.75 0)
 			(effects
 				(font
@@ -11348,7 +11347,7 @@
 				)
 			)
 		)
-		(property "Value" "Crystal_GND2"
+		(property "Value" "Resonator"
 			(at 99.06 128.27 0)
 			(effects
 				(font
@@ -11374,7 +11373,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Three pin crystal, GND on pin 2"
+		(property "Description" "Three pin, GND on pin 2"
 			(at 99.06 133.35 0)
 			(effects
 				(font
