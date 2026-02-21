@@ -5,4 +5,5 @@ Gerbers
 fp-info-cache
 *.step
 *.lck
+*.rpt
 production
