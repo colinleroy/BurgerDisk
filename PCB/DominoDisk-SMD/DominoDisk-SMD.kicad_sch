@@ -10068,7 +10068,6 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "7ae6cd66-4ecf-4f94-b312-3f1fffc57127")
 		(property "Reference" "D3"
 			(at 122.2375 154.94 90)
@@ -10106,15 +10105,15 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
-			(at 121.92 158.75 0)
+		(property "Description" "Blue LED, 20mA 3.3V"
+			(at 121.666 162.814 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "LCSC" "C2288"
+		(property "LCSC" "C965807"
 			(at 121.92 158.75 0)
 			(effects
 				(font
@@ -10398,7 +10397,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "150"
+		(property "Value" "100"
 			(at 115.57 156.21 0)
 			(effects
 				(font
@@ -10433,7 +10432,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C177290"
+		(property "LCSC" "C22369795"
 			(at 114.3 158.75 0)
 			(effects
 				(font
@@ -11303,7 +11302,7 @@
 				)
 			)
 		)
-		(property "Value" "Crystal_GND2"
+		(property "Value" "Resonator"
 			(at 99.06 128.27 0)
 			(effects
 				(font
@@ -11329,7 +11328,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" "Three pin crystal, GND on pin 2"
+		(property "Description" "Three pin, GND on pin 2"
 			(at 99.06 133.35 0)
 			(effects
 				(font

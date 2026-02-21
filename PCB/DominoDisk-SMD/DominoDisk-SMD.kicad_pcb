@@ -2696,7 +2696,7 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Blue LED, 20mA 3.3V"
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
@@ -2708,7 +2708,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C2288"
+		(property "LCSC" "C965807"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -4075,7 +4075,7 @@
 				)
 			)
 		)
-		(property "Value" "150"
+		(property "Value" "100"
 			(at 0 1.43 90)
 			(layer "F.Fab")
 			(uuid "e90b4a29-af2d-4391-bf30-444931426585")
@@ -4110,7 +4110,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C177290"
+		(property "LCSC" "C22369795"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -11352,7 +11352,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "Crystal_GND2"
+		(property "Value" "Resonator"
 			(at 0 -1.8 0)
 			(layer "B.Fab")
 			(uuid "957f4050-004d-4e7d-8aaf-af93f4859198")
@@ -11377,7 +11377,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" "Three pin crystal, GND on pin 2"
+		(property "Description" "Three pin, GND on pin 2"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
