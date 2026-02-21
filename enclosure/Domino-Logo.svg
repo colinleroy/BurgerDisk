@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="26.458244mm"
+   height="17.119049mm"
+   viewBox="0 0 26.458244 17.119049"
+   version="1.1"
+   id="svg617"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="DominoDisk-logo.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview619"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="4.2331174"
+     inkscape:cx="230.56294"
+     inkscape:cy="305.21242"
+     inkscape:window-width="1920"
+     inkscape:window-height="1001"
+     inkscape:window-x="0"
+     inkscape:window-y="31"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs614">
+    <rect
+       x="263.2117"
+       y="296.05228"
+       width="100.87792"
+       height="24.410561"
+       id="rect837" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-69.79664,-64.033796)">
+    <g
+       id="g3297"
+       transform="matrix(0,0.02645833,0.02645833,0,69.796628,64.033784)">
+      <g
+         id="layer1-03"
+         inkscape:label="Domino"
+         transform="translate(0,-52.362)">
+        <rect
+           id="rect1872-46"
+           style="fill:#ffffff;fill-rule:evenodd;stroke:#000000;stroke-width:27.517;stroke-linejoin:round"
+           rx="50"
+           ry="50"
+           height="972.47998"
+           width="472.48001"
+           y="66.121002"
+           x="13.759" />
+        <path
+           id="path15666-369"
+           style="fill:none;stroke:#000000;stroke-width:10px"
+           inkscape:connector-curvature="0"
+           d="M 45,552.36 H 455" />
+      </g>
+      <g
+         id="layer2-8"
+         inkscape:label="Pips"
+         transform="translate(0,-52.362)">
+        <circle
+           id="circle48-9"
+           style="fill:#000000"
+           cy="456"
+           cx="110"
+           r="50" />
+        <circle
+           id="circle50-0"
+           style="fill:#000000"
+           cy="168"
+           cx="390"
+           r="50" />
+        <circle
+           id="circle52-3"
+           style="fill:#000000"
+           cy="936"
+           cx="110"
+           r="50" />
+        <circle
+           id="circle54-8"
+           style="fill:#000000"
+           cy="648"
+           cx="390"
+           r="50" />
+      </g>
+    </g>
+    <text
+       xml:space="preserve"
+       transform="matrix(0.26458333,0,0,0.26458333,1.0372797,0)"
+       id="text835"
+       style="font-size:6.23999px;font-family:OCRA;-inkscape-font-specification:'OCRA, Normal';white-space:pre;shape-inside:url(#rect837);display:inline;fill:#040100"><tspan
+         x="263.21094"
+         y="306.71943"
+         id="tspan1069"><tspan
+           style="font-weight:500;font-size:10.6667px;font-family:'Print Char 21';-inkscape-font-specification:'Print Char 21, Medium'"
+           id="tspan1067">DominoDisk</tspan></tspan></text>
+  </g>
+</svg>
