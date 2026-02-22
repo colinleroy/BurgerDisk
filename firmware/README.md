@@ -27,7 +27,7 @@ You can then either continue using the Arduino IDE interactively:
 - In `Tools` menu, `Processor` submenu, select `Atmega328p`.
 - In `Sketch` menu, `Include Library` submenu, select `Manage Libraries...`.
   ![Manage Libraries menu item](../build_instructions/pictures/arduino_libraries_manager.png).
-- Search for `SdFat` by Bill Greiman, scroll to it, and install version 2.1.2.
+- Search for `SdFat` by Bill Greiman, scroll to it, and install version 2.3.0 (Screenshot shows 2.1.2, but choose 2.3.0).
   ![SdFat installation](../build_instructions/pictures/arduino_sdfat_library.png)
 
 Or, you can quit the Arduino IDE, and in your terminal, run:
