@@ -54,7 +54,39 @@
       "diff_pair_dimensions": [],
       "drc_exclusions": [
         [
+          "lib_footprint_mismatch|107346700|109384400|81092cfd-5b95-4490-b244-a7fd3980af69|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "lib_footprint_mismatch|110878900|64617600|c7730239-59c3-4c88-bf36-ec16ed3b8c02|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "lib_footprint_mismatch|111906900|103328300|fad2a85c-e29d-45c3-bbd0-92b0a2964b27|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "lib_footprint_mismatch|143158300|65128200|2383e0b0-6894-4eb9-b4e8-c126651c3206|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "silk_edge_clearance|124406200|140258800|0d09a5c9-4b38-4e45-a696-092f91273fa3|aef75fa6-495f-4328-a1ed-711c9ded3adb",
+          ""
+        ],
+        [
+          "silk_edge_clearance|139906200|140258800|0d09a5c9-4b38-4e45-a696-092f91273fa3|73cfb86d-b879-497b-a411-5c74f59a8197",
+          ""
+        ],
+        [
           "silk_edge_clearance|163367800|43339600|0d09a5c9-4b38-4e45-a696-092f91273fa3|a0231c98-1571-43f3-947c-38ead49ab13b",
+          ""
+        ],
+        [
+          "starved_thermal|113044400|103240800|5fca9280-1cb1-43aa-a0af-bd3252e5a39d|1e0d78ea-c858-493f-bd3e-d2c9060fd7fd|F.Cu",
+          ""
+        ],
+        [
+          "starved_thermal|137860000|61190000|5fca9280-1cb1-43aa-a0af-bd3252e5a39d|6b0abd37-aa31-4675-b5e7-16406b1bee9c|F.Cu",
           ""
         ]
       ],
