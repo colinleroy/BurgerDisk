@@ -1507,18 +1507,6 @@
 		(uuid "58b248bc-6132-409f-a47b-db07a02de61d")
 	)
 	(junction
-		(at 67.31 41.91)
-		(diameter 0.9144)
-		(color 0 0 0 0)
-		(uuid "5d1d2855-510f-41be-8553-f991df878b07")
-	)
-	(junction
-		(at 67.31 52.07)
-		(diameter 0.9144)
-		(color 0 0 0 0)
-		(uuid "6441e272-8ddc-4639-8755-ff987c07563b")
-	)
-	(junction
 		(at 69.85 100.33)
 		(diameter 0.9144)
 		(color 0 0 0 0)
@@ -1531,12 +1519,6 @@
 		(uuid "93205a94-db14-42c1-8372-51cf5e25ef21")
 	)
 	(junction
-		(at 74.93 52.07)
-		(diameter 0.9144)
-		(color 0 0 0 0)
-		(uuid "cfb12109-a2c5-459a-b4bd-33a8332a9288")
-	)
-	(junction
 		(at 69.85 87.63)
 		(diameter 0.9144)
 		(color 0 0 0 0)
@@ -1547,12 +1529,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "f5cfc5a6-399a-4ce2-be30-5d56e420ab00")
-	)
-	(junction
-		(at 74.93 41.91)
-		(diameter 0.9144)
-		(color 0 0 0 0)
-		(uuid "fdfddedb-bed6-4655-98f3-7b31c62bf476")
 	)
 	(no_connect
 		(at 95.25 55.88)
@@ -1758,16 +1734,6 @@
 	)
 	(wire
 		(pts
-			(xy 59.69 41.91) (xy 67.31 41.91)
-		)
-		(stroke
-			(width 0)
-			(type solid)
-		)
-		(uuid "2fc100f6-fb99-4a50-a63b-747f85d15e84")
-	)
-	(wire
-		(pts
 			(xy 152.4 57.15) (xy 158.75 57.15)
 		)
 		(stroke
@@ -1928,16 +1894,6 @@
 	)
 	(wire
 		(pts
-			(xy 59.69 44.45) (xy 59.69 41.91)
-		)
-		(stroke
-			(width 0)
-			(type solid)
-		)
-		(uuid "67cba12b-b07f-4600-8d6e-2b89a74eee95")
-	)
-	(wire
-		(pts
 			(xy 95.25 87.63) (xy 95.25 100.33)
 		)
 		(stroke
@@ -1965,16 +1921,6 @@
 			(type solid)
 		)
 		(uuid "78d5f0d5-e81e-4b88-b4cd-611f2492ed40")
-	)
-	(wire
-		(pts
-			(xy 59.69 52.07) (xy 67.31 52.07)
-		)
-		(stroke
-			(width 0)
-			(type solid)
-		)
-		(uuid "79e07187-04cb-413b-9a76-f653fdd1b57f")
 	)
 	(wire
 		(pts
@@ -2038,16 +1984,6 @@
 	)
 	(wire
 		(pts
-			(xy 67.31 41.91) (xy 74.93 41.91)
-		)
-		(stroke
-			(width 0)
-			(type solid)
-		)
-		(uuid "8e09198b-2160-4e09-a864-d45a32c6fba6")
-	)
-	(wire
-		(pts
 			(xy 144.78 38.1) (xy 147.955 38.1)
 		)
 		(stroke
@@ -2085,26 +2021,6 @@
 			(type solid)
 		)
 		(uuid "99ec779b-b2c4-41be-952e-a8f180a110c1")
-	)
-	(wire
-		(pts
-			(xy 67.31 52.07) (xy 74.93 52.07)
-		)
-		(stroke
-			(width 0)
-			(type solid)
-		)
-		(uuid "9c8fef07-a401-48d5-8343-b135aac7c396")
-	)
-	(wire
-		(pts
-			(xy 67.31 50.8) (xy 67.31 52.07)
-		)
-		(stroke
-			(width 0)
-			(type solid)
-		)
-		(uuid "9d7619d5-6634-4178-bc09-915cbc2e8355")
 	)
 	(polyline
 		(pts
@@ -2286,16 +2202,6 @@
 		)
 		(uuid "e760ca04-2320-47ab-8fbb-3dc88ae9bb84")
 	)
-	(wire
-		(pts
-			(xy 67.31 41.91) (xy 67.31 44.45)
-		)
-		(stroke
-			(width 0)
-			(type solid)
-		)
-		(uuid "f1859aed-07d9-4822-a663-ac37e5c65ea0")
-	)
 	(polyline
 		(pts
 			(xy 112.395 67.31) (xy 52.705 67.31)
@@ -2305,16 +2211,6 @@
 			(type dash)
 		)
 		(uuid "fcc84eac-9211-4458-bbd5-e630a5150c35")
-	)
-	(wire
-		(pts
-			(xy 59.69 50.8) (xy 59.69 52.07)
-		)
-		(stroke
-			(width 0)
-			(type solid)
-		)
-		(uuid "fcdf0f1c-6f44-4768-a1dd-b0b69745b428")
 	)
 	(wire
 		(pts
@@ -3150,83 +3046,6 @@
 	)
 	(symbol
 		(lib_id "e-radionica.com schematics:0603C")
-		(at 59.69 47.625 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "385cdf20-cecd-4e8f-bda9-df54effc11e0")
-		(property "Reference" "C6"
-			(at 60.96 45.72 90)
-			(effects
-				(font
-					(size 1 1)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "2u2"
-			(at 56.515 45.72 0)
-			(effects
-				(font
-					(size 1 1)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
-			(at 59.69 47.625 0)
-			(effects
-				(font
-					(size 1 1)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 59.69 47.625 0)
-			(effects
-				(font
-					(size 1 1)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 59.69 47.625 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C1607"
-			(at 59.69 47.625 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "070b52cd-88c8-44ee-839a-cd79bba6f381")
-		)
-		(pin "2"
-			(uuid "ad255971-dc71-4d16-8cf2-ee7cbdfa223b")
-		)
-		(instances
-			(project "Small"
-				(path "/596d0583-1d97-453e-b84c-75eed809afa2"
-					(reference "C6")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "e-radionica.com schematics:0603C")
 		(at 95.25 104.14 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3632,83 +3451,6 @@
 	)
 	(symbol
 		(lib_id "e-radionica.com schematics:0603C")
-		(at 67.31 47.625 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "7dc8f315-0389-49d5-bc7b-0a08d4a71f25")
-		(property "Reference" "C5"
-			(at 68.58 45.72 90)
-			(effects
-				(font
-					(size 1 1)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "100n"
-			(at 64.135 45.72 0)
-			(effects
-				(font
-					(size 1 1)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
-			(at 67.31 47.625 0)
-			(effects
-				(font
-					(size 1 1)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 67.31 47.625 0)
-			(effects
-				(font
-					(size 1 1)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 67.31 47.625 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "LCSC" "C1590"
-			(at 67.31 47.625 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "a94d22b4-28ca-4cd8-81e7-81ed577066c9")
-		)
-		(pin "2"
-			(uuid "2c278294-c0b6-45c8-95c4-e24753addc71")
-		)
-		(instances
-			(project "Small"
-				(path "/596d0583-1d97-453e-b84c-75eed809afa2"
-					(reference "C5")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "e-radionica.com schematics:0603C")
 		(at 74.93 47.625 90)
 		(unit 1)
 		(exclude_from_sim no)
@@ -3725,7 +3467,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "100n"
+		(property "Value" "22uf"
 			(at 71.755 45.72 0)
 			(effects
 				(font
@@ -3734,7 +3476,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 74.93 47.625 0)
 			(effects
 				(font
@@ -3760,7 +3502,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C1590"
+		(property "LCSC" "C45783"
 			(at 74.93 47.625 90)
 			(effects
 				(font
