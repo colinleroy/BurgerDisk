@@ -497,7 +497,7 @@
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 0,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.3,
+        "track_width": 0.6,
         "via_diameter": 0.7,
         "via_drill": 0.3
       },
