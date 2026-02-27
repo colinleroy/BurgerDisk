@@ -8844,7 +8844,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Horizontal"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
 			(at 148.59 165.1 0)
 			(effects
 				(font
@@ -9694,7 +9694,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C341092"
+		(property "LCSC" "C266612"
 			(at 269.24 36.83 0)
 			(effects
 				(font
