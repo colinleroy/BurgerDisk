@@ -490,13 +490,13 @@ void loop() {
       } else if ((partition = get_device_partition(dev_id)) != -1) {
         AckPacket();
       } else {
-        // DumpPacket(packet_buffer, 1);
+        DumpPacket(packet_buffer, 1);
         IgnorePacket();
         // Smartbus is now disabled, packet has been ignored. Loop back.
         break;
       }
 
-      // DumpPacket(packet_buffer, 0);
+      DumpPacket(packet_buffer, 0);
 
       SET_LED_HIGH;
 
@@ -614,6 +614,9 @@ bool open_image(struct device &d, String filename ) {
 
 //Debug helper - dump a packet's start
 static void DumpPacket(unsigned char *buffer, unsigned char ignored) {
+  if (!debug) {
+    return;
+  }
   if (ignored) {
     Serial.print("Ignored ");
   }
