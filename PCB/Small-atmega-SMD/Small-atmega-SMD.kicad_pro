@@ -80,14 +80,6 @@
         [
           "silk_edge_clearance|163367800|43339600|0d09a5c9-4b38-4e45-a696-092f91273fa3|a0231c98-1571-43f3-947c-38ead49ab13b",
           ""
-        ],
-        [
-          "starved_thermal|113044400|103240800|5fca9280-1cb1-43aa-a0af-bd3252e5a39d|1e0d78ea-c858-493f-bd3e-d2c9060fd7fd|F.Cu",
-          ""
-        ],
-        [
-          "starved_thermal|137860000|61190000|5fca9280-1cb1-43aa-a0af-bd3252e5a39d|6b0abd37-aa31-4675-b5e7-16406b1bee9c|F.Cu",
-          ""
         ]
       ],
       "meta": {
@@ -551,6 +543,10 @@
       {
         "netclass": "Power",
         "pattern": "GND"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "3V3"
       }
     ]
   },

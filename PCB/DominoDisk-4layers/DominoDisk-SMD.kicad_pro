@@ -501,7 +501,7 @@
         "microvia_drill": 0.1,
         "name": "3V3",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 0,
+        "priority": 1,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
         "track_width": 0.6,
         "via_diameter": 0.7,
@@ -513,13 +513,27 @@
         "diff_pair_width": 0.2,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
+        "name": "Passthrough",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "priority": 0,
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 1.0,
+        "via_diameter": 1.0,
+        "via_drill": 0.4
+      },
+      {
+        "clearance": 0.2,
+        "diff_pair_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
         "name": "Power",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 1,
+        "priority": 2,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
         "track_width": 0.6,
         "via_diameter": 0.8,
-        "via_drill": 0.3
+        "via_drill": 0.35
       }
     ],
     "meta": {
@@ -529,7 +543,7 @@
     "netclass_assignments": null,
     "netclass_patterns": [
       {
-        "netclass": "Power",
+        "netclass": "Passthrough",
         "pattern": "5V_apple2"
       },
       {
@@ -537,20 +551,24 @@
         "pattern": "5V_burgerDisk"
       },
       {
-        "netclass": "Power",
+        "netclass": "Passthrough",
         "pattern": "+12V"
       },
       {
-        "netclass": "Power",
+        "netclass": "Passthrough",
         "pattern": "-12V"
       },
       {
-        "netclass": "Power",
+        "netclass": "Passthrough",
         "pattern": "GND"
       },
       {
         "netclass": "3V3",
         "pattern": "3V3"
+      },
+      {
+        "netclass": "Default",
+        "pattern": ""
       }
     ]
   },

@@ -51,18 +51,32 @@
           "min_clearance": 0.5
         }
       },
-      "diff_pair_dimensions": [],
+      "diff_pair_dimensions": [
+        {
+          "gap": 0.0,
+          "via_gap": 0.0,
+          "width": 0.0
+        }
+      ],
       "drc_exclusions": [
         [
-          "courtyards_overlap|124316000|102322500|91cbeeb0-d661-41b7-af5a-b96837a446be|fad2a85c-e29d-45c3-bbd0-92b0a2964b27",
+          "courtyards_overlap|124365000|103595000|91cbeeb0-d661-41b7-af5a-b96837a446be|fad2a85c-e29d-45c3-bbd0-92b0a2964b27",
           ""
         ],
         [
-          "courtyards_overlap|124316000|107695000|7104ab5d-93b2-4e66-adba-0277b642a9db|91cbeeb0-d661-41b7-af5a-b96837a446be",
+          "courtyards_overlap|124365000|107755000|7104ab5d-93b2-4e66-adba-0277b642a9db|91cbeeb0-d661-41b7-af5a-b96837a446be",
+          ""
+        ],
+        [
+          "courtyards_overlap|124370000|102005000|67a29321-e0ed-4880-8711-13f7837a6a3b|91cbeeb0-d661-41b7-af5a-b96837a446be",
           ""
         ],
         [
           "courtyards_overlap|129220689|102225000|91cbeeb0-d661-41b7-af5a-b96837a446be|d5da5565-c031-4af7-80b0-e9dc5a22e609",
+          ""
+        ],
+        [
+          "courtyards_overlap|130695000|107815000|362d1c8c-12ba-43d2-9a0e-91d23b247674|91cbeeb0-d661-41b7-af5a-b96837a446be",
           ""
         ],
         [
@@ -71,10 +85,6 @@
         ],
         [
           "courtyards_overlap|131790980|135988460|204e7943-4e72-4209-b0a3-244689c9141a|6dd0e3f3-38f6-43fa-bcbe-543582976922",
-          ""
-        ],
-        [
-          "courtyards_overlap|132955000|107915000|362d1c8c-12ba-43d2-9a0e-91d23b247674|91cbeeb0-d661-41b7-af5a-b96837a446be",
           ""
         ],
         [
@@ -87,10 +97,6 @@
         ],
         [
           "courtyards_overlap|140606000|109901300|204e7943-4e72-4209-b0a3-244689c9141a|91cbeeb0-d661-41b7-af5a-b96837a446be",
-          ""
-        ],
-        [
-          "lib_footprint_mismatch|125887500|104367500|fad2a85c-e29d-45c3-bbd0-92b0a2964b27|00000000-0000-0000-0000-000000000000",
           ""
         ],
         [
@@ -261,7 +267,9 @@
           "td_width_to_size_filter_ratio": 0.9
         }
       ],
-      "track_widths": [],
+      "track_widths": [
+        0.0
+      ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
           "corner_radius_percentage": 80,
@@ -288,7 +296,12 @@
           "spacing": 0.6
         }
       },
-      "via_dimensions": [],
+      "via_dimensions": [
+        {
+          "diameter": 0.0,
+          "drill": 0.0
+        }
+      ],
       "zones_allow_external_fillets": false
     },
     "ipc2581": {
@@ -595,6 +608,10 @@
       {
         "netclass": "Power",
         "pattern": "GND"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "3V3"
       }
     ]
   },
