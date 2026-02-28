@@ -41,14 +41,11 @@
 // code, the other one depends on the Arduino boot process and this one must
 // be fixed by using an AVR programmer to upload the firmware.
 //
-// FIXME: This code uses the SDFat library, written by Bill Greiman. It builds
-// with SDFat version 2.1.2, which is outdated. 
-//
 // This firmware is licensed under the GPL v3.
 //
 //*****************************************************************************
 
-#include "SdFat.h" // SDFat version 2.1.2
+#include "SdFat.h" // tested with SDFat version 2.3.0
 #include <string.h>
 #include <stdio.h>
 #include <avr/pgmspace.h>
