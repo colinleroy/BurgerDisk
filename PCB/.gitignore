@@ -6,4 +6,5 @@ fp-info-cache
 *.step
 *.lck
 *.rpt
+*.zip
 production
