@@ -11,7 +11,8 @@ setup:
 
 fuse:
 	avrdude -v -p m328p -c avrisp2 -U lfuse:w:0xFF:m -U hfuse:w:0xDA:m -U efuse:w:0xFD:m
-
+getfuse:
+	avrdude -v -p m328p -c avrisp2 -U lfuse:r:-:h -U hfuse:r:-:h -U efuse:r:-:h
 version:
 	echo "#define GIT_VERSION \"$(GIT_VERSION)\"" > version.h
 
