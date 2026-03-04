@@ -24,7 +24,8 @@ should double-check before buying.
 - one [1N5818 diode](https://aliexpress.com/item/4000055728807.html)
 - one [1N4448 diode](https://aliexpress.com/item/1005008591345474.html)
 - two [2-pin male headers, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html)
-- one [microSD module ("TF")](https://aliexpress.com/item/1005008633757049.html)
+- one [microSD module ("TF")](https://aliexpress.com/item/1005008633757049.html) or for a better manipulation of the card,
+  [my version](../../../releases/latest/)
 - one [6-pin male header, 2.54mm pitch](https://aliexpress.com/item/1005006181780843.html) for the MicroSD module
 - one [6-pin cable, 2.54mm pitch, 10cm long](https://aliexpress.com/item/4001119232749.html) for the MicroSD module
 - one [2-pin cable, 2.54mm pitch, 20cm long](https://aliexpress.com/item/4001119232749.html) for the LED
@@ -57,16 +58,15 @@ So far I print the enclosure at 15% infill, 0.20mm layer height. With my printer
 I don't need support for the overhangs on the slots at the back, but your mileage
 may vary.
 
+## Video format
+
+These instructions are also [available in video format](https://www.youtube.com/watch?v=1XYskDaTvEE).
+
 ## Building the main PCB
 **All elements are to be soldered on the top-side of the PCB**, the side with the
 markings.
 
-![The empty PCB](./pictures/PCB-v2.0.jpeg)
-
-### Daisy DB19
-Align the female DB19 connector with the Daisy out pads on the PCB. Pay close
-attention to the alignment, as the DB19 will basically be un-desolderable with
-basic equipment. Solder it.
+![The empty PCB](./pictures/BD-PCB-empty.jpeg)
 
 ### Small components: Resistors, diodes and optocoupler
 Insert the 150Ω resistor in its spot, (R2/150).
@@ -83,13 +83,6 @@ Resistors are not polarized, so you can put them either way.
 
 Insert the 1N4448 diode in its spot (D2 / 1N4448).
 
-**Errata**: early PCBs had two 1N4448 diodes,
-but one of them broke SoftSP card compatibility. If you have two 1N4448 spots,
-D1 and D2, only populate D2, and use a piece of wire or a component leg to
-connect D1 as a simple trace:
-
-![The D1 bodge](./pictures/D1_errata.png)
-
 Mind that diodes **are** polarized, so make sure the line on the PCB silkscreen
 and the line on the diode are facing the same way.
 
@@ -102,6 +95,13 @@ Make these components stay in place, either by bending their legs or taping them
 
 Solder them.
 
+![Small components soldered](./pictures/BD-small-components.jpeg)
+
+### MicroSD card module connector
+Solder the 6-pin male header on the "MicroSD module" spot.
+
+![The MicroSD header](./pictures/BD-micro-header.jpeg)
+
 ### 2-pin headers
 Insert one 2-pin male headers in the "UART" and "LED" spots. Solder them.
 
@@ -109,9 +109,11 @@ Insert one 2-pin male headers in the "UART" and "LED" spots. Solder them.
 Insert the IDC-20 connector in its spot. Mind the notch position, it must be
 towards the bottom of the PCB. Solder it.
 
+![The IDC20 connector](./pictures/BD-IDC20.jpeg)
+
 ### Arduino Nano
-Solder the Nano's 6-pin header for programming on top of the Nano. The top of
-the Nano is the side with the USB connector and the reset button.
+Solder the Nano's 6-pin header for programming on top of the Nano if necessary.
+The top of the Nano is the side with the USB connector and the reset button.
 
 This is not strictly necessary, but I like to put the Nano on a "socket" so that
 it is easy to replace if necessary.
@@ -123,16 +125,34 @@ on the PCB. Solder the 30 pins to the Nano.
 
 Reverse the PCB, and solder the female headers' 30 pins to the PCB.
 
-You can [program the Arduino at this point](../firmware/README.md).
+![The Nano on its headers](./pictures/BD-nano.jpeg)
 
-### MicroSD card module connector
-Solder the 6-pin male header on the "MicroSD module" spot.
+You can [program the Arduino at this point](../firmware/README.md). People having
+bought a kit from me don't need to program the Arduino, I did it before shipping.
+
+Add a strip of black tape on the Nano's red LEDs, otherwise it will glow red
+through white enclosures.
+
+### Daisy DB19
+Align the female DB19 connector with the Daisy out pads on the PCB. Pay close
+attention to the alignment, as the DB19 will basically be un-desolderable with
+basic equipment. Solder it on both sides.
+
+![DB-19 soldered](./pictures/BD-DB19.jpeg)
 
 Your PCB now looks like this:
-![The assembled PCB](./pictures/pcb-v2.0-soldered.jpeg)
+![The assembled PCB](./pictures/BD-assembled.jpeg)
 
 ### LED
-Solder the LED to about 15 cm of Dupont wire connectors.
+Solder the LED to about 15 cm of Dupont wire connectors. The easiest way is to use
+male/female connectors, shorten the LED's legs, and solder the LED to the male
+connectors, minding the polarity (long leg = anode, red wire).
+
+Put 3mm heatshrink on the LED to avoid having it illuminate the whole enclosure.
+
+The anode (red wire) goes to the edge of the PCB.
+
+![The LED](./pictures/BD-LED.jpeg)
 
 ## The main connection cable
 Because of its daisy-chaining capabilities, the cable to plug BurgerDisk to the
@@ -150,8 +170,12 @@ Insert the IDC-20 connector in the adapter PCB. It must on the top-side of the
 PCB, where the IDC-20 is outlined on the silkscreen. Pay attention to the notch
 position, which should be towards the DB19 connector. Solder it.
 
+![The adapter, soldered](./pictures/BD-adapter.jpeg)
+
 Insert the assembled adapter into its enclosure, and screw it shut with two M2
 x 12 (or 14) mm screws.
+
+![The adapter, assembled](./pictures/BD-adapter-assembled.jpeg)
 
 ## Assembling in the enclosure
 Put washers on the enclosure mounting posts: 2mm if you are using the angled
@@ -173,8 +197,12 @@ enclosure's bottom; then connect it to the PCB using the 6 or 8-pin cable.
 When looking from the front of the enclosure, +5V and GND are on the **right**
 both on the PCB, and on the MicroSD module.
 
+![The microSD wiring](./pictures/BD-microsd-wiring.jpeg)
+
 Plug the main input cable in, and route it out of the enclosure via its dedicated
 slot in the back.
+
+![The cable routing](./pictures/BD-cable-routing.jpeg)
 
 Glue a weight in the front of the bottom part if needed (epoxy works well on PLA
 and lead). Make sure you leave room for the enclosure top's posts.
