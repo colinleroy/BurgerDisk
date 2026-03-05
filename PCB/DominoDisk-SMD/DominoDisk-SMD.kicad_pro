@@ -559,7 +559,7 @@
         "pattern": "-12V"
       },
       {
-        "netclass": "Passthrough",
+        "netclass": "Power",
         "pattern": "GND"
       },
       {

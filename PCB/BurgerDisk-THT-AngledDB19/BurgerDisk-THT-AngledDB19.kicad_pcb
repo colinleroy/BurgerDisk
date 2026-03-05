@@ -6042,7 +6042,7 @@
 	(footprint "LOGO"
 		(layer "F.Cu")
 		(uuid "b25ab045-e913-4d13-9aba-b33552e9b992")
-		(at 137.6934 64.2366)
+		(at 196.34 63.42)
 		(property "Reference" "G***"
 			(at 0 0 0)
 			(layer "F.Fab")

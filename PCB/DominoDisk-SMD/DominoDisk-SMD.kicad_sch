@@ -9356,7 +9356,7 @@
 				)
 			)
 		)
-		(property "Value" "SE5218 voltage regulator"
+		(property "Value" "SE5218ALG voltage regulator"
 			(at 255.27 93.345 0)
 			(effects
 				(font

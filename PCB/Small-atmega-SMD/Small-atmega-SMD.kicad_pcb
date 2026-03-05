@@ -8419,7 +8419,7 @@
 	(footprint "LOGO"
 		(layer "F.Cu")
 		(uuid "a6033b2b-f3cd-4382-8250-3aec5b272660")
-		(at 143.4846 119.253)
+		(at 192.162905 110.299597)
 		(property "Reference" "G***"
 			(at 0 0 0)
 			(layer "F.Fab")
