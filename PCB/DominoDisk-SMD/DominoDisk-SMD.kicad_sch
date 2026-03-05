@@ -8862,8 +8862,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
-			(at 148.59 165.1 0)
+		(property "Description" "Debug header - do not assemble"
+			(at 149.352 170.688 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9356,7 +9356,7 @@
 				)
 			)
 		)
-		(property "Value" "SE5218"
+		(property "Value" "SE5218 voltage regulator"
 			(at 255.27 93.345 0)
 			(effects
 				(font
@@ -9659,7 +9659,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "TF-104"
+		(property "Value" "TF-104 MicroSD card holder"
 			(at 266.954 48.768 0)
 			(effects
 				(font
@@ -10478,8 +10478,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
-			(at 123.19 128.27 0)
+		(property "Description" "2x3 pins male header, 2.54mm pitch, horizontal"
+			(at 133.096 134.112 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10831,7 +10831,7 @@
 				)
 			)
 		)
-		(property "Value" "TXB0104PWR"
+		(property "Value" "TXB0104PWR level shifter"
 			(at 245.11 149.86 0)
 			(effects
 				(font
@@ -11140,7 +11140,7 @@
 				)
 			)
 		)
-		(property "Value" "Resonator"
+		(property "Value" "CSTNE16M0V530000R0 Resonator"
 			(at 99.06 128.27 0)
 			(effects
 				(font
