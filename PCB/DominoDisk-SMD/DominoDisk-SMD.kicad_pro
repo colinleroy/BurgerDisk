@@ -60,7 +60,47 @@
       ],
       "drc_exclusions": [
         [
+          "courtyards_overlap|101694114|66247509|3e82d0ff-5e89-4db6-85db-281388a52dee|8054ffd7-695e-4998-8583-2053a1df4878",
+          ""
+        ],
+        [
+          "lib_footprint_mismatch|105666750|55590895|204e7943-4e72-4209-b0a3-244689c9141a|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "lib_footprint_mismatch|106558400|59882100|fad2a85c-e29d-45c3-bbd0-92b0a2964b27|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "lib_footprint_mismatch|107475000|53907500|81092cfd-5b95-4490-b244-a7fd3980af69|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "lib_footprint_mismatch|118725000|54860000|3dab91f0-11ab-45ad-934a-0f3b8ece9c36|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "lib_footprint_mismatch|124075000|51617500|2383e0b0-6894-4eb9-b4e8-c126651c3206|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "lib_footprint_mismatch|135630000|58345000|c7730239-59c3-4c88-bf36-ec16ed3b8c02|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
           "missing_courtyard|136131890|55959559|13e5af56-86bb-468a-b669-ced120b64b48|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "silk_edge_clearance|99925073|49348679|edc4b9ed-22c3-4e14-9750-df8ef9b177cc|267496e8-4f0e-432a-b4c4-d26c555ed09a",
+          ""
+        ],
+        [
+          "silk_edge_clearance|99931000|61693179|edc4b9ed-22c3-4e14-9750-df8ef9b177cc|2137ea4b-60c3-49a0-a1a3-c6b8d68ae20e",
+          ""
+        ],
+        [
+          "silk_edge_clearance|99931976|61695674|edc4b9ed-22c3-4e14-9750-df8ef9b177cc|76778853-3cae-4a2b-88f2-0c62a4651233",
           ""
         ]
       ],
@@ -152,7 +192,7 @@
           "td_onpthpad": true,
           "td_onroundshapesonly": false,
           "td_onsmdpad": true,
-          "td_ontrackend": false,
+          "td_ontrackend": true,
           "td_onvia": true
         }
       ],
