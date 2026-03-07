@@ -36,8 +36,7 @@ chain. Plug the next device to the daisy port of the BurgerDisk.
 
 When daisy-chaining, the usual Apple II rules apply:
 - first the dumb 3.5" floppy disk drives (like the Apple 3.5 drive)
-- followed by the smart 3.5" disk drives (like the Unidisk 3.5)
-- followed by Smartport devices (like BurgerDisk, Fujinet, SPIISD, etc)
+- followed by Smartport devices (like BurgerDisk, Unidisk 3.5", Fujinet, SPIISD, etc)
 - followed by dumb disk drives (like the Disk //c)
 
 So far, BurgerDisk has been tested in the following configurations:
@@ -45,11 +44,14 @@ So far, BurgerDisk has been tested in the following configurations:
 - computer => BurgerDisk => Disk //c
 - computer => Unidisk 3.5 => BurgerDisk
 - computer => Unidisk 3.5 => BurgerDisk => Disk //c
+- computer => BurgerDisk => Unidisk 3.5 => Disk //c
 
 It has been tested with the following computers:
 - Apple //c A2S4000, ROM3
 - Apple //c A2S4100, ROM4x
 - Apple IIgs, ROM 01
+
+[More tests results are available](https://www.colino.net/wordpress/archives/2026/02/08/burgerdisk-tests/).
 
 ### Configuring disk images
 The firmware will open and present between one and four partitions.
