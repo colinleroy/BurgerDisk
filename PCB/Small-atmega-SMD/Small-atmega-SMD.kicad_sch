@@ -6214,6 +6214,16 @@
 		)
 		(uuid "2b239b2a-6149-4711-836a-1c666a3b0ece")
 	)
+	(wire
+		(pts
+			(xy 167.64 123.19) (xy 167.64 135.89)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2c22c067-7af9-4adc-89aa-a42ee41a3824")
+	)
 	(polyline
 		(pts
 			(xy 276.86 58.42) (xy 276.86 21.59)
@@ -6313,16 +6323,6 @@
 			(type default)
 		)
 		(uuid "3b3d57f9-5bc8-49ca-81c0-12ff816c7ae7")
-	)
-	(wire
-		(pts
-			(xy 165.1 123.19) (xy 165.1 135.89)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3c8f5daf-49d8-47ab-9bdc-3b22fd9d7ed0")
 	)
 	(wire
 		(pts
@@ -6596,16 +6596,6 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 135.89) (xy 170.18 146.05)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "8164357b-ee68-45e5-8cee-1dccfeed5bb3")
-	)
-	(wire
-		(pts
 			(xy 241.3 45.72) (xy 257.81 45.72)
 		)
 		(stroke
@@ -6613,6 +6603,16 @@
 			(type solid)
 		)
 		(uuid "828aa623-840f-4c78-b3f8-1041e21d36ee")
+	)
+	(wire
+		(pts
+			(xy 165.1 146.05) (xy 165.1 135.89)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "85057976-cc6b-4c40-95ce-fea49bab014e")
 	)
 	(wire
 		(pts
@@ -6693,6 +6693,16 @@
 			(type default)
 		)
 		(uuid "8f243a09-7937-4262-a9c6-e998dc90d4f4")
+	)
+	(wire
+		(pts
+			(xy 149.86 146.05) (xy 165.1 146.05)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8f77649a-8960-4231-a68c-ac8770ad009a")
 	)
 	(wire
 		(pts
@@ -6844,16 +6854,6 @@
 		)
 		(uuid "aa810826-7518-4a76-ae0e-ef68f57333d3")
 	)
-	(wire
-		(pts
-			(xy 170.18 146.05) (xy 149.86 146.05)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ac60819c-2ad0-4b46-bab1-890f02b9d8d4")
-	)
 	(polyline
 		(pts
 			(xy 172.72 58.42) (xy 213.36 58.42)
@@ -6926,7 +6926,7 @@
 	)
 	(wire
 		(pts
-			(xy 149.86 123.19) (xy 165.1 123.19)
+			(xy 149.86 123.19) (xy 167.64 123.19)
 		)
 		(stroke
 			(width 0)
@@ -6953,16 +6953,6 @@
 			(type dash)
 		)
 		(uuid "d12c8c4e-4524-4184-b135-63ef377202df")
-	)
-	(wire
-		(pts
-			(xy 167.64 135.89) (xy 170.18 135.89)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d1af1c6c-173f-45c3-8e8d-8fb46f8dc7eb")
 	)
 	(wire
 		(pts
@@ -9498,7 +9488,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C1590"
+		(property "LCSC" "C14663"
 			(at 234.95 73.66 0)
 			(effects
 				(font
@@ -9574,7 +9564,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C1590"
+		(property "LCSC" "C14663"
 			(at 31.75 118.11 90)
 			(effects
 				(font
@@ -9615,7 +9605,7 @@
 				)
 			)
 		)
-		(property "Value" "UART"
+		(property "Value" "2-pin header"
 			(at 92.075 166.37 0)
 			(effects
 				(font
@@ -9641,8 +9631,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
-			(at 92.71 163.83 0)
+		(property "Description" "UART"
+			(at 93.218 158.496 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10258,7 +10248,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C177337"
+		(property "LCSC" "C25804"
 			(at 105.41 57.15 0)
 			(effects
 				(font
@@ -10335,7 +10325,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C1607"
+		(property "LCSC" "C23630"
 			(at 259.08 149.86 90)
 			(effects
 				(font
@@ -10428,7 +10418,7 @@
 		(at 233.68 125.73 90)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
@@ -10589,7 +10579,7 @@
 				)
 			)
 		)
-		(property "Value" "EXT LED"
+		(property "Value" "2-pin header"
 			(at 162.56 140.335 0)
 			(effects
 				(font
@@ -10615,7 +10605,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Ext. LED"
 			(at 165.1 140.97 0)
 			(effects
 				(font
@@ -10798,7 +10788,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C177337"
+		(property "LCSC" "C25804"
 			(at 252.73 102.87 90)
 			(effects
 				(font
@@ -10876,7 +10866,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C177337"
+		(property "LCSC" "C25804"
 			(at 109.22 142.24 0)
 			(effects
 				(font
@@ -11190,7 +11180,7 @@
 		(at 149.86 127 90)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
@@ -11396,7 +11386,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C177290"
+		(property "LCSC" "C22808"
 			(at 149.86 134.62 0)
 			(effects
 				(font
@@ -11537,7 +11527,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C1607"
+		(property "LCSC" "C23630"
 			(at 228.6 151.13 90)
 			(effects
 				(font
@@ -11788,7 +11778,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C177341"
+		(property "LCSC" "C23138"
 			(at 41.91 74.93 0)
 			(effects
 				(font
@@ -11939,7 +11929,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C1590"
+		(property "LCSC" "C14663"
 			(at 248.92 73.66 0)
 			(effects
 				(font
@@ -12192,7 +12182,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C177343"
+		(property "LCSC" "C21190"
 			(at 105.41 52.07 0)
 			(effects
 				(font
