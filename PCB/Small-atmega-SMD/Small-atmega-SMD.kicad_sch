@@ -10534,15 +10534,6 @@
 				)
 			)
 		)
-		(property "LCSC" "C56816"
-			(at 189.23 41.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
 		(pin "4"
 			(uuid "e013f10d-288d-44eb-80b6-b78ee975cdb8")
 		)
@@ -10622,7 +10613,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C32713268"
+		(property "LCSC" ""
 			(at 165.1 140.97 0)
 			(effects
 				(font
