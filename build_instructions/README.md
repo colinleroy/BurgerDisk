@@ -103,7 +103,7 @@ Solder the 6-pin male header on the "MicroSD module" spot.
 ![The MicroSD header](./pictures/BD-micro-header.jpeg)
 
 ### 2-pin headers
-Insert one 2-pin male headers in the "UART" and "LED" spots. Solder them.
+Insert the 2-pin male headers in the "J3" and "LED" spots. Solder them.
 
 ### Input IDC-20 connector
 Insert the IDC-20 connector in its spot. Mind the notch position, it must be
