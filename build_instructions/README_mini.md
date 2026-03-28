@@ -8,7 +8,7 @@ before buying.
 **For the main board**, you will need:
 - the [assembled main PCB](../PCB/Small-atmega-SMD). Kicad 9 + the 
   [Fabrication toolkit plugin](https://github.com/bennymeg/Fabrication-Toolkit)
-  allows for a simple order at JLC, with a few components needing a manual rotation
+  allows for a simple order at JLC, with a few components needing a manual rotation.
 - one female DB19 connector, [angled](https://www.ebay.com/itm/284338436979), for daisy-chaining
 - one [STK500 AVR ISP programmer](https://aliexpress.com/item/1005006205386137.html) for uploading the firmware to the Arduino
 
