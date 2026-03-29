@@ -70,6 +70,8 @@
 
 int open_partitions = 0;
 int debug = 0;
+int force_next_smartport = 1;
+
 unsigned char *packet_buffer;
 unsigned char identifier = '0';
 
@@ -101,25 +103,26 @@ static void init_storage(void) {
     return;
   }
 
-  // Not enough RAM for SDFat to open a file if the standard packet_buffer
-  // is allocated.
-  free(packet_buffer);
-
   if (!sdcard.begin(SD_CONFIG)) {
     LOG(F("SD card init error."));
     storage_init_error = 1;
     return;
   }
 
-  SdFile myFile("config.txt", O_READ);
   // check for open error
   LOG(F("Opening partitions"));
   open_partitions = 0;
-  if (myFile.isOpen()) {
+
+  // Not enough RAM for SDFat to open a file if the standard packet_buffer
+  // is allocated.
+  free(packet_buffer);
+  packet_buffer = (unsigned char *)malloc(_MAX_FILENAME_LEN + _2MG_HEADER_LEN + 1);
+
+  SdFile configFile("config.txt", O_READ);
+  if (configFile.isOpen()) {
     unsigned char n;
-    packet_buffer = (unsigned char *)malloc(_MAX_FILENAME_LEN + _2MG_HEADER_LEN + 1);
     while (open_partitions < MAX_PARTITIONS) {
-      n = myFile.fgets((char*)packet_buffer, _MAX_FILENAME_LEN - 1);
+      n = configFile.fgets((char*)packet_buffer, _MAX_FILENAME_LEN - 1);
       if(n > 1) {
         if (packet_buffer[n - 1] == '\n') {
           packet_buffer[n-1] = 0;
@@ -152,16 +155,7 @@ static void init_storage(void) {
         break;
       }
     }
-
-    /* Now get parameters */
-    while (myFile.fgets((char*)packet_buffer, _MAX_FILENAME_LEN) > 0) {
-      if (!strncmp((const char *)packet_buffer, "debug=", 6)) {
-        debug = (packet_buffer[6] == '1');
-      }
-    }
-    free(packet_buffer);
-    myFile.close();
-
+    configFile.close();
   } else {
     LOG(F("No config.txt. Searching for images."));
     for (unsigned char i = 0; i < MAX_PARTITIONS; i++) {
@@ -172,7 +166,22 @@ static void init_storage(void) {
       }
     }
   }
+
+  /* Now get parameters */
+  SdFile optionsFile("options.txt", O_READ);
+  if (optionsFile.isOpen()) {
+    while (optionsFile.fgets((char*)packet_buffer, _MAX_FILENAME_LEN) > 0) {
+      if (!strncmp((const char *)packet_buffer, "debug=", 6)) {
+        debug = (packet_buffer[6] == '1');
+      } else if (!strncmp((const char *)packet_buffer, "force_next_smartport=", 21)) {
+        force_next_smartport = (packet_buffer[21] == '1');
+      }
+    }
+    optionsFile.close();
+  }
+
   // Realloc standard packet_buffer
+  free(packet_buffer);
   packet_buffer = (unsigned char *)malloc(605);
   memset(packet_buffer, 0, 605);
   DEBUGN(F("Free memory now "), freeMemory(), DEC);
@@ -415,7 +424,7 @@ static void smartport_init(unsigned char dev_id) {
   if (number_partitions_initialised < open_partitions) { //are all init'd yet
     status = 0x80;
   } else {
-    status = DAISY_HDSEL_IS_HIGH ? 0xff : 0x80;
+    status = (DAISY_HDSEL_IS_LOW || force_next_smartport) ? 0x80 : 0xFF;
     device_init_done = 1; //Mark init done
     number_partitions_initialised = 0; // Reset variable for potential next INIT
   }
