@@ -48,7 +48,7 @@ Two options here too:
 - From the Arduino IDE, `Sketch` menu, choose `Upload using programmer`. Wait
   until the "Done uploading" message.
   ![Upload using programmer menu item](../build_instructions/pictures/arduino_flashing.png)
-- From the command line, run `make`. Wait for the upload to be done.
+- From the command line, run `make fuse && make upload`. Wait for the upload to be done.
 
 Disconnect the programmer, and you're set.
 
