@@ -2,7 +2,7 @@
   "board": {
     "active_layer": 0,
     "active_layer_preset": "",
-    "auto_track_width": true,
+    "auto_track_width": false,
     "hidden_netclasses": [],
     "hidden_nets": [],
     "high_contrast_mode": 1,
@@ -58,13 +58,11 @@
     "ssh_key": ""
   },
   "meta": {
-    "filename": "DominoDisk-SMD.kicad_prl",
+    "filename": "BurgerDisk-SMD.kicad_prl",
     "version": 5
   },
   "net_inspector_panel": {
     "col_hidden": [
-      false,
-      false,
       false,
       false,
       false,
@@ -86,13 +84,9 @@
       6,
       7,
       8,
-      9,
-      10,
-      11
+      9
     ],
     "col_widths": [
-      0,
-      0,
       0,
       0,
       0,
