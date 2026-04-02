@@ -12,6 +12,177 @@
 		(comment 1 "License: CC BY-SA")
 	)
 	(lib_symbols
+		(symbol "Conn_01x02_Pin_1"
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J6"
+				(at 0.635 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "EXT LED"
+				(at 0.635 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "LCSC" "C6273326"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_locked" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "connector"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "Connector*:*_1x??_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Conn_01x02_Pin_1_1_1"
+				(rectangle
+					(start 0.8636 0.127)
+					(end 0 -0.127)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start 0.8636 -2.413)
+					(end 0 -2.667)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 0) (xy 0.8636 0)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 -2.54) (xy 0.8636 -2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at 5.08 0 180)
+					(length 3.81)
+					(name "+5V"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -2.54 180)
+					(length 3.81)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Connector:Conn_01x02_Pin"
 			(pin_names
 				(offset 1.016)
@@ -165,6 +336,333 @@
 						)
 					)
 					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Connector:Conn_01x06_Pin"
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at 0 7.62 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Conn_01x06_Pin"
+				(at 0 -10.16 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Generic connector, single row, 01x06, script generated"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_locked" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "connector"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "Connector*:*_1x??_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Conn_01x06_Pin_1_1"
+				(rectangle
+					(start 0.8636 5.207)
+					(end 0 4.953)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start 0.8636 2.667)
+					(end 0 2.413)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start 0.8636 0.127)
+					(end 0 -0.127)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start 0.8636 -2.413)
+					(end 0 -2.667)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start 0.8636 -4.953)
+					(end 0 -5.207)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(rectangle
+					(start 0.8636 -7.493)
+					(end 0 -7.747)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 5.08) (xy 0.8636 5.08)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 2.54) (xy 0.8636 2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 0) (xy 0.8636 0)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 -2.54) (xy 0.8636 -2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 -5.08) (xy 0.8636 -5.08)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 -7.62) (xy 0.8636 -7.62)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at 5.08 5.08 180)
+					(length 3.81)
+					(name "Pin_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 2.54 180)
+					(length 3.81)
+					(name "Pin_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 0 180)
+					(length 3.81)
+					(name "Pin_3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -2.54 180)
+					(length 3.81)
+					(name "Pin_4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -5.08 180)
+					(length 3.81)
+					(name "Pin_5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -7.62 180)
+					(length 3.81)
+					(name "Pin_6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2409,6 +2907,200 @@
 						)
 					)
 					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Jumper:SolderJumper_2_Bridged"
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "JP"
+				(at 0 2.032 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "SolderJumper_2_Bridged"
+				(at 0 -2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Solder Jumper, 2-pole, closed/bridged"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "solder jumper SPST"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "SolderJumper*Bridged*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "SolderJumper_2_Bridged_0_1"
+				(rectangle
+					(start -0.508 0.508)
+					(end 0.508 -0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(polyline
+					(pts
+						(xy -0.254 1.016) (xy -0.254 -1.016)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start -0.254 -1.016)
+					(mid -1.2656 0)
+					(end -0.254 1.016)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start -0.254 -1.016)
+					(mid -1.2656 0)
+					(end -0.254 1.016)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(arc
+					(start 0.254 1.016)
+					(mid 1.2656 0)
+					(end 0.254 -1.016)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(arc
+					(start 0.254 1.016)
+					(mid 1.2656 0)
+					(end 0.254 -1.016)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.254 1.016) (xy 0.254 -1.016)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "SolderJumper_2_Bridged_1_1"
+				(pin passive line
+					(at -3.81 0 0)
+					(length 2.54)
+					(name "A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 2.54)
+					(name "B"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -5072,6 +5764,17 @@
 		)
 		(uuid "8d442f92-c645-40a6-9ec2-6c04a1428c5e")
 	)
+	(text "EXT. MICROSD"
+		(exclude_from_sim no)
+		(at 188.214 25.908 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "a8fa0350-12ce-4e1d-8f7d-203e3996a801")
+	)
 	(text "MINIMAL \"ARDUINO NANO\""
 		(exclude_from_sim no)
 		(at 20.828 101.092 0)
@@ -5221,6 +5924,26 @@
 	(no_connect
 		(at 71.12 158.75)
 		(uuid "fef6b988-f38d-4d78-9f1f-6e85d2e88fde")
+	)
+	(polyline
+		(pts
+			(xy 172.72 58.42) (xy 213.36 58.42)
+		)
+		(stroke
+			(width 0)
+			(type dash)
+		)
+		(uuid "003412ac-5e43-4426-a393-b1e53c906911")
+	)
+	(wire
+		(pts
+			(xy 165.1 156.21) (xy 165.1 146.05)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "01c4b7b4-27de-4efb-bb05-7367322e8a62")
 	)
 	(polyline
 		(pts
@@ -5384,6 +6107,16 @@
 	)
 	(wire
 		(pts
+			(xy 149.86 133.35) (xy 167.64 133.35)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1e98e605-8d30-4cdb-8ac5-650e24343bc3")
+	)
+	(wire
+		(pts
 			(xy 250.19 90.17) (xy 256.54 90.17)
 		)
 		(stroke
@@ -5481,6 +6214,16 @@
 			(type dash)
 		)
 		(uuid "2b239b2a-6149-4711-836a-1c666a3b0ece")
+	)
+	(wire
+		(pts
+			(xy 167.64 133.35) (xy 167.64 146.05)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2caeb41f-324f-42c0-80d4-bffb5e3bbc6d")
 	)
 	(polyline
 		(pts
@@ -5642,6 +6385,16 @@
 		)
 		(uuid "44654c7b-4917-4cdb-aa5d-2f7d8831e1c6")
 	)
+	(polyline
+		(pts
+			(xy 172.72 21.59) (xy 213.36 21.59)
+		)
+		(stroke
+			(width 0)
+			(type dash)
+		)
+		(uuid "49e9a9d2-257f-4b2f-a062-96da9e017787")
+	)
 	(wire
 		(pts
 			(xy 252.73 106.045) (xy 252.73 107.95)
@@ -5781,6 +6534,26 @@
 			(type solid)
 		)
 		(uuid "63ef23b3-bfed-4242-a3d9-c8042fc7bfe1")
+	)
+	(wire
+		(pts
+			(xy 149.86 156.21) (xy 165.1 156.21)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "64793c34-6d51-43dd-9688-1a76be28327c")
+	)
+	(polyline
+		(pts
+			(xy 172.72 21.59) (xy 172.72 58.42)
+		)
+		(stroke
+			(width 0)
+			(type dash)
+		)
+		(uuid "67550ef8-5683-48d9-9a65-b21681dbc0c8")
 	)
 	(wire
 		(pts
@@ -6071,6 +6844,16 @@
 			(type dash)
 		)
 		(uuid "a534d1e5-3ac6-42c9-aaeb-1d270f594cfd")
+	)
+	(polyline
+		(pts
+			(xy 213.36 21.59) (xy 213.36 58.42)
+		)
+		(stroke
+			(width 0)
+			(type dash)
+		)
+		(uuid "a58fd68a-13c5-4e16-b91b-4566dfec90b0")
 	)
 	(polyline
 		(pts
@@ -6402,6 +7185,28 @@
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
+			)
+		)
+	)
+	(global_label "MOSI"
+		(shape input)
+		(at 194.31 44.45 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "100f4363-1357-4731-8fcc-a4cfe41c657d")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 201.8914 44.45 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
 				(hide yes)
 			)
 		)
@@ -6799,6 +7604,28 @@
 			)
 		)
 	)
+	(global_label "GND"
+		(shape input)
+		(at 149.86 156.21 270)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "34c77cce-3464-4edb-9535-1069f272ff6a")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 149.86 163.0657 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+				(hide yes)
+			)
+		)
+	)
 	(global_label "SCK"
 		(shape input)
 		(at 256.54 90.17 0)
@@ -6933,6 +7760,28 @@
 	)
 	(global_label "SCK"
 		(shape input)
+		(at 194.31 46.99 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "46d3fc1e-f568-40e0-8ad5-e6d129539998")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 201.0447 46.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+	)
+	(global_label "SCK"
+		(shape input)
 		(at 119.38 128.27 180)
 		(effects
 			(font
@@ -6964,6 +7813,28 @@
 		(uuid "49752824-20ea-4660-8be3-d084102a63fa")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 76.5847 120.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+	)
+	(global_label "5V_burgerDisk"
+		(shape input)
+		(at 194.31 39.37 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "4b2059e3-dccd-4e7d-af09-d7098d89ad03")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 210.5999 39.37 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7052,28 +7923,6 @@
 		(uuid "5bde694c-30fb-4405-8bf0-fa02ecb7c739")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 82.9346 146.05 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-	)
-	(global_label "LED"
-		(shape input)
-		(at 149.86 130.81 90)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "5be623f4-f37e-4edd-a60c-a9b80edc871d")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 149.86 124.3777 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7227,6 +8076,28 @@
 		(uuid "688ecc86-a01f-4687-ad4c-8876c76ce459")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 32.5143 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+				(hide yes)
+			)
+		)
+	)
+	(global_label "5V_intMicroSD"
+		(shape input)
+		(at 233.68 129.54 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "6cb1687a-1b3c-4ad2-8047-d0e6dcf45641")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 217.3901 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7432,6 +8303,28 @@
 			)
 		)
 	)
+	(global_label "5V_burgerDisk"
+		(shape input)
+		(at 233.68 121.92 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "81f3f1df-b046-4228-9247-f148be5c6076")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 217.3901 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+				(hide yes)
+			)
+		)
+	)
 	(global_label "TX"
 		(shape input)
 		(at 71.12 161.29 0)
@@ -7472,28 +8365,6 @@
 					(size 1.27 1.27)
 				)
 				(justify left)
-				(hide yes)
-			)
-		)
-	)
-	(global_label "5V_burgerDisk"
-		(shape input)
-		(at 233.68 129.54 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "864c963c-17d3-4687-85c0-8576bb241c1c")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 217.3901 129.54 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
 				(hide yes)
 			)
 		)
@@ -7555,28 +8426,6 @@
 		(uuid "8eb75802-b5f7-49ed-a878-d005e6202905")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 31.3048 60.96 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-				(hide yes)
-			)
-		)
-	)
-	(global_label "GND"
-		(shape input)
-		(at 149.86 146.05 270)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "8f321972-c74b-4d64-851e-8300c466f165")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 149.86 152.9057 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7708,28 +8557,6 @@
 		(uuid "a27560db-f508-45fe-aebd-678a414951b4")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 275.3699 78.74 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-				(hide yes)
-			)
-		)
-	)
-	(global_label "5V_intMicroSD"
-		(shape input)
-		(at 233.68 129.54 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "a2e41ce0-dee4-4791-a86c-3184a20c9fea")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 249.9699 129.54 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7935,6 +8762,50 @@
 			)
 		)
 	)
+	(global_label "LED"
+		(shape input)
+		(at 149.86 133.35 90)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "b6466655-69ac-4d67-b43e-be98083dcf0b")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 149.86 126.9177 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+	)
+	(global_label "GND"
+		(shape input)
+		(at 194.31 36.83 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "b6938d02-15d3-4791-b542-e79e991fcb87")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 201.1657 36.83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+	)
 	(global_label "PH3_out"
 		(shape input)
 		(at 142.24 52.07 180)
@@ -8080,6 +8951,28 @@
 		(uuid "cfed9f8d-0cfd-4571-8646-e91f7f6bb622")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 162.5212 105.41 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+	)
+	(global_label "CS"
+		(shape input)
+		(at 194.31 49.53 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "d058f995-ade5-432e-ae84-a4e99516a0d3")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 199.7747 49.53 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8276,6 +9169,28 @@
 		(uuid "eadde485-ec46-4f30-8e1a-7dcd38e4b3cc")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 264.1214 92.71 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+	)
+	(global_label "MISO"
+		(shape input)
+		(at 194.31 41.91 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "eb82a9dd-c8df-416c-b565-c21f6cfb7d64")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 201.8914 41.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9477,6 +10392,230 @@
 		)
 	)
 	(symbol
+		(lib_id "Jumper:SolderJumper_2_Bridged")
+		(at 233.68 125.73 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "5aa1ea18-e2e3-409f-bb7e-96950a443835")
+		(property "Reference" "JP2"
+			(at 236.22 124.4599 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "INT MICROSD JUMPER"
+			(at 236.22 126.9999 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Bridged_Pad1.0x1.5mm"
+			(at 233.68 125.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 233.68 125.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Solder Jumper, 2-pole, closed/bridged"
+			(at 233.68 125.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "a03f6134-276f-400a-ac01-c2216d96fb66")
+		)
+		(pin "2"
+			(uuid "0fef1ae2-c011-4743-9d00-a73ea3d0262f")
+		)
+		(instances
+			(project "Mini-SMD"
+				(path "/596d0583-1d97-453e-b84c-75eed809afa2"
+					(reference "JP2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x06_Pin")
+		(at 189.23 41.91 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "6044920a-5bbe-4578-9cf5-187fdd0a176b")
+		(property "Reference" "J5"
+			(at 189.865 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Ext. MicroSD module"
+			(at 189.865 34.29 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical"
+			(at 189.23 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 189.23 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 189.23 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "4"
+			(uuid "e013f10d-288d-44eb-80b6-b78ee975cdb8")
+		)
+		(pin "5"
+			(uuid "58da61b1-09e9-41b4-af30-92f25ae135cc")
+		)
+		(pin "3"
+			(uuid "944ac697-4512-4f28-ad3b-d42d23212925")
+		)
+		(pin "6"
+			(uuid "22b9680d-99a9-47f1-81ab-ce8f5508b57d")
+		)
+		(pin "1"
+			(uuid "5e07a945-582e-4473-8963-17729fe61f27")
+		)
+		(pin "2"
+			(uuid "9cf1a9c2-bbb5-47c4-9f51-e30038f11cf7")
+		)
+		(instances
+			(project "Mini-SMD"
+				(path "/596d0583-1d97-453e-b84c-75eed809afa2"
+					(reference "J5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "Conn_01x02_Pin_1")
+		(lib_id "Connector:Conn_01x02_Pin")
+		(at 165.1 151.13 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "65666080-8fcb-44b2-b8fa-c82793fbc95f")
+		(property "Reference" "J6"
+			(at 160.02 150.495 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "2-pin header"
+			(at 162.56 150.495 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
+			(at 165.1 151.13 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 165.1 151.13 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Ext. LED"
+			(at 165.1 151.13 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" ""
+			(at 165.1 151.13 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "55964af0-8f09-4d36-bdbd-2470e0855050")
+		)
+		(pin "2"
+			(uuid "438eadb6-23ab-46bf-b8c1-d55a896bce41")
+		)
+		(instances
+			(project "Mini-SMD"
+				(path "/596d0583-1d97-453e-b84c-75eed809afa2"
+					(reference "J6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "e-radionica.com schematics:HYC77-TF09-200")
 		(at 262.89 41.91 0)
 		(unit 1)
@@ -10015,6 +11154,76 @@
 		)
 	)
 	(symbol
+		(lib_id "Jumper:SolderJumper_2_Bridged")
+		(at 149.86 137.16 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "88e1f415-71ab-4199-86ba-469548a000d8")
+		(property "Reference" "JP1"
+			(at 152.4 135.8899 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "INT/EXT LED JUMPER"
+			(at 152.4 138.4299 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "Jumper:SolderJumper-2_P1.3mm_Bridged_Pad1.0x1.5mm"
+			(at 149.86 137.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 149.86 137.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Solder Jumper, 2-pole, closed/bridged"
+			(at 149.86 137.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ce1313a9-14ef-4eb6-b486-e45e490dd6ac")
+		)
+		(pin "2"
+			(uuid "28f6c679-4124-44ea-a167-27d4a8b98f41")
+		)
+		(instances
+			(project "Mini-SMD"
+				(path "/596d0583-1d97-453e-b84c-75eed809afa2"
+					(reference "JP1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Isolator:PC817")
 		(at 91.44 52.07 0)
 		(unit 1)
@@ -10103,7 +11312,7 @@
 	)
 	(symbol
 		(lib_id "Device:R_US")
-		(at 149.86 134.62 180)
+		(at 149.86 144.78 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -10112,7 +11321,7 @@
 		(fields_autoplaced yes)
 		(uuid "924d3487-298e-438a-a891-062d5c0b9424")
 		(property "Reference" "R7"
-			(at 152.4 133.3499 0)
+			(at 152.4 143.5099 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10121,7 +11330,7 @@
 			)
 		)
 		(property "Value" "150"
-			(at 152.4 135.8899 0)
+			(at 152.4 146.0499 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10130,7 +11339,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 148.844 134.366 90)
+			(at 148.844 144.526 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10139,7 +11348,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 149.86 134.62 0)
+			(at 149.86 144.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10148,7 +11357,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 149.86 134.62 0)
+			(at 149.86 144.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10156,7 +11365,7 @@
 			)
 		)
 		(property "LCSC" "C22808"
-			(at 149.86 134.62 0)
+			(at 149.86 144.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10171,7 +11380,7 @@
 			(uuid "a34254a7-c894-4a5a-a2a2-672d31201340")
 		)
 		(instances
-			(project "Small-atmega-SMD"
+			(project "Mini-SMD"
 				(path "/596d0583-1d97-453e-b84c-75eed809afa2"
 					(reference "R7")
 					(unit 1)
@@ -10322,7 +11531,7 @@
 	)
 	(symbol
 		(lib_id "Device:LED")
-		(at 149.86 142.24 90)
+		(at 149.86 152.4 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -10331,7 +11540,7 @@
 		(fields_autoplaced yes)
 		(uuid "a0d6915a-52d7-4cf8-b26c-b25eaecaefd3")
 		(property "Reference" "D3"
-			(at 153.67 142.5574 90)
+			(at 153.67 152.7174 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10340,7 +11549,7 @@
 			)
 		)
 		(property "Value" "LED"
-			(at 153.67 145.0974 90)
+			(at 153.67 155.2574 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10349,7 +11558,7 @@
 			)
 		)
 		(property "Footprint" "LED_THT:LED_D3.0mm"
-			(at 149.86 142.24 0)
+			(at 149.86 152.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10358,7 +11567,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 149.86 142.24 0)
+			(at 149.86 152.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10367,7 +11576,7 @@
 			)
 		)
 		(property "Description" "Blue LED, 3mm, 3.3V 20mA"
-			(at 149.86 142.24 0)
+			(at 149.86 152.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10375,7 +11584,7 @@
 			)
 		)
 		(property "LCSC" "C5875763"
-			(at 149.86 142.24 0)
+			(at 149.86 152.4 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10390,7 +11599,7 @@
 			(uuid "b3efbb72-18ba-4bfa-9393-db2515277daf")
 		)
 		(instances
-			(project "Small-atmega-SMD"
+			(project "Mini-SMD"
 				(path "/596d0583-1d97-453e-b84c-75eed809afa2"
 					(reference "D3")
 					(unit 1)

@@ -12900,13 +12900,13 @@
 		)
 	)
 	(gr_text "CS\nSCK\nMOSI\nMISO\n5V\nGND"
-		(at 158.06 133.9 90)
+		(at 158.51 133.86 90)
 		(layer "F.SilkS")
 		(uuid "3fecd8ce-62ca-48a4-bd63-8879b6194fe2")
 		(effects
 			(font
-				(size 1.5 1.5)
-				(thickness 0.3)
+				(size 1.55 1.55)
+				(thickness 0.31)
 				(bold yes)
 			)
 			(justify left bottom)
