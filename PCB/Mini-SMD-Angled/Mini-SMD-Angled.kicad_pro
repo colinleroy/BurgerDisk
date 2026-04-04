@@ -58,6 +58,22 @@
           ""
         ],
         [
+          "lib_footprint_mismatch|117052000|114486500|fad2a85c-e29d-45c3-bbd0-92b0a2964b27|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "lib_footprint_mismatch|118834500|121054000|81092cfd-5b95-4490-b244-a7fd3980af69|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "lib_footprint_mismatch|137359854|65433000|2383e0b0-6894-4eb9-b4e8-c126651c3206|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "lib_footprint_mismatch|140867800|46117100|01bf4f74-317f-48c4-83cf-16ece83e615e|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
           "silk_edge_clearance|124406200|140258800|0d09a5c9-4b38-4e45-a696-092f91273fa3|aef75fa6-495f-4328-a1ed-711c9ded3adb",
           ""
         ],
@@ -468,7 +484,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "Small-atmega-SMD-angled.kicad_pro",
+    "filename": "Mini-SMD-Angled.kicad_pro",
     "version": 3
   },
   "net_settings": {
