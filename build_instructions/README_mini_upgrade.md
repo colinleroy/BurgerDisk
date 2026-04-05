@@ -71,4 +71,7 @@ both to the PCB.
 
 ![The result](./pictures/mini-upgrade/done.jpeg)
 
-You're done!
+Let the IDC-20 cable through its slot, close the enclosure and screw it shut.
+![The cable's path](./pictures/mini-upgrade/cable-slot.jpeg)
+
+Add the LED diffuser, the logo and feet to the enclosure. You're done!
