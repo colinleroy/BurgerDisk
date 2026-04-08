@@ -37,9 +37,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 2.2,
-          "height": 2.2,
-          "width": 2.2
+          "drill": 1.0,
+          "height": 1.6,
+          "width": 1.6
         },
         "silk_line_width": 0.1,
         "silk_text_italic": false,
@@ -51,48 +51,26 @@
           "min_clearance": 0.5
         }
       },
-      "diff_pair_dimensions": [
-        {
-          "gap": 0.0,
-          "via_gap": 0.0,
-          "width": 0.0
-        }
-      ],
+      "diff_pair_dimensions": [],
       "drc_exclusions": [
         [
-          "courtyards_overlap|123493114|136856059|204e7943-4e72-4209-b0a3-244689c9141a|2c47bdc8-34e7-4b53-a5d0-e993dbfa5c80",
+          "copper_edge_clearance|165128400|43564000|5919b6db-0679-4aad-8449-add58da216f9|97c503a0-eb7e-4d18-9a4d-3a33370548dc",
           ""
         ],
         [
-          "courtyards_overlap|129525000|110479000|81092cfd-5b95-4490-b244-a7fd3980af69|91cbeeb0-d661-41b7-af5a-b96837a446be",
+          "lib_footprint_mismatch|108490000|69127500|c7730239-59c3-4c88-bf36-ec16ed3b8c02|00000000-0000-0000-0000-000000000000",
           ""
         ],
         [
-          "courtyards_overlap|140606000|100538554|6822ea38-398e-4a6f-9352-351006a5ea7e|91cbeeb0-d661-41b7-af5a-b96837a446be",
+          "lib_footprint_mismatch|129608000|67418000|3dab91f0-11ab-45ad-934a-0f3b8ece9c36|00000000-0000-0000-0000-000000000000",
           ""
         ],
         [
-          "courtyards_overlap|140630331|138307227|204e7943-4e72-4209-b0a3-244689c9141a|7bc7c5a4-8788-4620-87e2-5f2890080b03",
+          "lib_footprint_mismatch|141915000|65525000|2383e0b0-6894-4eb9-b4e8-c126651c3206|00000000-0000-0000-0000-000000000000",
           ""
         ],
         [
-          "lib_footprint_mismatch|124810000|114790000|fad2a85c-e29d-45c3-bbd0-92b0a2964b27|00000000-0000-0000-0000-000000000000",
-          ""
-        ],
-        [
-          "lib_footprint_mismatch|132312500|114424000|81092cfd-5b95-4490-b244-a7fd3980af69|00000000-0000-0000-0000-000000000000",
-          ""
-        ],
-        [
-          "lib_footprint_mismatch|132461000|104679600|91cbeeb0-d661-41b7-af5a-b96837a446be|00000000-0000-0000-0000-000000000000",
-          ""
-        ],
-        [
-          "silk_edge_clearance|124406200|140258800|ac5c6667-263e-4951-8192-ca4681b431cd|aef75fa6-495f-4328-a1ed-711c9ded3adb",
-          ""
-        ],
-        [
-          "silk_edge_clearance|139906200|140258800|ac5c6667-263e-4951-8192-ca4681b431cd|73cfb86d-b879-497b-a411-5c74f59a8197",
+          "silk_edge_clearance|163395600|43391800|75c9d395-8a6f-40b5-8c45-d5468797c2ed|23862545-223d-48d5-9461-4a051da260db",
           ""
         ]
       ],
@@ -223,9 +201,7 @@
           "td_width_to_size_filter_ratio": 0.9
         }
       ],
-      "track_widths": [
-        0.0
-      ],
+      "track_widths": [],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
           "corner_radius_percentage": 80,
@@ -252,12 +228,7 @@
           "spacing": 0.6
         }
       },
-      "via_dimensions": [
-        {
-          "diameter": 0.0,
-          "drill": 0.0
-        }
-      ],
+      "via_dimensions": [],
       "zones_allow_external_fillets": false
     },
     "ipc2581": {
@@ -501,7 +472,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "MicroSD-module.kicad_pro",
+    "filename": "BurgerDisk-SMD-Angled.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -568,6 +539,10 @@
       {
         "netclass": "Power",
         "pattern": "3V3"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "5V_intMicroSD"
       }
     ]
   },
@@ -579,7 +554,7 @@
       "plot": "",
       "pos_files": "",
       "specctra_dsn": "",
-      "step": "Small-atmega-SMD.step",
+      "step": "../../../../BurgerDisk-SMD.stl",
       "svg": "",
       "vrml": ""
     },
@@ -649,12 +624,54 @@
           "label": "Datasheet",
           "name": "Datasheet",
           "show": true
+        },
+        {
+          "group_by": false,
+          "label": "LCSC",
+          "name": "LCSC",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Ref",
+          "name": "Ref",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Sim.Device",
+          "name": "Sim.Device",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Sim.Pins",
+          "name": "Sim.Pins",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Field6",
+          "name": "Field6",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Description",
+          "name": "Description",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "#",
+          "name": "${ITEM_NUMBER}",
+          "show": false
         }
       ],
       "filter_string": "",
       "group_symbols": true,
       "include_excluded_from_bom": true,
-      "name": "Default Editing",
+      "name": "",
       "sort_asc": true,
       "sort_field": "Reference"
     },

@@ -5,7 +5,7 @@
     "auto_track_width": false,
     "hidden_netclasses": [],
     "hidden_nets": [],
-    "high_contrast_mode": 0,
+    "high_contrast_mode": 1,
     "net_color_mode": 1,
     "opacity": {
       "images": 0.6,
@@ -58,7 +58,7 @@
     "ssh_key": ""
   },
   "meta": {
-    "filename": "Mini-SMD-Angled.kicad_prl",
+    "filename": "BurgerDisk-SMD-Angled.kicad_prl",
     "version": 5
   },
   "net_inspector_panel": {
