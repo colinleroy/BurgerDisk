@@ -243,18 +243,29 @@ static int get_device_partition(int device_id) {
 }
 
 // Helper to extract the block number from the Smartport packet
-static unsigned long int smartport_get_block_num_from_buf(void) {
+static unsigned long int smartport_get_block_num_from_buf(unsigned char extended) {
   unsigned long int block_num;
-  unsigned char LBH, LBL, LBN, LBT;
+  unsigned char LBE, LBH, LBL, LBN, LBT;
 
-  LBH = packet_buffer[16]; //high order bits
-  LBN = packet_buffer[19]; //block number low
-  LBL = packet_buffer[20]; //block number middle
-  LBT = packet_buffer[21]; //block number high
-
-  block_num = (LBN & 0x7f) | (((unsigned short)LBH << 3) & 0x80);
-  block_num = block_num + ( ((unsigned long)((LBL & 0x7f) | (((unsigned short)LBH << 4) & 0x80))) << 8);
-  block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 16);
+  if (!extended) {
+    LBH = packet_buffer[16]; //high order bits
+    LBN = packet_buffer[19]; //block number low
+    LBL = packet_buffer[20]; //block number middle
+    LBT = packet_buffer[21]; //block number high
+    block_num = (LBN & 0x7f) | (((unsigned short)LBH << 3) & 0x80);
+    block_num = block_num + ( ((unsigned long)((LBL & 0x7f) | (((unsigned short)LBH << 4) & 0x80))) << 8);
+    block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 16);
+  } else {
+    LBH = packet_buffer[16]; //high order bits
+    LBN = packet_buffer[18]; //block number low
+    LBL = packet_buffer[19]; //block number middle
+    LBT = packet_buffer[20]; //block number high
+    LBE = packet_buffer[21]; //extra block number
+    block_num = (LBN & 0x7f) | (((unsigned short)LBH << 2) & 0x80);
+    block_num = block_num + ( ((unsigned long)((LBL & 0x7f) | (((unsigned short)LBH << 3) & 0x80))) << 8);
+    block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 4) & 0x80))) << 16);
+    block_num = block_num + ( ((unsigned long)((LBE & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 24);
+  }
 
   return block_num;
 }
@@ -349,13 +360,13 @@ static void smartport_answer_status(int partition, unsigned char extended) {
 }
 
 //Smartport READ handler
-static void smartport_read_block(int partition) {
+static void smartport_read_block(int partition, unsigned char extended) {
   unsigned long int block_num;
   unsigned char status = 0x00;
 
-  block_num = smartport_get_block_num_from_buf();
+  block_num = smartport_get_block_num_from_buf(extended);
 
-  DEBUG_CMD('R', devices[partition].device_id, block_num);
+  DEBUG_CMD(extended?'R':'r', devices[partition].device_id, block_num);
 
   if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
     log_io_err(F("Seek"), partition, block_num);
@@ -375,25 +386,28 @@ reply:
   if (status != 0x00)
     DEBUG_CMD('E', devices[partition].device_id, status);
 
-  encode_data_packet(devices[partition].device_id, 0, status);
+  encode_data_packet(devices[partition].device_id, extended, status);
 
   SendPacket( (unsigned char*) packet_buffer);
 }
 
 //Smartport WRITE handler
-static void smartport_write_block(int partition) {
+static void smartport_write_block(int partition, unsigned char extended) {
   unsigned long int block_num;
   int status = 0;
 
-  block_num = smartport_get_block_num_from_buf();
+  block_num = smartport_get_block_num_from_buf(extended);
 
-  DEBUG_CMD('W', devices[partition].device_id, block_num);
+  DEBUG_CMD(extended?'W':'w', devices[partition].device_id, block_num);
 
   //get write data packet
   ReceivePacket( (unsigned char*) packet_buffer);
   AckPacket();
 
-  status = decode_data_packet();
+  DumpPacket(packet_buffer+11, 0);
+  LOGN("Numodds",packet_buffer[11]&0x7F,DEC);
+  LOGN("Numgrps",packet_buffer[12]&0x7F,DEC);
+  status = decode_data_packet(extended);
   if (status == 0) {
     if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
       log_io_err(F("Seek"), partition, block_num);
@@ -418,7 +432,7 @@ reply:
     DEBUG_CMD('E', devices[partition].device_id, status);
 
   //now return status code to host
-  encode_write_status_packet(devices[partition].device_id, status);
+  encode_write_status_packet(devices[partition].device_id, extended, status);
   SendPacket( (unsigned char*) packet_buffer);
 }
 
@@ -536,20 +550,26 @@ void loop() {
         smartport_answer_status(partition, 1);
         break;
 
-      case SP_EXT_READ:
       case SP_READ:
-        smartport_read_block(partition);
+        smartport_read_block(partition, 0);
+        break;
+
+      case SP_EXT_READ:
+        smartport_read_block(partition, 1);
         break;
 
       case SP_WRITE:
-        smartport_write_block(partition);
+        smartport_write_block(partition, 0);
+        break;
+
+      case SP_EXT_WRITE:
+        smartport_write_block(partition, 1);
         break;
 
       case SP_FORMAT:
         smartport_format(partition);
         break;
 
-      case SP_EXT_WRITE:
       case SP_EXT_FORMAT:
       case SP_EXT_INIT:
       default:

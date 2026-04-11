@@ -117,7 +117,7 @@ void encode_data_packet (unsigned char source, unsigned char extended, unsigned 
 // decodes the data from the packet_buffer IN-PLACE!
 //*****************************************************************************
 #pragma GCC optimize("-O3")
-int decode_data_packet (void)
+int decode_data_packet (unsigned char extended)
 {
   int grpbyte, count;
   unsigned char numgrps, numodd;
@@ -128,6 +128,7 @@ int decode_data_packet (void)
   //Handle arbitrary length packets :)
   numodd = packet_buffer[11] & 0x7f;
   numgrps = packet_buffer[12] & 0x7f;
+  num_final_bytes = numodd + (numgrps * 7);
 
   // First, checksum  packet header, because we're about to destroy it
   for (count = 6; count < 13; count++) {
@@ -135,19 +136,18 @@ int decode_data_packet (void)
     checksum ^= packet_buffer[count];
   }
 
-  evenbits = packet_buffer[599] & 0x55;
-  oddbits = (packet_buffer[600] & 0x55 ) << 1;
+  evenbits = packet_buffer[numgrps*8 + 13 + numodd + (numodd != 0)] & 0x55;
+  oddbits = (packet_buffer[numgrps*8 + 14 + numodd + (numodd != 0)] & 0x55 ) << 1;
 
   //add oddbyte(s), 1 in a 512 data packet
   for(int i = 0; i < numodd; i++) {
     packet_buffer[i] = ((packet_buffer[13] << (i+1)) & 0x80) | (packet_buffer[14+i] & 0x7f);
+    checksum ^= packet_buffer[i];
   }
 
   // 73 grps of 7 in a 512 byte packet
-  src = packet_buffer + 15;
-  num_final_bytes = 1 + (numgrps * 7);
+  src = packet_buffer + 12 + numodd + (numodd != 0) + 1;
   out_byte = 0;
-  checksum ^= packet_buffer[out_byte];
   while (out_byte < num_final_bytes) {
     for (grpbyte = 1; grpbyte < 8; grpbyte++) {
       bit7 = (src[0] << grpbyte) & 0x80;
@@ -176,13 +176,13 @@ int decode_data_packet (void)
 // Description: this is the reply to the write block data packet. The reply
 // indicates the status of the write block cmd.
 //*****************************************************************************
-void encode_write_status_packet(unsigned char source, unsigned char status)
+void encode_write_status_packet(unsigned char source, unsigned char extended, unsigned char status)
 {
   int count;
   unsigned char checksum = 0;
 
   init_packet_buffer(source);
-  packet_buffer[9]  = 0x81; //TYPE
+  packet_buffer[9]  = extended ? 0xC1 : 0x81; //TYPE
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = status | 0x80; //STAT
   packet_buffer[12] = 0x80; //ODDCNT
@@ -432,7 +432,7 @@ void encode_status_dib_reply_packet (unsigned char device_id, unsigned long bloc
   data[19] = ' ';
   data[20] = ' ';  //ID string (16 chars total)
   data[21] = 0x02; //Device type    - 0x02  harddisk
-  data[22] = 0x00; //Device Subtype - 0x00 Removable media
+  data[22] = 0x80; //Device Subtype - 0x00 Removable media, 0x80 extended smartport
   data[23] = 0x01; //Firmware version 2 bytes
   data[24] = 0x0f; //
 

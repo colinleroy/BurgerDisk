@@ -4,8 +4,8 @@
 extern "C" {
 
 void encode_data_packet (unsigned char source, unsigned char extended, unsigned char status);   //encode smartport 512 byte data packet
-int  decode_data_packet (void);                   //decode smartport 512 byte data packet
-void encode_write_status_packet(unsigned char source, unsigned char status);
+int  decode_data_packet (unsigned char extended);                   //decode smartport 512 byte data packet
+void encode_write_status_packet(unsigned char source, unsigned char extended, unsigned char status);
 void encode_init_reply_packet (unsigned char source, unsigned char status);
 void encode_status_reply_packet (unsigned char device_id, unsigned long blocks);
 void encode_extended_status_reply_packet (unsigned char device_id, unsigned long blocks);
