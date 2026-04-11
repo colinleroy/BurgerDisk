@@ -54,7 +54,7 @@ static void init_packet_buffer(unsigned char source) {
 // requires the data to be in the packet buffer, and builds the smartport
 // packet IN PLACE in the packet buffer
 //*****************************************************************************
-void encode_data_packet (unsigned char source, unsigned char extended)
+void encode_data_packet (unsigned char source, unsigned char extended, unsigned char status)
 {
   int count;
   signed char grpbyte, grpcount;
@@ -91,7 +91,7 @@ void encode_data_packet (unsigned char source, unsigned char extended)
   init_packet_buffer(source);
   packet_buffer[9]  = extended ? 0xC2 : 0x82; //TYPE - 0x82 = data / C2 = extended
   packet_buffer[10] = 0x80; //AUX
-  packet_buffer[11] = 0x80; //STAT
+  packet_buffer[11] = 0x80 | status; //STAT
   packet_buffer[12] = 0x81; //ODDCNT  - 1 odd byte for 512 byte packet
   packet_buffer[13] = 0xC9; //GRP7CNT - 73 groups of 7 bytes for 512 byte packet
 
@@ -262,7 +262,7 @@ void encode_status_reply_packet (unsigned char device_id, unsigned long blocks)
   //Bit 2: Media write protected
   //Bit 1: Currently interrupting (//c only)
   //Bit 0: Currently open (char devices only)
-  data[0] = 0b11111000;
+  data[0] = blocks > 0 ? 0b11111000 : 0b11101000;
   //Disk size
   data[1] = blocks & 0xff;
   data[2] = (blocks >> 8 ) & 0xff;
@@ -325,7 +325,7 @@ void encode_extended_status_reply_packet (unsigned char device_id, unsigned long
   //Bit 2: Media write protected
   //Bit 1: Currently interrupting (//c only)
   //Bit 0: Currently open (char devices only)
-  data[0] = 0b11111000;
+  data[0] = blocks > 0 ? 0b11111000 : 0b11101000;
   //Disk size
   data[1] = blocks & 0xff;
   data[2] = (blocks >> 8 ) & 0xff;
@@ -409,7 +409,7 @@ void encode_status_dib_reply_packet (unsigned char device_id, unsigned long bloc
   oddnum=4;
 
   //* write data buffer first (25 bytes) 3 grp7 + 4 odds
-  data[0]  = 0xf8; //general status - f8 = 11111000
+  data[0] = blocks > 0 ? 0b11111000 : 0b11101000;
   //number of blocks =0x00ffff = 65525 or 32mb
   data[1]  = blocks & 0xff; //block size 1
   data[2]  = (blocks >> 8 ) & 0xff; //block size 2
@@ -432,7 +432,7 @@ void encode_status_dib_reply_packet (unsigned char device_id, unsigned long bloc
   data[19] = ' ';
   data[20] = ' ';  //ID string (16 chars total)
   data[21] = 0x02; //Device type    - 0x02  harddisk
-  data[22] = 0x20; //Device Subtype - 0x0a
+  data[22] = 0x00; //Device Subtype - 0x00 Removable media
   data[23] = 0x01; //Firmware version 2 bytes
   data[24] = 0x0f; //
 

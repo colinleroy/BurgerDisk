@@ -92,20 +92,29 @@ static void log_io_err(const __FlashStringHelper *op, int partition, int block_n
   Serial.print(partition);
   Serial.print(F(", block "));
   Serial.println(block_num);
+
+  deinit_storage();
+  init_storage();
 }
 
-//SD card init and images opening
-static int storage_init_done = 0;
-static int storage_init_error = 0;
+static void deinit_storage(void) {
+  // cleanup previous possibly opened files
+  while (open_partitions > 0) {
+    open_partitions--;
+    if (devices[open_partitions].sdf.isOpen()) {
+      devices[open_partitions].sdf.close();
+      devices[open_partitions].blocks = 0;
+    }
+  }
+}
 
 static void init_storage(void) {
-  if (storage_init_done) {
+  if (!sdcard.begin(SD_CONFIG)) {
+    LOG(F("SD card init error."));
     return;
   }
 
-  if (!sdcard.begin(SD_CONFIG)) {
-    LOG(F("SD card init error."));
-    storage_init_error = 1;
+  if (open_partitions > 0) {
     return;
   }
 
@@ -185,12 +194,6 @@ static void init_storage(void) {
   packet_buffer = (unsigned char *)malloc(605);
   memset(packet_buffer, 0, 605);
   DEBUGN(F("Free memory now "), freeMemory(), DEC);
-
-  storage_init_done = 1;
-
-  if (open_partitions == 0) {
-    storage_init_error = 1;
-  }
 }
 
 //Arduino boot setup - serial, pinmodes.
@@ -313,11 +316,7 @@ static void smartport_device_reset(void) {
   device_init_done = 0;
   never_got_reset = 0;
 
-  //clear device_id table
-  for (int partition = 0; partition < MAX_PARTITIONS; partition++) {
-    devices[partition].device_id = 0;
-  }
-
+  deinit_storage();
   daisy_diskII_disable();
 
   // Ready. Wait for reset to clear
@@ -352,19 +351,31 @@ static void smartport_answer_status(int partition, unsigned char extended) {
 //Smartport READ handler
 static void smartport_read_block(int partition) {
   unsigned long int block_num;
+  unsigned char status = 0x00;
+
   block_num = smartport_get_block_num_from_buf();
 
   DEBUG_CMD('R', devices[partition].device_id, block_num);
 
   if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
     log_io_err(F("Seek"), partition, block_num);
+    status = 0x27;
+    goto reply;
   }
 
   //Read block from SD Card
-  if (!devices[partition].sdf.read((unsigned char*) packet_buffer, 512)) {
+  if (devices[partition].sdf.read((unsigned char*) packet_buffer, 512) != 512) {
     log_io_err(F("Read"), partition, block_num);
+    status = 0x27;
   }
-  encode_data_packet(devices[partition].device_id, 0);
+reply:
+  if (!devices[partition].sdf.isOpen()) {
+    status = 0x2F;
+  }
+  if (status != 0x00)
+    DEBUG_CMD('E', devices[partition].device_id, status);
+
+  encode_data_packet(devices[partition].device_id, 0, status);
 
   SendPacket( (unsigned char*) packet_buffer);
 }
@@ -372,6 +383,7 @@ static void smartport_read_block(int partition) {
 //Smartport WRITE handler
 static void smartport_write_block(int partition) {
   unsigned long int block_num;
+  int status = 0;
 
   block_num = smartport_get_block_num_from_buf();
 
@@ -380,21 +392,30 @@ static void smartport_write_block(int partition) {
   //get write data packet
   ReceivePacket( (unsigned char*) packet_buffer);
   AckPacket();
-  int status = decode_data_packet();
+
+  status = decode_data_packet();
   if (status == 0) {
     if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
       log_io_err(F("Seek"), partition, block_num);
-      goto err;
+      goto err_write;
     }
     // Write block to SD Card
-    if (!devices[partition].sdf.write((unsigned char*) packet_buffer, 512)) {
+    if (devices[partition].sdf.write((unsigned char*) packet_buffer, 512) != 512) {
       log_io_err(F("Write"), partition, block_num);
-err:
-      status = 6;
+err_write:
+      status = 0x27;
     }
   } else {
     // Checksum is wrong!
+    status = 0x06;
   }
+
+reply:
+  if (!devices[partition].sdf.isOpen()) {
+    status = 0x2F;
+  }
+  if (status != 0x00)
+    DEBUG_CMD('E', devices[partition].device_id, status);
 
   //now return status code to host
   encode_write_status_packet(devices[partition].device_id, status);
@@ -416,17 +437,17 @@ static void smartport_init(unsigned char dev_id) {
   number_partitions_initialised++;
 
   // now we have time to init our partitions before acking
-  if (!storage_init_done) {
+  if (!device_init_done) {
     identifier = (dev_id &~ 0x80) + '0';
     init_storage();
   }
 
-  if (number_partitions_initialised < open_partitions) { //are all init'd yet
+  if (number_partitions_initialised < MAX_PARTITIONS) { //are all init'd yet
     status = 0x80;
   } else {
     status = (DAISY_HDSEL_IS_LOW || force_next_smartport) ? 0x80 : 0xFF;
-    device_init_done = 1; //Mark init done
-    number_partitions_initialised = 0; // Reset variable for potential next INIT
+    device_init_done = 1;               //Mark init done
+    number_partitions_initialised = 0;  // Reset variable for potential next INIT
   }
   encode_init_reply_packet(dev_id, status);
 
@@ -457,7 +478,7 @@ void loop() {
       daisy_ph3_mirror();
     }
 
-    if (storage_init_error != 0) {
+    if (open_partitions == 0) {
       led_err();
     }
 
@@ -468,16 +489,11 @@ void loop() {
     case SP_BUS_RESET:
       daisy_ph3_disable();
       smartport_device_reset();
+      device_init_done = 0;
       break;
 
     case SP_BUS_ENABLED:
       daisy_diskII_disable();
-
-      if (storage_init_error != 0) {
-        // We couldn't init the SD card, so do absolutely nothing else
-        // than disable dumb disk drives.
-        break;
-      }
 
       // We can come back here after handling a previous smartport packet, as
       // it happens the bus stays enabled a bit longer. ReceivePacket() will
