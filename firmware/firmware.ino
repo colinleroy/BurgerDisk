@@ -370,14 +370,14 @@ static void smartport_read_block(int partition, unsigned char extended) {
 
   if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
     log_io_err(F("Seek"), partition, block_num);
-    status = 0x27;
+    status = 0x2D; //BADBLOCK
     goto reply;
   }
 
   //Read block from SD Card
   if (devices[partition].sdf.read((unsigned char*) packet_buffer, 512) != 512) {
     log_io_err(F("Read"), partition, block_num);
-    status = 0x27;
+    status = 0x27; //IOERROR
   }
 reply:
   if (!devices[partition].sdf.isOpen()) {
@@ -395,6 +395,7 @@ reply:
 static void smartport_write_block(int partition, unsigned char extended) {
   unsigned long int block_num;
   int status = 0;
+  unsigned int numodd, numgrps, bytes_to_write;
 
   block_num = smartport_get_block_num_from_buf(extended);
 
@@ -404,9 +405,21 @@ static void smartport_write_block(int partition, unsigned char extended) {
   ReceivePacket( (unsigned char*) packet_buffer);
   AckPacket();
 
-  DumpPacket(packet_buffer+11, 0);
-  LOGN("Numodds",packet_buffer[11]&0x7F,DEC);
-  LOGN("Numgrps",packet_buffer[12]&0x7F,DEC);
+  numodd  = packet_buffer[11]&0x7F;
+  numgrps = packet_buffer[12]&0x7F;
+  bytes_to_write = numodd + numgrps*7;
+
+  if (debug) {
+    LOGN("Numodds ",packet_buffer[11]&0x7F, DEC);
+    LOGN("Numgrps ",packet_buffer[12]&0x7F, DEC);
+    LOGN("bytes   ", bytes_to_write, DEC);
+  }
+
+  if (bytes_to_write != 512) {
+    status = 0x2D;
+    goto reply;
+  }
+
   status = decode_data_packet(extended);
   if (status == 0) {
     if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
@@ -414,7 +427,7 @@ static void smartport_write_block(int partition, unsigned char extended) {
       goto err_write;
     }
     // Write block to SD Card
-    if (devices[partition].sdf.write((unsigned char*) packet_buffer, 512) != 512) {
+    if (devices[partition].sdf.write((unsigned char*) packet_buffer, bytes_to_write) != bytes_to_write) {
       log_io_err(F("Write"), partition, block_num);
 err_write:
       status = 0x27;

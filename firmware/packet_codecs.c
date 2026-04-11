@@ -89,7 +89,7 @@ void encode_data_packet (unsigned char source, unsigned char extended, unsigned 
   packet_buffer[15] = packet_buffer[0] | 0x80;
 
   init_packet_buffer(source);
-  packet_buffer[9]  = extended ? 0xC2 : 0x82; //TYPE - 0x82 = data / C2 = extended
+  packet_buffer[9]  = 0x82; //TYPE DATA
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0x80 | status; //STAT
   packet_buffer[12] = 0x81; //ODDCNT  - 1 odd byte for 512 byte packet
@@ -139,28 +139,31 @@ int decode_data_packet (unsigned char extended)
   evenbits = packet_buffer[numgrps*8 + 13 + numodd + (numodd != 0)] & 0x55;
   oddbits = (packet_buffer[numgrps*8 + 14 + numodd + (numodd != 0)] & 0x55 ) << 1;
 
+  out_byte = 0;
+
   //add oddbyte(s), 1 in a 512 data packet
   for(int i = 0; i < numodd; i++) {
     packet_buffer[i] = ((packet_buffer[13] << (i+1)) & 0x80) | (packet_buffer[14+i] & 0x7f);
     checksum ^= packet_buffer[i];
+    out_byte++;
   }
 
   // 73 grps of 7 in a 512 byte packet
   src = packet_buffer + 12 + numodd + (numodd != 0) + 1;
-  out_byte = 0;
-  while (out_byte < num_final_bytes) {
+  while (1) {
     for (grpbyte = 1; grpbyte < 8; grpbyte++) {
       bit7 = (src[0] << grpbyte) & 0x80;
       bit0to6 = (src[grpbyte]) & 0x7f;
-      out_byte++;
       packet_buffer[out_byte] = bit7 | bit0to6;
-      if (out_byte < 512) {
-        checksum ^= packet_buffer[out_byte];
+      checksum ^= packet_buffer[out_byte];
+      out_byte++;
+      if (out_byte == num_final_bytes) {
+        goto done;
       }
     }
     src += 8;
   }
-
+done:
   if (checksum == (oddbits | evenbits))
     return 0; //noerror
   else
@@ -182,7 +185,7 @@ void encode_write_status_packet(unsigned char source, unsigned char extended, un
   unsigned char checksum = 0;
 
   init_packet_buffer(source);
-  packet_buffer[9]  = extended ? 0xC1 : 0x81; //TYPE
+  packet_buffer[9]  = 0x81; //TYPE
   packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = status | 0x80; //STAT
   packet_buffer[12] = 0x80; //ODDCNT
@@ -432,7 +435,7 @@ void encode_status_dib_reply_packet (unsigned char device_id, unsigned long bloc
   data[19] = ' ';
   data[20] = ' ';  //ID string (16 chars total)
   data[21] = 0x02; //Device type    - 0x02  harddisk
-  data[22] = 0x80; //Device Subtype - 0x00 Removable media, 0x80 extended smartport
+  data[22] = 0x00; //Device Subtype - 0x00 Removable media, 0x80 extended smartport
   data[23] = 0x01; //Firmware version 2 bytes
   data[24] = 0x0f; //
 
