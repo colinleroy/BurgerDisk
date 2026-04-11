@@ -430,17 +430,10 @@ static void smartport_format(int partition) {
 
 //Smartport INIT handler
 static void smartport_init(unsigned char dev_id) {
-  int status, p;
+  int status;
 
   devices[number_partitions_initialised].device_id = dev_id; //remember device id for partition
-  p = number_partitions_initialised;
   number_partitions_initialised++;
-
-  // now we have time to init our partitions before acking
-  if (!device_init_done) {
-    identifier = (dev_id &~ 0x80) + '0';
-    init_storage();
-  }
 
   if (number_partitions_initialised < MAX_PARTITIONS) { //are all init'd yet
     status = 0x80;
@@ -448,7 +441,10 @@ static void smartport_init(unsigned char dev_id) {
     status = (DAISY_HDSEL_IS_LOW || force_next_smartport) ? 0x80 : 0xFF;
     device_init_done = 1;               //Mark init done
     number_partitions_initialised = 0;  // Reset variable for potential next INIT
+    identifier = (devices[0].device_id & 0x7F) + '0';
+    init_storage();
   }
+
   encode_init_reply_packet(dev_id, status);
 
   SendPacket( (unsigned char*) packet_buffer);
