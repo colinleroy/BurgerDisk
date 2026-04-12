@@ -437,12 +437,14 @@ static void smartport_init(unsigned char dev_id) {
 
   if (number_partitions_initialised < MAX_PARTITIONS) { //are all init'd yet
     status = 0x80;
+    if (number_partitions_initialised == 1) {
+      identifier = (devices[0].device_id & 0x7F) + '0';
+      init_storage();
+    }
   } else {
     status = (DAISY_HDSEL_IS_LOW || force_next_smartport) ? 0x80 : 0xFF;
     device_init_done = 1;               //Mark init done
     number_partitions_initialised = 0;  // Reset variable for potential next INIT
-    identifier = (devices[0].device_id & 0x7F) + '0';
-    init_storage();
   }
 
   encode_init_reply_packet(dev_id, status);
