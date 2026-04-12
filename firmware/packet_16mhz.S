@@ -72,7 +72,7 @@ recv_cancel:
 // Description: This handles the ACK and REQ lines and reads a packet into the 
 // packet_buffer. Warning: returns with interrupts off, must be followed by either
 // AckPacket or IgnorePacket.
-// 
+// Returns 0 on success, 1 if bus deactivated, 2 if start byte not found
 //*****************************************************************************
 .global ReceivePacket
 
@@ -81,8 +81,12 @@ ReceivePacket:
           mov  XL,r24                                                ;move packet buffer pointer into X
           mov  XH,r25
 
-          adiw x,5                    ;set start pos for packet beginning byte (0xC3)
           clr  r19                    ;clear start of packet found flag (r19)
+          st  x+, r19
+          st  x+, r19
+          st  x+, r19
+          st  x+, r19
+          st  x+, r19
 
           rcall SP_ACK_ON
 
@@ -196,6 +200,13 @@ recv_done:
           clr  r23
           st   x+,r23                                                ;save zero byte in buffer to mark end
 
+          cpi  r19,1                                                 ;check flag (r19) to see if we have received the start byte
+          breq ok                                                    ;yes, return success
+          ldi  r24,2
+          clr  r25
+          ret
+
+ok:
           clr  r25                                                   ;return no error (for now)
           clr  r24
           ret
