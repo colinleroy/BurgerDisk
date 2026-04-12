@@ -32,6 +32,7 @@
 #include "sp_vals.h"
 
 extern unsigned char *packet_buffer;
+extern int extended;
 
 static void init_packet_buffer(unsigned char source) {
   packet_buffer[0] = 0xff;  //sync bytes
@@ -90,7 +91,7 @@ void encode_data_packet (unsigned char source, unsigned char extended, unsigned 
 
   init_packet_buffer(source);
   packet_buffer[9]  = 0x82; //TYPE DATA
-  packet_buffer[10] = 0x80; //AUX
+  packet_buffer[10] = extended ? 0xC0:0x80; //AUX
   packet_buffer[11] = 0x80 | status; //STAT
   packet_buffer[12] = 0x81; //ODDCNT  - 1 odd byte for 512 byte packet
   packet_buffer[13] = 0xC9; //GRP7CNT - 73 groups of 7 bytes for 512 byte packet
@@ -186,7 +187,7 @@ void encode_write_status_packet(unsigned char source, unsigned char extended, un
 
   init_packet_buffer(source);
   packet_buffer[9]  = 0x81; //TYPE
-  packet_buffer[10] = 0x80; //AUX
+  packet_buffer[10] = extended ? 0xC0 : 0x80; //AUX
   packet_buffer[11] = status | 0x80; //STAT
   packet_buffer[12] = 0x80; //ODDCNT
   packet_buffer[13] = 0x80; //GRP7CNT
@@ -336,8 +337,8 @@ void encode_extended_status_reply_packet (unsigned char device_id, unsigned long
   data[4] = (blocks >> 24 ) & 0xff;
 
   init_packet_buffer(device_id);
-  packet_buffer[9]  = 0xC1; //TYPE - extended status
-  packet_buffer[10] = 0x80; //AUX
+  packet_buffer[9]  = 0x81; //TYPE - extended status
+  packet_buffer[10] = 0xC0; //AUX
   packet_buffer[11] = 0x80; //STAT - data status
   packet_buffer[12] = 0x85; //ODDCNT - 5 data bytes
   packet_buffer[13] = 0x80; //GRP7CNT
@@ -435,7 +436,7 @@ void encode_status_dib_reply_packet (unsigned char device_id, unsigned long bloc
   data[19] = ' ';
   data[20] = ' ';  //ID string (16 chars total)
   data[21] = 0x02; //Device type    - 0x02  harddisk
-  data[22] = 0x00; //Device Subtype - 0x00 Removable media, 0x80 extended smartport
+  data[22] = extended ? 0x80 : 0x00; //Device Subtype - 0x00 Removable media, 0x80 extended smartport
   data[23] = 0x01; //Firmware version 2 bytes
   data[24] = 0x0f; //
 

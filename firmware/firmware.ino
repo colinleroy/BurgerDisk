@@ -71,6 +71,7 @@
 int open_partitions = 0;
 int debug = 0;
 int force_next_smartport = 1;
+int extended = 0;
 
 unsigned char *packet_buffer;
 unsigned char identifier = '0';
@@ -184,6 +185,8 @@ static void init_storage(void) {
         debug = (packet_buffer[6] == '1');
       } else if (!strncmp((const char *)packet_buffer, "force_next_smartport=", 21)) {
         force_next_smartport = (packet_buffer[21] == '1');
+      } else if (!strncmp((const char *)packet_buffer, "extended=", 9)) {
+        extended = (packet_buffer[9] == '1');
       }
     }
     optionsFile.close();
@@ -368,21 +371,23 @@ static void smartport_read_block(int partition, unsigned char extended) {
 
   DEBUG_CMD(extended?'R':'r', devices[partition].device_id, block_num);
 
+  if (!devices[partition].sdf.isOpen()) {
+    status = 0x2F;
+    goto reply;
+  }
+
   if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
     log_io_err(F("Seek"), partition, block_num);
-    status = 0x2D; //BADBLOCK
+    status = 0x2D;
     goto reply;
   }
 
   //Read block from SD Card
   if (devices[partition].sdf.read((unsigned char*) packet_buffer, 512) != 512) {
     log_io_err(F("Read"), partition, block_num);
-    status = 0x27; //IOERROR
+    status = 0x27;
   }
 reply:
-  if (!devices[partition].sdf.isOpen()) {
-    status = 0x2F;
-  }
   if (status != 0x00)
     DEBUG_CMD('E', devices[partition].device_id, status);
 
@@ -394,11 +399,10 @@ reply:
 //Smartport WRITE handler
 static void smartport_write_block(int partition, unsigned char extended) {
   unsigned long int block_num;
-  int status = 0;
+  int status = 0, r;
   unsigned int numodd, numgrps, bytes_to_write;
 
   block_num = smartport_get_block_num_from_buf(extended);
-
   DEBUG_CMD(extended?'W':'w', devices[partition].device_id, block_num);
 
   //get write data packet
@@ -408,28 +412,21 @@ static void smartport_write_block(int partition, unsigned char extended) {
   numodd  = packet_buffer[11]&0x7F;
   numgrps = packet_buffer[12]&0x7F;
   bytes_to_write = numodd + numgrps*7;
-
-  if (debug) {
-    LOGN("Numodds ",packet_buffer[11]&0x7F, DEC);
-    LOGN("Numgrps ",packet_buffer[12]&0x7F, DEC);
-    LOGN("bytes   ", bytes_to_write, DEC);
-  }
-
-  if (bytes_to_write != 512) {
-    status = 0x2D;
-    goto reply;
-  }
-
   status = decode_data_packet(extended);
-  if (status == 0) {
+
+  if (r == 0 && status == 0 && bytes_to_write == 512) {
+    if (!devices[partition].sdf.isOpen()) {
+      status = 0x2F;
+      goto reply;
+    }
     if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
       log_io_err(F("Seek"), partition, block_num);
-      goto err_write;
+      status = 0x2D;
+      goto reply;
     }
     // Write block to SD Card
     if (devices[partition].sdf.write((unsigned char*) packet_buffer, bytes_to_write) != bytes_to_write) {
       log_io_err(F("Write"), partition, block_num);
-err_write:
       status = 0x27;
     }
   } else {
@@ -438,9 +435,6 @@ err_write:
   }
 
 reply:
-  if (!devices[partition].sdf.isOpen()) {
-    status = 0x2F;
-  }
   if (status != 0x00)
     DEBUG_CMD('E', devices[partition].device_id, status);
 
@@ -464,12 +458,14 @@ static void smartport_init(unsigned char dev_id) {
 
   if (number_partitions_initialised < MAX_PARTITIONS) { //are all init'd yet
     status = 0x80;
+    if (number_partitions_initialised == 1) {
+      init_storage();
+      identifier = (dev_id & 0x7F) + '0';
+    }
   } else {
     status = (DAISY_HDSEL_IS_LOW || force_next_smartport) ? 0x80 : 0xFF;
     device_init_done = 1;               //Mark init done
     number_partitions_initialised = 0;  // Reset variable for potential next INIT
-    identifier = (devices[0].device_id & 0x7F) + '0';
-    init_storage();
   }
 
   encode_init_reply_packet(dev_id, status);
@@ -664,20 +660,24 @@ bool open_image(struct device &d, String filename ) {
 }
 
 //Debug helper - dump a packet's start
-static void DumpPacket(unsigned char *buffer, unsigned char ignored) {
+static void DumpPacket(unsigned char *buffer, unsigned char type) {
   if (!debug) {
     return;
   }
-  if (ignored) {
+  if (type == 1) {
     Serial.print("Ignored ");
   }
-  Serial.print(F("Packet from: "));
-  Serial.print(buffer[7], HEX);
-  Serial.print(F(", To: "));
-  Serial.print(buffer[6], HEX);
-  Serial.print(F(", Command: "));
-  Serial.print(buffer[14], HEX);
-  Serial.println();
+  if (type == 2) {
+    Serial.print("Data: ");
+  } else {
+    Serial.print(F("Packet from: "));
+    Serial.print(buffer[7], HEX);
+    Serial.print(F(", To: "));
+    Serial.print(buffer[6], HEX);
+    Serial.print(F(", Command: "));
+    Serial.print(buffer[14], HEX);
+    Serial.println();
+  }
   for (int i = 0; i < 30; i++) {
     Serial.print(' ');
     Serial.print(buffer[i], HEX);
