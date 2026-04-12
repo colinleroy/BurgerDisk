@@ -110,12 +110,12 @@ static void deinit_storage(void) {
 }
 
 static void init_storage(void) {
-  if (!sdcard.begin(SD_CONFIG)) {
-    LOG(F("SD card init error."));
+  if (open_partitions > 0) {
     return;
   }
 
-  if (open_partitions > 0) {
+  if (!sdcard.begin(SD_CONFIG)) {
+    LOG(F("SD card init error."));
     return;
   }
 
@@ -341,6 +341,9 @@ static void smartport_device_reset(void) {
 static void smartport_answer_status(int partition, unsigned char extended) {
   unsigned char status_code;
 
+  if (open_partitions == 0)
+    init_storage();
+
   status_code = (packet_buffer[extended ? 21 : 19] & 0x7f);
 
   // if statcode=3, then status with device info block
@@ -366,6 +369,9 @@ static void smartport_answer_status(int partition, unsigned char extended) {
 static void smartport_read_block(int partition, unsigned char extended) {
   unsigned long int block_num;
   unsigned char status = 0x00;
+
+  if (open_partitions == 0)
+    init_storage();
 
   block_num = smartport_get_block_num_from_buf(extended);
 
@@ -408,6 +414,9 @@ static void smartport_write_block(int partition, unsigned char extended) {
   //get write data packet
   ReceivePacket( (unsigned char*) packet_buffer);
   AckPacket();
+
+  if (open_partitions == 0)
+    init_storage();
 
   if (!devices[partition].sdf.isOpen()) {
     status = 0x2F;
