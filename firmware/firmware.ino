@@ -376,6 +376,11 @@ static void smartport_read_block(int partition, unsigned char extended) {
     goto reply;
   }
 
+  if (!devices[partition].sdf.isOpen()) {
+    status = 0x2F;
+    goto reply;
+  }
+
   if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
     log_io_err(F("Seek"), partition, block_num);
     status = 0x2D;
