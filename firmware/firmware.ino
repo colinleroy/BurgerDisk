@@ -357,9 +357,14 @@ static void smartport_read_block(int partition) {
 
   DEBUG_CMD('R', devices[partition].device_id, block_num);
 
+  if (!devices[partition].sdf.isOpen()) {
+    status = 0x2F;
+    goto reply;
+  }
+
   if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
     log_io_err(F("Seek"), partition, block_num);
-    status = 0x27;
+    status = 0x2D;
     goto reply;
   }
 
@@ -369,9 +374,6 @@ static void smartport_read_block(int partition) {
     status = 0x27;
   }
 reply:
-  if (!devices[partition].sdf.isOpen()) {
-    status = 0x2F;
-  }
   if (status != 0x00)
     DEBUG_CMD('E', devices[partition].device_id, status);
 
@@ -393,16 +395,21 @@ static void smartport_write_block(int partition) {
   ReceivePacket( (unsigned char*) packet_buffer);
   AckPacket();
 
+  if (!devices[partition].sdf.isOpen()) {
+    status = 0x2F;
+    goto reply;
+  }
+
   status = decode_data_packet();
   if (status == 0) {
     if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
       log_io_err(F("Seek"), partition, block_num);
-      goto err_write;
+      status = 0x2D;
+      goto reply;
     }
     // Write block to SD Card
     if (devices[partition].sdf.write((unsigned char*) packet_buffer, 512) != 512) {
       log_io_err(F("Write"), partition, block_num);
-err_write:
       status = 0x27;
     }
   } else {
@@ -411,9 +418,6 @@ err_write:
   }
 
 reply:
-  if (!devices[partition].sdf.isOpen()) {
-    status = 0x2F;
-  }
   if (status != 0x00)
     DEBUG_CMD('E', devices[partition].device_id, status);
 
