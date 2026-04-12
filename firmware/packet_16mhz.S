@@ -169,7 +169,7 @@ havebyte:
           brne getnext                                               ;no, must be sync byte, skip and go get next byte
           ldi  r19,1                                                 ;yes, set r19=1 as flag to say we have received the start of the packet
 pktstrtd: st   x+,r23                                                ;17                    ;2   save byte in buffer
-getnext:  ldi  r25,0   ;era 100!!!!!!!!!                             ;18                    ;1   timeout counter if we are at the end
+getnext:  ldi  r25,100 ;era 100!!!!!!!!!                             ;18                    ;1   timeout counter if we are at the end
           cpi  r22,1                                                 ;19                    ;1   check for status of last bit
           breq wasset                                                ;20  ;21               ;1/2
 
