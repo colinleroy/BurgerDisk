@@ -376,11 +376,6 @@ static void smartport_read_block(int partition, unsigned char extended) {
     goto reply;
   }
 
-  if (!devices[partition].sdf.isOpen()) {
-    status = 0x2F;
-    goto reply;
-  }
-
   if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
     log_io_err(F("Seek"), partition, block_num);
     status = 0x2D;
@@ -414,16 +409,17 @@ static void smartport_write_block(int partition, unsigned char extended) {
   ReceivePacket( (unsigned char*) packet_buffer);
   AckPacket();
 
+  if (!devices[partition].sdf.isOpen()) {
+    status = 0x2F;
+    goto reply;
+  }
+
   numodd  = packet_buffer[11]&0x7F;
   numgrps = packet_buffer[12]&0x7F;
   bytes_to_write = numodd + numgrps*7;
-  status = decode_data_packet(extended);
 
+  status = decode_data_packet(extended);
   if (r == 0 && status == 0 && bytes_to_write == 512) {
-    if (!devices[partition].sdf.isOpen()) {
-      status = 0x2F;
-      goto reply;
-    }
     if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
       log_io_err(F("Seek"), partition, block_num);
       status = 0x2D;
