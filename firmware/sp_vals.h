@@ -21,6 +21,15 @@ typedef enum _SP_Command {
   SP_EXT_INIT   = 0xC5
 } SP_Command;
 
+typedef enum _SP_Error {
+  SP_SUCCESS    = 0x00,
+  SP_BUSERR     = 0x06,
+  SP_IOERROR    = 0x27,
+  SP_NODRIVE    = 0x2B,
+  SP_BADBLOCK   = 0x2D,
+  SP_OFFLINE    = 0x2F
+} SP_Error;
+
 extern unsigned char identifier;
 
 #endif

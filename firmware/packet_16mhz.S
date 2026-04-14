@@ -229,7 +229,7 @@ IgnorePacket:
           rcall SP_ACK_MUTE
           rcall SP_RD_MUTE
           rjmp wait_req_low                                          ;wait for REQ line to go low
-
+          ; Fallthrough
 send_cancel:
           rcall SP_ACK_OFF
           rcall SP_ACK_MUTE
@@ -255,7 +255,6 @@ SendPacket:
           mov  XH,r25
 
           sbi  _SFR_IO_ADDR(DIR_PORT_RD),PIN_RD                      ; Set RD as output
-
           rcall SP_ACK_ON
 
 send_wait_ack:

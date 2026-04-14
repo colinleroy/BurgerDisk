@@ -32,7 +32,7 @@
 #include "sp_vals.h"
 
 extern unsigned char *packet_buffer;
-extern int extended;
+extern unsigned char extended;
 
 static void init_packet_buffer(unsigned char source) {
   packet_buffer[0] = 0xff;  //sync bytes
@@ -55,7 +55,7 @@ static void init_packet_buffer(unsigned char source) {
 // requires the data to be in the packet buffer, and builds the smartport
 // packet IN PLACE in the packet buffer
 //*****************************************************************************
-void encode_data_packet (unsigned char source, unsigned char extended, unsigned char status)
+void encode_data_packet (unsigned char source, unsigned char extended, SP_Error status)
 {
   int count;
   signed char grpbyte, grpcount;
@@ -118,7 +118,7 @@ void encode_data_packet (unsigned char source, unsigned char extended, unsigned 
 // decodes the data from the packet_buffer IN-PLACE!
 //*****************************************************************************
 #pragma GCC optimize("-O3")
-int decode_data_packet (unsigned char extended)
+unsigned char decode_data_packet (unsigned char extended)
 {
   int grpbyte, count;
   unsigned char numgrps, numodd;
@@ -143,7 +143,7 @@ int decode_data_packet (unsigned char extended)
   out_byte = 0;
 
   //add oddbyte(s), 1 in a 512 data packet
-  for(int i = 0; i < numodd; i++) {
+  for(unsigned char i = 0; i < numodd; i++) {
     packet_buffer[i] = ((packet_buffer[13] << (i+1)) & 0x80) | (packet_buffer[14+i] & 0x7f);
     checksum ^= packet_buffer[i];
     out_byte++;
@@ -180,15 +180,15 @@ done:
 // Description: this is the reply to the write block data packet. The reply
 // indicates the status of the write block cmd.
 //*****************************************************************************
-void encode_write_status_packet(unsigned char source, unsigned char extended, unsigned char status)
+void encode_write_status_packet(unsigned char source, unsigned char extended, SP_Error status)
 {
-  int count;
+  unsigned char count;
   unsigned char checksum = 0;
 
   init_packet_buffer(source);
   packet_buffer[9]  = 0x81; //TYPE
   packet_buffer[10] = extended ? 0xC0 : 0x80; //AUX
-  packet_buffer[11] = status | 0x80; //STAT
+  packet_buffer[11] = 0x80 | status; //STAT
   packet_buffer[12] = 0x80; //ODDCNT
   packet_buffer[13] = 0x80; //GRP7CNT
 
@@ -215,16 +215,15 @@ void encode_write_status_packet(unsigned char source, unsigned char extended, un
 // to 4 partions, i.e. devices, so we need to specify when we are doing the last
 // init reply.
 //*****************************************************************************
-void encode_init_reply_packet (unsigned char source, unsigned char status)
+void encode_init_reply_packet (unsigned char source, SP_Error status)
 {
-  int count;
+  unsigned char count;
   unsigned char checksum = 0;
 
   init_packet_buffer(source);
   packet_buffer[9]  = 0x80; //TYPE
   packet_buffer[10] = 0x80; //AUX
-  packet_buffer[11] = status; //STAT - data status
-
+  packet_buffer[11] = 0x80 | status; //STAT - data status
   packet_buffer[12] = 0x80; //ODDCNT
   packet_buffer[13] = 0x80; //GRP7CNT
 
@@ -252,7 +251,7 @@ void encode_init_reply_packet (unsigned char source, unsigned char status)
 //*****************************************************************************
 void encode_status_reply_packet (unsigned char device_id, unsigned long blocks)
 {
-  int count;
+  unsigned char count;
   unsigned char checksum = 0;
   unsigned char data[4];
 
@@ -285,15 +284,15 @@ void encode_status_reply_packet (unsigned char device_id, unsigned long blocks)
   packet_buffer[17] = data[2] | 0x80; //data 3
   packet_buffer[18] = data[3] | 0x80; //data 4
 
-  //calc the data bytes checksum
-  for(int i = 0; i < 4; i++) {
-    checksum ^= data[i];
-  }
-
   // xor the packet header bytes
   for (count = 7; count < 14; count++) {
     checksum = checksum ^ packet_buffer[count];
   }
+  //calc the data bytes checksum
+  for(count = 0; count < 4; count++) {
+    checksum ^= data[count];
+  }
+
   packet_buffer[19] = checksum | 0xaa;      // 1 c6 1 c4 1 c2 1 c0
   packet_buffer[20] = checksum >> 1 | 0xaa; // 1 c7 1 c5 1 c3 1 c1
 
@@ -315,7 +314,7 @@ void encode_status_reply_packet (unsigned char device_id, unsigned long blocks)
 //*****************************************************************************
 void encode_extended_status_reply_packet (unsigned char device_id, unsigned long blocks)
 {
-  int count;
+  unsigned char count;
   unsigned char checksum = 0;
   unsigned char data[5];
 
@@ -351,8 +350,8 @@ void encode_extended_status_reply_packet (unsigned char device_id, unsigned long
   packet_buffer[19] = data[4] | 0x80; //data 5
 
   // calc the data bytes checksum
-  for(int i = 0; i < 5; i++) {
-    checksum ^= data[i];
+  for(count = 0; count < 5; count++) {
+    checksum ^= data[count];
   }
 
   //calc the data bytes checksum
@@ -364,30 +363,6 @@ void encode_extended_status_reply_packet (unsigned char device_id, unsigned long
 
   packet_buffer[22] = 0xc8; //PEND
   packet_buffer[23] = 0x00; //end of packet in buffer
-}
-
-void encode_error_reply_packet (unsigned char source)
-{
-  int count;
-  unsigned char checksum = 0;
-
-  init_packet_buffer(source);
-  packet_buffer[9]  = 0x80; //TYPE -status
-  packet_buffer[10] = 0x80; //AUX
-  packet_buffer[11] = 0xA1; //STAT - data status - error
-  packet_buffer[12] = 0x80; //ODDCNT - 0 data bytes
-  packet_buffer[13] = 0x80; //GRP7CNT
-
-  // xor the packet header bytes
-  for (count = 7; count < 14; count++) {
-    checksum = checksum ^ packet_buffer[count];
-  }
-
-  packet_buffer[14] = checksum | 0xaa;      // 1 c6 1 c4 1 c2 1 c0
-  packet_buffer[15] = checksum >> 1 | 0xaa; // 1 c7 1 c5 1 c3 1 c1
-
-  packet_buffer[16] = 0xc8; //PEND
-  packet_buffer[17] = 0x00; //end of packet in buffer
 }
 
 //*****************************************************************************
