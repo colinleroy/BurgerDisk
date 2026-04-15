@@ -7,7 +7,7 @@ all: upload
 
 setup:
 	arduino --install-library $(LIBRARIES)
-	#arduino --pref programmer=$(PROGRAMMER)
+	#arduino --pref programmer=$(PROGRAMMER) --save-prefs
 
 fuse:
 	avrdude -v -p m328p -c avrisp2 -U lfuse:w:0xFF:m -U hfuse:w:0xDA:m -U efuse:w:0xFD:m
@@ -16,5 +16,8 @@ getfuse:
 version:
 	echo "#define GIT_VERSION \"$(GIT_VERSION)\"" > version.h
 
+#adding CFLAGS:--pref compiler.cpp.extra_flags=-DUSE_SD_CRC=2
+
 upload: version
-	arduino --upload --board $(BOARD) --useprogrammer firmware.ino
+	arduino --upload --board $(BOARD) --useprogrammer \
+	firmware.ino

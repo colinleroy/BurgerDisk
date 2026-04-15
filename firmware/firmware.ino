@@ -92,7 +92,9 @@ static void log_io_err(const __FlashStringHelper *op, unsigned char partition, i
   Serial.print(F(" error on partition "));
   Serial.print(partition);
   Serial.print(F(", block "));
-  Serial.println(block_num);
+  Serial.print(block_num);
+  Serial.print(F(" - errCode 0x"));
+  Serial.println(sdcard.sdErrorCode(), HEX);
 
   deinit_storage();
   init_storage();
@@ -116,7 +118,7 @@ static void init_storage(void) {
   }
 
   if (!sdcard.begin(SD_CONFIG)) {
-    LOG(F("SD card init error."));
+    sdcard.initErrorPrint();
     return;
   }
 
@@ -372,7 +374,8 @@ static void smartport_answer_status(unsigned char partition, unsigned char exten
 static void smartport_read_block(unsigned char partition, unsigned char extended) {
   unsigned long int block_num;
   SP_Error status = SP_SUCCESS;
-  unsigned char tries = 1;
+  unsigned char tries = 3;
+  int r;
 
   block_num = smartport_get_block_num_from_buf(extended);
 
@@ -394,7 +397,7 @@ read_again:
   }
 
   //Read block from SD Card
-  if (devices[partition].sdf.read((unsigned char*) packet_buffer, 512) != 512) {
+  if ((r = devices[partition].sdf.read((unsigned char*) packet_buffer, 512)) != 512) {
     log_io_err(F("Read"), partition, block_num);
     if (tries--) {
       goto read_again;
