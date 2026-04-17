@@ -91,14 +91,12 @@ ReceivePacket:
           rcall SP_ACK_ON
 
 recv_wait_ack:
-          sbic _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;1/2 wait for req line to go high
-          rjmp recv_start                                            ;this indicates host is about to send packet
-
           ; Verify that the bus is still enabled!
           sbic _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH1                  ;if phase1 is now down, bus is now disabled
           sbis _SFR_IO_ADDR(RD_PORT_PHASES),PIN_PH3                  ;otherwise, if phase3 is still up, bus is still enabled
           rjmp recv_cancel                                           ;if bus disabled, return with an error
-          rjmp recv_wait_ack                                         ;otherwise, keep waiting
+          sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;1/2 wait for req line to go high
+          rjmp recv_wait_ack                                         ;this indicates host is about to send packet
 
 recv_start:
           ldi  r22,1                                                 ;1   remember tx line status when previously sampled
