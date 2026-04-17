@@ -7,7 +7,11 @@ typedef enum _SP_State {
   SP_BUS_ENABLED
 } SP_State;
 
+#define COMMAND_EXTENDED_BIT 0x40
+
 typedef enum _SP_Command {
+  SP_NO_COMMAND = 0x00,
+
   SP_STATUS     = 0x80,
   SP_READ       = 0x81,
   SP_WRITE      = 0x82,
@@ -21,9 +25,18 @@ typedef enum _SP_Command {
   SP_EXT_INIT   = 0xC5
 } SP_Command;
 
+typedef enum _SP_Status_Code {
+  SP_STATUS_SIMPLE = 0x00,
+  SP_STATUS_DCB    = 0x01,
+  SP_STATUS_NLSTAT = 0x02,
+  SP_STATUS_DIB    = 0x03
+} SP_Status_Code;
+
 typedef enum _SP_Error {
   SP_SUCCESS    = 0x00,
+  SP_BADCMD     = 0x01,
   SP_BUSERR     = 0x06,
+  SP_BADCTL     = 0x21,
   SP_IOERROR    = 0x27,
   SP_NODRIVE    = 0x2B,
   SP_BADBLOCK   = 0x2D,

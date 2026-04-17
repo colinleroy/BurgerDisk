@@ -32,7 +32,7 @@
 #include "sp_vals.h"
 
 extern unsigned char *packet_buffer;
-extern unsigned char extended;
+extern unsigned char extended_option;
 
 static void init_packet_buffer(unsigned char source) {
   packet_buffer[0] = 0xff;  //sync bytes
@@ -215,14 +215,14 @@ void encode_write_status_packet(unsigned char source, unsigned char extended, SP
 // to 4 partions, i.e. devices, so we need to specify when we are doing the last
 // init reply.
 //*****************************************************************************
-void encode_init_reply_packet (unsigned char source, SP_Error status)
+void encode_init_reply_packet (unsigned char source, unsigned char extended, SP_Error status)
 {
   unsigned char count;
   unsigned char checksum = 0;
 
   init_packet_buffer(source);
   packet_buffer[9]  = 0x80; //TYPE
-  packet_buffer[10] = 0x80; //AUX
+  packet_buffer[10] = extended ? 0xC0:0x80; //AUX
   packet_buffer[11] = 0x80 | status; //STAT - data status
   packet_buffer[12] = 0x80; //ODDCNT
   packet_buffer[13] = 0x80; //GRP7CNT
@@ -249,70 +249,7 @@ void encode_init_reply_packet (unsigned char source, SP_Error status)
 // data byte 2-4 number of blocks. 2 is the LSB and 4 the MSB.
 // Size determined from image file.
 //*****************************************************************************
-void encode_status_reply_packet (unsigned char device_id, unsigned long blocks)
-{
-  unsigned char count;
-  unsigned char checksum = 0;
-  unsigned char data[4];
-
-  //Build the contents of the packet
-  //Info byte
-  //Bit 7: Block  device
-  //Bit 6: Write allowed
-  //Bit 5: Read allowed
-  //Bit 4: Device online or disk in drive
-  //Bit 3: Format allowed
-  //Bit 2: Media write protected
-  //Bit 1: Currently interrupting (//c only)
-  //Bit 0: Currently open (char devices only)
-  data[0] = blocks > 0 ? 0b11111000 : 0b11101000;
-  //Disk size
-  data[1] = blocks & 0xff;
-  data[2] = (blocks >> 8 ) & 0xff;
-  data[3] = (blocks >> 16 ) & 0xff;
-
-  init_packet_buffer(device_id);
-  packet_buffer[9]  = 0x81; //TYPE -status
-  packet_buffer[10] = 0x80; //AUX
-  packet_buffer[11] = 0x80; //STAT - data status
-  packet_buffer[12] = 0x84; //ODDCNT - 4 data bytes
-  packet_buffer[13] = 0x80; //GRP7CNT
-  //4 odd bytes
-  packet_buffer[14] = 0x80 | ((data[0]>> 1) & 0x40) | ((data[1]>>2) & 0x20) | (( data[2]>>3) & 0x10) | ((data[3]>>4) & 0x08 ); //odd msb
-  packet_buffer[15] = data[0] | 0x80; //data 1
-  packet_buffer[16] = data[1] | 0x80; //data 2
-  packet_buffer[17] = data[2] | 0x80; //data 3
-  packet_buffer[18] = data[3] | 0x80; //data 4
-
-  // xor the packet header bytes
-  for (count = 7; count < 14; count++) {
-    checksum = checksum ^ packet_buffer[count];
-  }
-  //calc the data bytes checksum
-  for(count = 0; count < 4; count++) {
-    checksum ^= data[count];
-  }
-
-  packet_buffer[19] = checksum | 0xaa;      // 1 c6 1 c4 1 c2 1 c0
-  packet_buffer[20] = checksum >> 1 | 0xaa; // 1 c7 1 c5 1 c3 1 c1
-
-  packet_buffer[21] = 0xc8; //PEND
-  packet_buffer[22] = 0x00; //end of packet in buffer
-}
-
-
-//*****************************************************************************
-// Function: encode_long_status_reply_packet
-// Parameters: source
-// Returns: none
-//
-// Description: this is the reply to the extended status command packet. The reply
-// includes following:
-// data byte 1
-// data byte 2-5 number of blocks. 2 is the LSB and 5 the MSB.
-// Size determined from image file.
-//*****************************************************************************
-void encode_extended_status_reply_packet (unsigned char device_id, unsigned long blocks)
+void encode_status_reply_packet (unsigned char device_id, unsigned char extended, unsigned char err, unsigned long blocks)
 {
   unsigned char count;
   unsigned char checksum = 0;
@@ -333,36 +270,51 @@ void encode_extended_status_reply_packet (unsigned char device_id, unsigned long
   data[1] = blocks & 0xff;
   data[2] = (blocks >> 8 ) & 0xff;
   data[3] = (blocks >> 16 ) & 0xff;
-  data[4] = (blocks >> 24 ) & 0xff;
 
-  init_packet_buffer(device_id);
-  packet_buffer[9]  = 0x81; //TYPE - extended status
-  packet_buffer[10] = 0xC0; //AUX
-  packet_buffer[11] = 0x80; //STAT - data status
-  packet_buffer[12] = 0x85; //ODDCNT - 5 data bytes
-  packet_buffer[13] = 0x80; //GRP7CNT
-  //5 odd bytes
-  packet_buffer[14] = 0x80 | ((data[0]>> 1) & 0x40) | ((data[1]>>2) & 0x20) | (( data[2]>>3) & 0x10) | ((data[3]>>4) & 0x08 ) | ((data[4] >> 5) & 0x04) ; //odd msb
-  packet_buffer[15] = data[0] | 0x80; //data 1
-  packet_buffer[16] = data[1] | 0x80; //data 2
-  packet_buffer[17] = data[2] | 0x80; //data 3
-  packet_buffer[18] = data[3] | 0x80; //data 4
-  packet_buffer[19] = data[4] | 0x80; //data 5
-
-  // calc the data bytes checksum
-  for(count = 0; count < 5; count++) {
+  //calc the data bytes checksum
+  for(count = 0; count < 4; count++) {
     checksum ^= data[count];
   }
 
-  //calc the data bytes checksum
+  if (extended) {
+    data[4] = (blocks >> 24 ) & 0xff;
+    checksum ^= data[4];
+  }
+
+  init_packet_buffer(device_id);
+  packet_buffer[9]  = 0x81; //TYPE -status
+  packet_buffer[10] = extended ? 0xC0:0x80; //AUX
+  packet_buffer[11] = 0x80 | err; //STAT - data status
+  packet_buffer[12] = extended ? 0x85:0x84; //ODDCNT - 4 or 5 data bytes
+  packet_buffer[13] = 0x80; //GRP7CNT
+
+  // xor the packet header bytes
   for (count = 7; count < 14; count++) {
     checksum = checksum ^ packet_buffer[count];
   }
-  packet_buffer[20] = checksum | 0xaa;      // 1 c6 1 c4 1 c2 1 c0
-  packet_buffer[21] = checksum >> 1 | 0xaa; // 1 c7 1 c5 1 c3 1 c1
 
-  packet_buffer[22] = 0xc8; //PEND
-  packet_buffer[23] = 0x00; //end of packet in buffer
+  packet_buffer[15] = data[0] | 0x80;
+  packet_buffer[16] = data[1] | 0x80;
+  packet_buffer[17] = data[2] | 0x80;
+  packet_buffer[18] = data[3] | 0x80;
+
+  // odd bytes MSBs
+  packet_buffer[14] = 0x80 
+                      | ((data[0]>>1) & 0x40) 
+                      | ((data[1]>>2) & 0x20) 
+                      | ((data[2]>>3) & 0x10) 
+                      | ((data[3]>>4) & 0x08);
+  if (extended) {
+    packet_buffer[14] |= ((data[4] >> 5) & 0x04);
+    packet_buffer[19] = data[4] | 0x80;
+  }
+
+  count = extended ? 20:19;
+  packet_buffer[count++] = checksum | 0xaa;      // 1 c6 1 c4 1 c2 1 c0
+  packet_buffer[count++] = checksum >> 1 | 0xaa; // 1 c7 1 c5 1 c3 1 c1
+
+  packet_buffer[count++] = 0xc8; //PEND
+  packet_buffer[count++] = 0x00; //end of packet in buffer
 }
 
 //*****************************************************************************
@@ -376,47 +328,51 @@ void encode_extended_status_reply_packet (unsigned char device_id, unsigned long
 // data byte 2-4 number of blocks. 2 is the LSB and 4 the MSB.
 // Calculated from actual image file size.
 //*****************************************************************************
-void encode_status_dib_reply_packet (unsigned char device_id, unsigned long blocks)
+void encode_status_dib_reply_packet (unsigned char device_id, unsigned char extended, unsigned long blocks)
 {
   int grpbyte, grpcount, i, count;
   int grpnum, oddnum;
   unsigned char checksum = 0, grpmsb;
   unsigned char group_buffer[7];
-  unsigned char data[25];
-  //data buffer=25: 3 x Grp7 + 4 odds
-  grpnum=3;
-  oddnum=4;
+  unsigned char data[26];
+  //data buffer: 3 x Grp7 + 4 or 5 odds
+  grpnum = 3;
+  oddnum = extended ? 5:4;
 
+  i = 0;
   //* write data buffer first (25 bytes) 3 grp7 + 4 odds
-  data[0] = blocks > 0 ? 0b11111000 : 0b11101000;
+  data[i++] = blocks > 0 ? 0b11111000 : 0b11101000;
   //number of blocks =0x00ffff = 65525 or 32mb
-  data[1]  = blocks & 0xff; //block size 1
-  data[2]  = (blocks >> 8 ) & 0xff; //block size 2
-  data[3]  = (blocks >> 16 ) & 0xff ; //block size 3
-  data[4]  = 0x0a; //ID string length - 10 chars
-  data[5]  = 'B';
-  data[6]  = 'U';
-  data[7]  = 'R';
-  data[8]  = 'G';
-  data[9]  = 'E';
-  data[10] = 'R';
-  data[11] = 'D';
-  data[12] = 'I';
-  data[13] = 'S';
-  data[14] = 'K';
-  data[15] = ' ';
-  data[16] = '(';
-  data[17] = identifier;
-  data[18] = ')';
-  data[19] = ' ';
-  data[20] = ' ';  //ID string (16 chars total)
-  data[21] = 0x02; //Device type    - 0x02  harddisk
-  data[22] = extended ? 0x80 : 0x00; //Device Subtype - 0x00 Removable media, 0x80 extended smartport
-  data[23] = 0x01; //Firmware version 2 bytes
-  data[24] = 0x0f; //
+  data[i++]  = blocks & 0xff; //block size 1
+  data[i++]  = (blocks >> 8 ) & 0xff; //block size 2
+  data[i++]  = (blocks >> 16 ) & 0xff ; //block size 3
+  if (extended) {
+    data[i++]= (blocks >> 24 ) & 0xff ; //block size 4
+  }
+  data[i++] = 14; //ID string length - 14 chars
+  data[i++] = 'B';
+  data[i++] = 'U';
+  data[i++] = 'R';
+  data[i++] = 'G';
+  data[i++] = 'E';
+  data[i++] = 'R';
+  data[i++] = 'D';
+  data[i++] = 'I';
+  data[i++] = 'S';
+  data[i++] = 'K';
+  data[i++] = ' ';
+  data[i++] = '(';
+  data[i++] = identifier;
+  data[i++] = ')';
+  data[i++] = ' ';
+  data[i++] = ' ';  //ID string (16 chars total)
+  data[i++] = 0x02; //Device type    - 0x02  harddisk
+  data[i++] = extended_option ? 0x80 : 0x00; //Device Subtype - 0x00 Removable media, 0x80 extended smartport
+  data[i++] = 0x01; //Firmware version 2 bytes
+  data[i++] = 0x0f; //
 
   // Calculate checksum of sector bytes before we destroy them
-  for (count = 0; count < 25; count++) {
+  for (count = 0; count < i; count++) {
     checksum = checksum ^ data[count];
   }
 
@@ -443,27 +399,39 @@ void encode_status_dib_reply_packet (unsigned char device_id, unsigned long bloc
     }
   }
 
-  //odd byte
-  packet_buffer[14] = 0x80 | ((data[0]>> 1) & 0x40) | ((data[1]>>2) & 0x20) | (( data[2]>>3) & 0x10) | ((data[3]>>4) & 0x08 ); //odd msb
+  init_packet_buffer(device_id);
+  packet_buffer[9]  = 0x81; //TYPE -status
+  packet_buffer[10] = extended ? 0xC0:0x80; //AUX
+  packet_buffer[11] = 0x80; //STAT - data status
+  packet_buffer[12] = 0x80|oddnum; //ODDCNT - 4 or 5 data bytes
+  packet_buffer[13] = 0x80|grpnum; //GRP7CNT - 3 grps of 7
+
+  //odd bytes high bits
+  packet_buffer[14] = 0x80 
+                    | ((data[0]>> 1) & 0x40)
+                    | ((data[1]>>2) & 0x20)
+                    | ((data[2]>>3) & 0x10)
+                    | ((data[3]>>4) & 0x08);
+  if (extended) {
+    packet_buffer[14] |= ((data[4]>>5) & 0x04);
+    packet_buffer[19] = data[4] | 0x80;
+  }
+
   packet_buffer[15] = data[0] | 0x80;
   packet_buffer[16] = data[1] | 0x80;
   packet_buffer[17] = data[2] | 0x80;
-  packet_buffer[18] = data[3] | 0x80;;
-
-  init_packet_buffer(device_id);
-  packet_buffer[9]  = 0x81; //TYPE -status
-  packet_buffer[10] = 0x80; //AUX
-  packet_buffer[11] = 0x80; //STAT - data status
-  packet_buffer[12] = 0x84; //ODDCNT - 4 data bytes
-  packet_buffer[13] = 0x83; //GRP7CNT - 3 grps of 7
+  packet_buffer[18] = data[3] | 0x80;
 
   // xor the packet header bytes
   for (count = 7; count < 14; count++) {
     checksum = checksum ^ packet_buffer[count];
   }
-  packet_buffer[43] = checksum | 0xaa;      // 1 c6 1 c4 1 c2 1 c0
-  packet_buffer[44] = checksum >> 1 | 0xaa; // 1 c7 1 c5 1 c3 1 c1
 
-  packet_buffer[45] = 0xc8; //PEND
-  packet_buffer[46] = 0x00; //end of packet in buffer
+  // finish packet
+  count = extended ? 44:43;
+  packet_buffer[count++] = checksum | 0xaa;      // 1 c6 1 c4 1 c2 1 c0
+  packet_buffer[count++] = checksum >> 1 | 0xaa; // 1 c7 1 c5 1 c3 1 c1
+
+  packet_buffer[count++] = 0xc8; //PEND
+  packet_buffer[count++] = 0x00; //end of packet in buffer
 }
