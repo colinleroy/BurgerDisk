@@ -91,7 +91,7 @@ void encode_data_packet (unsigned char source, unsigned char extended, SP_Error 
 
   init_packet_buffer(source);
   packet_buffer[9]  = 0x82; //TYPE DATA
-  packet_buffer[10] = extended ? 0xC0:0x80; //AUX
+  packet_buffer[10] = 0x80; //AUX
   packet_buffer[11] = 0x80 | status; //STAT
   packet_buffer[12] = 0x81; //ODDCNT  - 1 odd byte for 512 byte packet
   packet_buffer[13] = 0xC9; //GRP7CNT - 73 groups of 7 bytes for 512 byte packet
@@ -151,7 +151,7 @@ unsigned char decode_data_packet (unsigned char extended)
 
   // 73 grps of 7 in a 512 byte packet
   src = packet_buffer + 12 + numodd + (numodd != 0) + 1;
-  while (1) {
+  while (numgrps != 0) {
     for (grpbyte = 1; grpbyte < 8; grpbyte++) {
       bit7 = (src[0] << grpbyte) & 0x80;
       bit0to6 = (src[grpbyte]) & 0x7f;
