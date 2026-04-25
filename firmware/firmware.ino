@@ -698,3 +698,21 @@ static void DumpPacket(unsigned char *buffer, unsigned char type) {
   }
   Serial.println();
 }
+
+static void FullPacketDump(unsigned char decoded) {
+  int i;
+  if (decoded == 0) {
+    Serial.print("Encoded packet:");
+  } else {
+    Serial.print("Decoded packet:");
+  }
+  for (i = 0; i < 606; i++) {
+    if (i % 8 == 0) {
+      Serial.println();
+      Serial.print(i, DEC);
+    }
+    Serial.print(' ');
+    Serial.print(packet_buffer[i], HEX);
+  }
+  Serial.println();
+}
