@@ -120,50 +120,83 @@ void encode_data_packet (unsigned char source, unsigned char extended, SP_Error 
 #pragma GCC optimize("-O3")
 unsigned char decode_data_packet (unsigned char extended)
 {
-  int grpbyte, count;
-  unsigned char numgrps, numodd;
-  unsigned char checksum = 0, bit0to6, bit7, oddbits, evenbits;
-  unsigned char *src;
-  unsigned int out_byte, num_final_bytes;
+  register unsigned char numgrps, numodd;
+  register unsigned char checksum, bit7, oddbits, evenbits;
+  register unsigned char *src, *dst;
 
-  //Handle arbitrary length packets :)
-  numodd = packet_buffer[11] & 0x7f;
-  numgrps = packet_buffer[12] & 0x7f;
-  num_final_bytes = numodd + (numgrps * 7);
+  src = packet_buffer;
+  dst = packet_buffer;
 
-  // First, checksum  packet header, because we're about to destroy it
-  for (count = 6; count < 13; count++) {
-    // now xor the packet header bytes
-    checksum ^= packet_buffer[count];
+  src += 6;
+  checksum = *src;
+  src++;
+  checksum ^= *src;
+  src++;
+  checksum ^= *src;
+  src++;
+  checksum ^= *src;
+  src++;
+  checksum ^= *src;
+  src++;
+  checksum ^=(numodd = *src);
+  numodd &= 0x7f;
+  src++;
+  checksum ^=(numgrps = *src);
+  numgrps &= 0x7f;
+
+  if (!numodd) {
+    goto groups;
   }
-
-  evenbits = packet_buffer[numgrps*8 + 13 + numodd + (numodd != 0)] & 0x55;
-  oddbits = (packet_buffer[numgrps*8 + 14 + numodd + (numodd != 0)] & 0x55 ) << 1;
-
-  out_byte = 0;
-
   //add oddbyte(s), 1 in a 512 data packet
-  for(unsigned char i = 0; i < numodd; i++) {
-    packet_buffer[i] = ((packet_buffer[13] << (i+1)) & 0x80) | (packet_buffer[14+i] & 0x7f);
-    checksum ^= packet_buffer[i];
-    out_byte++;
-  }
+  bit7 = *(++src) << 1;
+  do {
+    *dst = (bit7 & 0x80) | (*(++src) & 0x7f);
+    bit7 <<= 1;
+    checksum ^= *(dst++);
+  } while (--numodd);
 
-  // 73 grps of 7 in a 512 byte packet
-  src = packet_buffer + 12 + numodd + (numodd != 0) + 1;
-  while (numgrps != 0) {
-    for (grpbyte = 1; grpbyte < 8; grpbyte++) {
-      bit7 = (src[0] << grpbyte) & 0x80;
-      bit0to6 = (src[grpbyte]) & 0x7f;
-      packet_buffer[out_byte] = bit7 | bit0to6;
-      checksum ^= packet_buffer[out_byte];
-      out_byte++;
-      if (out_byte == num_final_bytes) {
-        goto done;
-      }
-    }
-    src += 8;
+groups:
+  if (!numgrps) {
+    goto epilog;
   }
+  // 73 grps of 7 in a 512 byte packet
+  do {
+    bit7 = *(++src) << 1;
+
+    *dst = (bit7 & 0x80) | (*(++src) & 0x7f);
+    bit7 <<= 1;
+    checksum ^= *(dst++);
+
+    *dst = (bit7 & 0x80) | (*(++src) & 0x7f);
+    bit7 <<= 1;
+    checksum ^= *(dst++);
+
+    *dst = (bit7 & 0x80) | (*(++src) & 0x7f);
+    bit7 <<= 1;
+    checksum ^= *(dst++);
+
+    *dst = (bit7 & 0x80) | (*(++src) & 0x7f);
+    bit7 <<= 1;
+    checksum ^= *(dst++);
+
+    *dst = (bit7 & 0x80) | (*(++src) & 0x7f);
+    bit7 <<= 1;
+    checksum ^= *(dst++);
+
+    *dst = (bit7 & 0x80) | (*(++src) & 0x7f);
+    bit7 <<= 1;
+    checksum ^= *(dst++);
+
+    *dst = (bit7 & 0x80) | (*(++src) & 0x7f);
+    bit7 <<= 1;
+    checksum ^= *(dst++);
+
+  } while (--numgrps);
+
+epilog:
+  evenbits = *(++src) & 0x55;
+  oddbits = (*(++src) & 0x55 ) << 1;
+
 done:
   if (checksum == (oddbits | evenbits))
     return 0; //noerror
