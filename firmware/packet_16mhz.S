@@ -107,18 +107,22 @@ recv_start:
           rjmp recv_cancel                                           ;if not, return with an error
           rjmp recv_start
                                                                      ; wait for half a bit, 2us (32 cycles total)
-2:        ldi  r24,10                                                ; 30 cycles waster
+2:        ldi  r24,6                                                 ; 19 cycles waster - previous checks ate some of the 32
 3:        dec  r24                                                   ;(1*9 decrement)
-          brne 3b                                                    ;(3*8 loop, +2)
+          brne 3b                                                    ;(3*6 loop, +2)
+          nop
 
 nxtbyte:                  ; nxtbyte to loadbit: 1 + 11(nxtbit)                                   = 12
           ldi  r25,8      ; 1
 
 nxtbit:                   ; nxtbit to loadbit: 3(noskip)+8(bitset) or 4(skip)+7(bitclr)          = 11
                                                 ; noskip | skip
-          sbic _SFR_IO_ADDR(RD_PORT_WR),PIN_WR  ; 1      | 2
-          rjmp bitset                           ; 3      |
-          rjmp bitclr                           ;        | 4
+          cbi _SFR_IO_ADDR(WR_PORT_LED),PIN_LED ; 2        2     Toggle LED to get a reference on logic captures
+          sbi _SFR_IO_ADDR(WR_PORT_LED),PIN_LED ; 4        4
+
+          sbic _SFR_IO_ADDR(RD_PORT_WR),PIN_WR  ; 5      | 6
+          rjmp bitset                           ; 7      |
+          rjmp bitclr                           ;        | 8
 
 bitset:                   ; bitset to loadbit: 3+5(carryclr) if noskip; 2+6(bitset_cont) if skip = 8
                           ; noskip  | skip
@@ -153,19 +157,17 @@ carryclr:                 ; carryclr to loadbit: 5 cycles
           nop             ; 4
           nop             ; 5
 
-loadbit:                  ; We are now at 11 cycles since nxtbit
-          rol  r23        ; 1 - total 12
-          dec  r25        ; 1 - total 13
-          breq havebyte   ; 1 - total 14 assuming we don't branch
+loadbit:                  ; We are now at 15 cycles since nxtbit
+          rol  r23        ; 1 - total 16
+          dec  r25        ; 1 - total 17
+          breq havebyte   ; 1 - total 18 assuming we don't branch
 
-          ldi  r24,15     ; waste loop: 1 + 14*3 + 2 = 45 cycles
+          ldi  r24,14     ; waste loop: 1 + 14*3 + 2 = 45 cycles
 4:        dec  r24
           brne 4b
-                          ; We are now at 59 cycles since nxtbit (14 + 45)
-          nop             ; 1 - total 60
-          nop             ; 1 - total 61
-          nop             ; 1 - total 62
-          rjmp nxtbit     ; 2 - total 64 since nxtbit
+                          ; We are now at 63 cycles since nxtbit (18 + 45)
+          nop             ; 1 - total 64
+          rjmp nxtbit
 
 havebyte:                 ; We have a full byte and must go back to nxtbyte in a 64 cycle timeframe
                           ; We come from loadbit and are at 14 cycles since last bit.
@@ -183,13 +185,12 @@ getnext:
           cpi  r22,1      ;19                    ;1   check for status of last bit
           breq wasset     ;20  ;21               ;1/2
 
-                          ; Wait for new byte to begin
-
-wasclr:   sbic _SFR_IO_ADDR(RD_PORT_WR),PIN_WR ;
-          rjmp havesbit                        ; we have read a bit
-          dec  r25
-          breq recv_done                       ; we have timed out, must be end of packet
-          rjmp wasclr
+                                               ; Wait for new byte to begin, this helps resyncing
+wasclr:   sbic _SFR_IO_ADDR(RD_PORT_WR),PIN_WR ; 1 / 2
+          rjmp havesbit                        ; 3      we have read a bit
+          dec  r25                             ;     1
+          breq recv_done                       ;     2 - we have timed out, must be end of packet
+          rjmp wasclr                          ;     4
 
 wasset:   sbis _SFR_IO_ADDR(RD_PORT_WR),PIN_WR
           rjmp havesbit                        ; we have read a bit
@@ -197,11 +198,8 @@ wasset:   sbis _SFR_IO_ADDR(RD_PORT_WR),PIN_WR
           breq recv_done                       ; we have timed out, must be end of packet
           rjmp wasset
 
-                                               ; Resync - 3 to 10 cycles since bit has been toggled
-havesbit:                                      ; wait for half a bit, 2us (32 cycles total)
-                                               ; Must waste 22-29 cycles.
-
-          ldi  r24,7                           ;delay total of 21 cycles
+havesbit:
+          ldi  r24,6                           ; delay 18 cycles to get to mid-window
 5:        dec  r24
           brne 5b
           rjmp nxtbyte
