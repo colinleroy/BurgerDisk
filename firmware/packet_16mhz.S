@@ -62,24 +62,49 @@ recv_cancel:
           ldi  r24,1                               ;setup return value, 1=error
           clr  r25
           sei
-          ret
+          rjmp pop_and_ret
 
-//*****************************************************************************
-// Function: ReceivePacket
-// Parameters: packet_buffer pointer
-// Returns: status (not used yet, always returns 0)
-//
-// Description: This handles the ACK and REQ lines and reads a packet into the 
-// packet_buffer. Warning: returns with interrupts off, must be followed by either
-// AckPacket or IgnorePacket.
-// Returns 0 on success, 1 if bus deactivated, 2 if start byte not found
-//*****************************************************************************
+/******************************************************************************
+Function: ReceivePacket
+Parameters: packet_buffer pointer
+Returns: status (not used yet, always returns 0)
+Description: This handles the ACK and REQ lines and reads a packet into the 
+packet_buffer. Warning: returns with interrupts off, must be followed by either
+AckPacket or IgnorePacket.
+Returns 0 on success, 1 if bus deactivated, 2 if start byte not found
+
+Register use:
+r19: got packet_start
+r20: header bytes counter
+r21: computed checksum
+r22: line state
+r23: current byte
+r24: sync cycle counter
+r25: bit counter/timeout counter
+r26: X index
+r27: X index
+r28: MSB byte, then expected checksum byte
+r29: number of bytes before next MSB byte
+r30: numodd
+r31: numgrp
+*****************************************************************************/
 .global ReceivePacket
 
 ReceivePacket:
           cli
-          mov  XL,r24                                                ;move packet buffer pointer into X
+          mov  XL,r24                 ;move packet buffer pointer into X
           mov  XH,r25
+          push r19                    ;Backup every register we use. Only r19 is
+          push r20                    ;necessary *apparently* but heh.
+          push r21
+          push r22
+          push r23
+          push r26
+          push r27
+          push r28
+          push r29
+          push r30
+          push r31
 
           clr  r19                    ;clear start of packet found flag (r19)
           st  x+, r19
@@ -101,123 +126,267 @@ recv_wait_ack:
           ldi  r22,1
 recv_start:
           sbis _SFR_IO_ADDR(RD_PORT_WR),PIN_WR
-          rjmp 2f                                                    ; 3 cycles min, 7 cycles max
+          rjmp first_transition                                                    ; 3 cycles min, 7 cycles max
 
           sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;Don't wait forever, verify that REQ is still high
           rjmp recv_cancel                                           ;if not, return with an error
           rjmp recv_start
+
+first_transition:
                                                                      ; wait for half a bit, 2us (32 cycles total)
-2:        ldi  r24,6                                                 ; 19 cycles waster - previous checks ate some of the 32
+          ldi  r24,6                                                 ; 19 cycles waster - previous checks ate some of the 32
 3:        dec  r24                                                   ;(1*9 decrement)
           brne 3b                                                    ;(3*6 loop, +2)
           nop
 
-nxtbyte:                  ; nxtbyte to loadbit: 1 + 11(nxtbit)                                   = 12
-          ldi  r25,8      ; 1
+next_byte:                                      ; next_byte to load_bit: 1 + 11(next_bit)                                   = 12
+          ldi  r25,8                            ; 1
 
-nxtbit:                   ; nxtbit to loadbit: 3(noskip)+8(bitset) or 4(skip)+7(bitclr)          = 11
+next_bit:                                       ; next_bit to load_bit: 3(noskip)+8(line_is_up) or 4(skip)+7(line_is_down)          = 11
                                                 ; noskip | skip
           cbi _SFR_IO_ADDR(WR_PORT_LED),PIN_LED ; 2        2     Toggle LED to get a reference on logic captures
           sbi _SFR_IO_ADDR(WR_PORT_LED),PIN_LED ; 4        4
 
           sbic _SFR_IO_ADDR(RD_PORT_WR),PIN_WR  ; 5      | 6
-          rjmp bitset                           ; 7      |
-          rjmp bitclr                           ;        | 8
+          rjmp line_is_up                       ; 7      |
+          rjmp line_is_down                     ;        | 8
 
-bitset:                   ; bitset to loadbit: 3+5(carryclr) if noskip; 2+6(bitset_cont) if skip = 8
-                          ; noskip  | skip
-          sbrc r22,0      ; 1       | 2
-          rjmp carryclr   ; 3
-bitset_cont:              ; bitset_cont to loadbit: 6 cycles
-          ldi  r22,1      ; 1
-          sec             ; 2
-          nop             ; 3
-          nop             ; 4
-          rjmp loadbit    ; 6
+line_is_up:                  ; line_is_up to load_bit: 3+5(line_was_down) if noskip; 2+6(line_is_up_cont) if skip = 8
+                             ; noskip  | skip
+          sbrc r22,0         ; 1       | 2
+          rjmp line_was_down ; 3
+line_is_up_cont:             ; line_is_up_cont to load_bit: 6 cycles
+          ldi  r22,1         ; 1
+          sec                ; 2
+          nop                ; 3
+          nop                ; 4
+          rjmp load_bit      ; 6
 
-bitclr:                   ; bitclr to loadbit: 3+4(carryset) if noskip, 2+5(bitclr_cont) if skip = 7
-                          ; noskip  | skip
-          sbrc r22,0      ; 1       | 2
-          rjmp carryset   ; 3
-bitlcr_cont:              ; bitclr_cont to loadbit: 5 cycles
-          ldi  r22,0      ; 1
-          clc             ; 2
-          nop             ; 3
-          rjmp loadbit    ; 5
+line_is_down:                ; line_is_down to load_bit: 3+4(line_was_up) if noskip, 2+5(line_is_down_cont) if skip = 7
+                             ; noskip  | skip
+          sbrc r22,0         ; 1       | 2
+          rjmp line_was_up   ; 3
+line_is_down_cont:           ; line_is_down_cont to load_bit: 5 cycles
+          ldi  r22,0         ; 1
+          clc                ; 2
+          nop                ; 3
+          rjmp load_bit      ; 5
 
-carryset:                 ; carryset to loadbit: 4 cycles
-          ldi  r22,0      ; 1
-          sec             ; 2
-          rjmp loadbit    ; 4
+line_was_up:                 ; line_was_up to load_bit: 4 cycles
+          ldi  r22,0         ; 1
+          sec                ; 2
+          rjmp load_bit      ; 4
 
-carryclr:                 ; carryclr to loadbit: 5 cycles
-          ldi  r22,1      ; 1
-          clc             ; 2
-          nop             ; 3
-          nop             ; 4
-          nop             ; 5
+line_was_down:               ; line_was_down to load_bit: 5 cycles
+          ldi  r22,1         ; 1
+          clc                ; 2
+          nop                ; 3
+          nop                ; 4
+          nop                ; 5
 
-loadbit:                  ; We are now at 15 cycles since nxtbit
-          rol  r23        ; 1 - total 16
-          dec  r25        ; 1 - total 17
-          breq havebyte   ; 1 - total 18 assuming we don't branch
+load_bit:                    ; We are now at 15 cycles since next_bit
+          rol  r23           ; 1 - total 16
+          dec  r25           ; 1 - total 17
+          breq byte_done     ; 1 - total 18 assuming we don't branch
 
-          ldi  r24,14     ; waste loop: 1 + 14*3 + 2 = 45 cycles
+          ldi  r24,14        ; waste loop: 1 + 14*3 + 2 = 45 cycles
 4:        dec  r24
           brne 4b
-                          ; We are now at 63 cycles since nxtbit (18 + 45)
-          nop             ; 1 - total 64
-          rjmp nxtbit
+                             ; We are now at 63 cycles since next_bit (18 + 45)
+          nop                ; 1 - total 64
+          rjmp next_bit
 
-havebyte:                 ; We have a full byte and must go back to nxtbyte in a 64 cycle timeframe
-                          ; We come from loadbit and are at 14 cycles since last bit.
-                          ; No need to count cycles here, we'll resync on the next change (MSB always set)
-handle_byte:
-          cpi  r19,1      ;check flag (r19) to see if we have received the start byte
-          breq pktstrtd   ;yes, hop around the start byte check and continue (3 cycles)
-          cpi  r23,0xC3   ;else see if its the packet start byte (these cycles are ignored)
-          brne getnext    ;no, must be sync byte, skip and go get next byte
-          ldi  r19,1      ;yes, set r19=1 as flag to say we have received the start of the packet
-pktstrtd:
-          st   x+,r23     ;17                    ;2   save byte in buffer
-getnext:
-          ldi  r25,100    ;18                    ;1   timeout counter if we are at the end
-          cpi  r22,1      ;19                    ;1   check for status of last bit
-          breq wasset     ;20  ;21               ;1/2
+byte_done:                   ; We have a full byte and must go back to next_byte in a 64 cycle timeframe
+                             ; We come from load_bit and are at 14 cycles since last bit.
+                             ; No need to count cycles here, we'll resync on the next change (MSB always set)
+          cpi  r19,0         ;check flag (r19) to see if we have received the start byte
+          brne store_byte    ;yes, hop around the start byte check and continue (3 cycles)
+          cpi  r23,0xC3      ;else see if its the packet start byte (these cycles are ignored)
+          brne wait_next     ;no, must be sync byte, skip and go get next byte
+          ldi  r19,1         ;yes, set r19=1 as flag to say we have received the start of the packet
+store_byte:
+          st   x+,r23        ;17                    ;2   save byte in buffer
 
-                                               ; Wait for new byte to begin, this helps resyncing
-wasclr:   sbic _SFR_IO_ADDR(RD_PORT_WR),PIN_WR ; 1 / 2
-          rjmp havesbit                        ; 3      we have read a bit
-          dec  r25                             ;     1
-          breq recv_done                       ;     2 - we have timed out, must be end of packet
-          rjmp wasclr                          ;     4
+wait_next:                   ; Wait for next transition, start of next byte
+          ldi  r25,100       ;18                    ;1   timeout counter if we are at the end
+          cpi  r22,1         ;19                    ;1   check for status of last bit
+          breq wait_down     ;20  ;21               ;1/2
 
-wasset:   sbis _SFR_IO_ADDR(RD_PORT_WR),PIN_WR
-          rjmp havesbit                        ; we have read a bit
+                             ; Wait for new byte to begin, so we can resync
+wait_up:
+          sbic _SFR_IO_ADDR(RD_PORT_WR),PIN_WR ; 1 / 2
+          rjmp got_transition                  ; 3      we have read a bit
           dec  r25
-          breq recv_done                       ; we have timed out, must be end of packet
-          rjmp wasset
+          brne wait_up
+          rjmp recv_done
 
-havesbit:
-          ldi  r24,6                           ; delay 18 cycles to get to mid-window
-5:        dec  r24
-          brne 5b
-          rjmp nxtbyte
+wait_down:
+          sbis _SFR_IO_ADDR(RD_PORT_WR),PIN_WR
+          rjmp got_transition                  ; we have read a bit
+          dec  r25
+          brne wait_down
+          rjmp recv_done                       ; we have timed out, must be end of packet
+
+                                               ;Unreachable from previous branches
+verify_chksum_h:                               ;inlined here for branching reach
+          ldi  r19, 7                          ;this is the last step. nothing to do next
+          rol  r23                             ;get relevant bits of checksum byte
+          andi r23,0xAA
+          or   r28,r23                         ;expected checksum ready in r28
+          nop
+          nop
+          nop
+          rjmp waste6                         ;9 cycles incl jump
+
+got_transition:                               ; Compute checksum in 18 cycles :-)
+          cpi  r19,3
+          breq compute_odd_chksum             ; takes 15 cycles + 3 = 18
+          cpi  r19,4
+          breq compute_grp_chksum             ; takes 13 cycles + 5 = 18
+          cpi  r19,2
+          breq chksum_hdr                     ; takes 12 cycles + 7 = 19 at worst... good enough
+          cpi  r19,5
+          breq verify_chksum_h                ; takes 9 cycles + 9 = 18
+          cpi  r19,1
+          breq packet_started                 ; takes 7 cycles + 11 = 18
+          rjmp waste6                         ; takes 12 cycles + 6 = 18
+
+packet_started:
+          ldi  r20, 7                          ;set num header bytes to 7
+          clr  r21                             ;clear checksum
+          ldi  r19, 2                          ;next state = chksum_hdr
+          rjmp waste2                          ;took 5 cycles incl jump, 7 with waste
+
+chksum_hdr:
+          eor  r21, r23                        ;checksum one header byte
+          dec  r20                             ;dec num_header bytes to check
+          cpi  r20, 1                          ;if it's second to last, it's the number of odd bytes.
+          breq get_numodd
+          cpi  r20, 0                          ;if it's the last, it's the number of group bytes.
+          brne chk_waste                       ;otherwise we're done
+get_numgrps:
+          andi r23, 0x7F                       ;clear high bit
+          mov  r31, r23                        ;store numgrps
+          ldi  r19, 3                          ;next step is data checksumming of the odd bytes
+          rjmp next_byte                       ;took 11 cycles incl jump, 18 total
+chk_waste:rjmp waste2                          ;took 9 cycles+2, 18 total
+
+get_numodd:
+          andi r23, 0x7F                      ;clear high bit
+          mov  r30, r23                       ;store numodd
+          clr  r29                            ;we'll need to fetch MSBs so note we have no high bits available
+          nop
+          rjmp next_byte                      ;took 11 cycles incl jump, 18 total
+
+compute_odd_chksum:
+          nop
+          nop
+          cpi  r30, 0                          ;more odd bytes?
+          breq odd_chksum_done
+          cpi  r29, 0                          ;do we have the MSB byte?
+          brne eor_odd                         ;if no, fetch it
+          mov  r29, r30                        ;all odd bytes need a single MSB
+          mov  r28, r23                        ;store MSB for odd
+          rol  r28                             ;get rid of its high bit
+          nop
+          nop
+          nop
+          nop
+          rjmp next_byte                       ;15 cycles incl jump
+
+eor_odd:
+          rol  r23                             ;get rid of odd byte's high bit
+          clc
+          rol  r28                             ;get high bit from current MSB byte
+          ror  r23                             ;put it in odd byte
+          eor  r21, r23                        ;update checksum
+          dec  r30                             ;one odd byte done
+          rjmp next_byte                       ;15 cycles incl jump
+
+odd_chksum_done:                               ;we're done with odd bytes
+          cpi  r31, 0                          ;do we have group bytes?
+          breq verify_chksum_l                 ;if no groups, go start verifying the checksum
+
+          ldi  r19, 4                          ;next step is checksumming groups
+          dec  r31                             ;dec groups for next time
+          mov  r28, r23                        ;store current MSB byte
+          rol  r28                             ;get rid of its high bit
+          ldi  r29, 7                          ;set available MSB bits
+          nop
+          rjmp next_byte                       ;15 cycles incl jump
+
+verify_chksum_l:
+          ldi  r19, 5                          ;next byte is checksum high
+          andi r23, 0x55                       ;mask relevant bits
+          mov  r28, r23                        ;and store in expected checksum byte
+          rjmp next_byte                       ;15 cycles incl jump
+
+compute_grp_chksum:
+          cpi  r29, 0                          ;do we need to fetch MSBs?
+          breq next_group
+cont_group:
+          dec  r29                             ;decrement number of available MSBs
+          rol  r23                             ;clear non-decoded data byte's high bit
+          clc
+          rol  r28                             ;current MSB to carry
+          ror  r23                             ;carry to current byte
+          eor  r21, r23                        ;update computed checksum
+          nop
+          nop
+          nop
+          rjmp next_byte                       ;13 cycles incl jump
+next_group:
+          nop
+          dec  r31                             ;finished a group, dec their number
+          brpl store_group_msb                 ; if there's more, store byte as MSB
+          rjmp verify_chksum_l                 ; 8 cycles so far... 13 total
+
+store_group_msb:
+          mov  r28, r23                        ;store MSB
+          rol  r28                             ;get rid of its high bit
+          ldi  r29, 7                          ;7 MSBs available
+          nop
+          rjmp next_byte                       ;13 cycles incl jump
 
 recv_done:
           clr  r23
           st   x+,r23                          ;save zero byte in buffer to mark end
 
-          cpi  r19,1                           ;check flag (r19) to see if we have received the start byte
-          breq ok                              ;yes, return success
-          ldi  r24,2
           clr  r25
-          ret
 
-ok:
-          clr  r25                             ;return no error (for now)
-          clr  r24
-          ret
+          cpi  r19, 7                          ;have we finished the packet?
+          brne nopkt_error
+
+          clr  r24                             ;return no error
+          cp   r28, r21                        ;check checksum...
+          brne chk_error
+          rjmp pop_and_ret
+
+chk_error:
+          ; In case of checksum error, wait for REQ to go low so caller can retry
+          ; without a race condition on ACK/REQ
+          sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;wait for REQ line to go low
+          rjmp ret_chkerr                                            ;this indicates host has acknowledged ACK
+          rjmp chk_error
+ret_chkerr:
+          ldi  r24, 8                          ;return checksum error
+          rjmp pop_and_ret
+
+nopkt_error:
+          ; same for incomplete packet
+          sbis _SFR_IO_ADDR(RD_PORT_REQ),PIN_REQ                     ;wait for REQ line to go low
+          rjmp ret_nopkterr                                          ;this indicates host has acknowledged ACK
+          rjmp nopkt_error
+ret_nopkterr:
+          mov  r24, r19                        ;return step as error
+          ori  r24, 0x80                       ;with high bit in case it's zero
+          rjmp pop_and_ret
+
+waste6:   nop
+          nop
+          nop
+          nop
+waste2:   rjmp next_byte
 
 .global AckPacket
 AckPacket:
@@ -288,8 +457,8 @@ nxtsbyte: ld   r23,x+                                               ;59         
                                                                     ;Clr  ;Set
 nxtsbit:  sbrs r23,7                                                ;64(Set) ;64      ;47   ;48   ;1/2 send bit 7 first
                                                                     ;63(Clr)
-          rjmp sbitclr                                              ;64+1             ;48+1       ;2   bit is clear
-sbitset:
+          rjmp sline_is_down                                              ;64+1             ;48+1       ;2   bit is clear
+sline_is_up:
           sbi  _SFR_IO_ADDR(WR_PORT_RD),PIN_RD                      ;2    ;2   set bit for 1us (14 cycles)-->16 cycles for 16Mhz(2 more)
 
           ldi  r24,4                                                ;1   |delay total of 12 cycles
@@ -322,7 +491,7 @@ nxtsbyt1:                                                           ;5          
           rjmp nxtsbyte                                             ;41         ;2
 
 ; bit is clr, we need to check if its the last one, otherwise delay for 4us before next bit
-sbitclr:  dec  r25                                                  ;2                   ;1
+sline_is_down:  dec  r25                                                  ;2                   ;1
           breq nxtsbycl                                             ;4       ;3                   ;1/2 end of byte, delay then get nxt
           rol  r23                                                  ;4                   ;1
                                                                     ;    delay to makeup 4us (56 cycles total)-->64 cycles for 16Mhz(8 more)
@@ -361,4 +530,18 @@ send_done:
           clr  r25
           clr  r24                                                   ;return no error
           sei
+          ret
+
+pop_and_ret:
+          pop  r31
+          pop  r30
+          pop  r29
+          pop  r28
+          pop  r27
+          pop  r26
+          pop  r23
+          pop  r22
+          pop  r21
+          pop  r20
+          pop  r19
           ret
