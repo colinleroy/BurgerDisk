@@ -85,11 +85,10 @@ r26: X index
 r27: X index
 r28: MSB byte, then expected checksum byte
 r29: number of bytes before next MSB byte
-r30: numodd
-r31: numgrp
+r17: numodd
+r18: numgrp
 *****************************************************************************/
 .global ReceivePacket
-
 ReceivePacket:
           cli
           mov  XL,r24                 ;move packet buffer pointer into X
@@ -103,8 +102,8 @@ ReceivePacket:
           push r27
           push r28
           push r29
-          push r30
-          push r31
+          push r17
+          push r18
 
           clr  r19                    ;clear start of packet found flag (r19)
           st  x+, r19
@@ -233,10 +232,7 @@ verify_chksum_h:                               ;inlined here for branching reach
           rol  r23                             ;get relevant bits of checksum byte
           andi r23,0xAA
           or   r28,r23                         ;expected checksum ready in r28
-          nop
-          nop
-          nop
-          rjmp waste6                         ;9 cycles incl jump
+          rjmp waste3                          ;9 cycles incl jump
 
 got_transition:                               ; Compute checksum in 18 cycles :-)
           cpi  r19,3
@@ -260,39 +256,34 @@ packet_started:
 chksum_hdr:
           eor  r21, r23                        ;checksum one header byte
           dec  r20                             ;dec num_header bytes to check
-          cpi  r20, 1                          ;if it's second to last, it's the number of odd bytes.
-          breq get_numodd
-          cpi  r20, 0                          ;if it's the last, it's the number of group bytes.
-          brne chk_waste                       ;otherwise we're done
-get_numgrps:
+          brne check_odds
+get_numgrp:
           andi r23, 0x7F                       ;clear high bit
-          mov  r31, r23                        ;store numgrps
+          mov  r18, r23                        ;store numgrps
           ldi  r19, 3                          ;next step is data checksumming of the odd bytes
-          rjmp next_byte                       ;took 11 cycles incl jump, 18 total
-chk_waste:rjmp waste2                          ;took 9 cycles+2, 18 total
-
+          rjmp waste3                          ;11 cycles
+check_odds:
+          cpi  r20, 1                          ;if it's second to last, it's the number of odd bytes.
+          brne skip
 get_numodd:
           andi r23, 0x7F                      ;clear high bit
-          mov  r30, r23                       ;store numodd
+          mov  r17, r23                       ;store numodd
           clr  r29                            ;we'll need to fetch MSBs so note we have no high bits available
-          nop
           rjmp next_byte                      ;took 11 cycles incl jump, 18 total
+skip:
+          rjmp waste2                         ;took 9 cycles+2, 18 total
 
 compute_odd_chksum:
           nop
           nop
-          cpi  r30, 0                          ;more odd bytes?
+          cpi  r17, 0                          ;more odd bytes?
           breq odd_chksum_done
           cpi  r29, 0                          ;do we have the MSB byte?
           brne eor_odd                         ;if no, fetch it
-          mov  r29, r30                        ;all odd bytes need a single MSB
+          mov  r29, r17                        ;all odd bytes need a single MSB
           mov  r28, r23                        ;store MSB for odd
           rol  r28                             ;get rid of its high bit
-          nop
-          nop
-          nop
-          nop
-          rjmp next_byte                       ;15 cycles incl jump
+          rjmp waste4                          ;15 cycles incl jump
 
 eor_odd:
           rol  r23                             ;get rid of odd byte's high bit
@@ -300,15 +291,15 @@ eor_odd:
           rol  r28                             ;get high bit from current MSB byte
           ror  r23                             ;put it in odd byte
           eor  r21, r23                        ;update checksum
-          dec  r30                             ;one odd byte done
+          dec  r17                             ;one odd byte done
           rjmp next_byte                       ;15 cycles incl jump
 
 odd_chksum_done:                               ;we're done with odd bytes
-          cpi  r31, 0                          ;do we have group bytes?
+          cpi  r18, 0                          ;do we have group bytes?
           breq verify_chksum_l                 ;if no groups, go start verifying the checksum
 
           ldi  r19, 4                          ;next step is checksumming groups
-          dec  r31                             ;dec groups for next time
+          dec  r18                             ;dec groups for next time
           mov  r28, r23                        ;store current MSB byte
           rol  r28                             ;get rid of its high bit
           ldi  r29, 7                          ;set available MSB bits
@@ -337,7 +328,7 @@ cont_group:
           rjmp next_byte                       ;13 cycles incl jump
 next_group:
           nop
-          dec  r31                             ;finished a group, dec their number
+          dec  r18                             ;finished a group, dec their number
           brpl store_group_msb                 ; if there's more, store byte as MSB
           rjmp verify_chksum_l                 ; 8 cycles so far... 13 total
 
@@ -383,9 +374,9 @@ ret_nopkterr:
           rjmp pop_and_ret
 
 waste6:   nop
-          nop
-          nop
-          nop
+waste5:   nop
+waste4:   nop
+waste3:   nop
 waste2:   rjmp next_byte
 
 .global AckPacket
@@ -533,8 +524,8 @@ send_done:
           ret
 
 pop_and_ret:
-          pop  r31
-          pop  r30
+          pop  r18
+          pop  r17
           pop  r29
           pop  r28
           pop  r27
