@@ -244,7 +244,7 @@ got_transition:                               ; Compute checksum in 18 cycles :-
           cpi  r19,4
           breq compute_grp_chksum             ; takes 13 cycles + 5 = 18
           cpi  r19,2
-          breq chksum_hdr                     ; takes 12 cycles + 7 = 19 at worst... good enough
+          breq chksum_hdr                     ; takes 11 cycles + 7 = 18
           cpi  r19,5
           breq verify_chksum_h                ; takes 9 cycles + 9 = 18
           cpi  r19,1
