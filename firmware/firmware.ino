@@ -413,17 +413,24 @@ static void smartport_write_block(unsigned char partition, unsigned char extende
   unsigned long int block_num;
   SP_Error status;
   unsigned int numodd, numgrps, bytes_to_write;
+  unsigned char tries = 5;
 
   block_num = smartport_get_block_num_from_buf(extended);
 
-  ReceivePacket((unsigned char*) packet_buffer);
+try_again:
+  if (ReceivePacket((unsigned char*) packet_buffer) != 0) {
+    if (tries--) {
+      Serial.print('.');
+      goto try_again;
+    }
+  }
   AckPacket();
 
   numodd  = packet_buffer[11]&0x7F;
   numgrps = packet_buffer[12]&0x7F;
   bytes_to_write = numodd + numgrps*7;
 
-  DumpPacket(packet_buffer, 2);
+  // DumpPacket(packet_buffer, 2);
 
   DEBUG_CMD(extended?'W':'w', devices[partition].device_id, block_num);
 
@@ -715,4 +722,10 @@ static void FullPacketDump(unsigned char decoded) {
     Serial.print(packet_buffer[i], HEX);
   }
   Serial.println();
+}
+
+static void dump(char *str, unsigned char i) {
+  Serial.print(str);
+  Serial.print("= 0x");
+  Serial.println(i, HEX);
 }
