@@ -71,7 +71,6 @@
 unsigned char open_partitions = 0;
 unsigned char debug = 0;
 unsigned char force_next_smartport = 1;
-unsigned char extended_option = 0;
 
 unsigned char *packet_buffer;
 unsigned char identifier = '0';
@@ -188,8 +187,6 @@ static void init_storage(void) {
         debug = (packet_buffer[6] == '1');
       } else if (!strncmp((const char *)packet_buffer, "force_next_smartport=", 21)) {
         force_next_smartport = (packet_buffer[21] == '1');
-      } else if (!strncmp((const char *)packet_buffer, "extended=", 9)) {
-        extended_option = (packet_buffer[9] == '1');
       }
     }
     optionsFile.close();
@@ -251,29 +248,12 @@ static unsigned char get_device_partition(unsigned char device_id) {
 }
 
 // Helper to extract the block number from the Smartport packet
-static unsigned long int smartport_get_block_num_from_buf(unsigned char extended) {
+static unsigned long int smartport_get_block_num_from_buf(void) {
   unsigned long int block_num;
-  unsigned char LBE, LBH, LBL, LBN, LBT;
 
-  if (!extended) {
-    LBH = packet_buffer[16]; //high order bits
-    LBN = packet_buffer[19]; //block number low
-    LBL = packet_buffer[20]; //block number middle
-    LBT = packet_buffer[21]; //block number high
-    block_num = (LBN & 0x7f) | (((unsigned short)LBH << 3) & 0x80);
-    block_num = block_num + ( ((unsigned long)((LBL & 0x7f) | (((unsigned short)LBH << 4) & 0x80))) << 8);
-    block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 16);
-  } else {
-    LBH = packet_buffer[16]; //high order bits
-    LBN = packet_buffer[18]; //block number low
-    LBL = packet_buffer[19]; //block number middle
-    LBT = packet_buffer[20]; //block number high
-    LBE = packet_buffer[21]; //extra block number
-    block_num = (LBN & 0x7f) | (((unsigned short)LBH << 2) & 0x80);
-    block_num = block_num + ( ((unsigned long)((LBL & 0x7f) | (((unsigned short)LBH << 3) & 0x80))) << 8);
-    block_num = block_num + ( ((unsigned long)((LBT & 0x7f) | (((unsigned short)LBH << 4) & 0x80))) << 16);
-    block_num = block_num + ( ((unsigned long)((LBE & 0x7f) | (((unsigned short)LBH << 5) & 0x80))) << 24);
-  }
+  block_num = ((unsigned long int)packet_buffer[PACKET_BLOCK_NUM_L])
+            | ((unsigned long int)packet_buffer[PACKET_BLOCK_NUM_M] << 8)
+            | ((unsigned long int)packet_buffer[PACKET_BLOCK_NUM_H] << 16);
 
   return block_num;
 }
@@ -343,43 +323,43 @@ static void smartport_device_reset(void) {
 }
 
 //Smartport STATUS handler
-static void smartport_answer_status(unsigned char partition, unsigned char extended) {
+static void smartport_answer_status(unsigned char partition) {
   SP_Status_Code status_code;
 
   if (open_partitions == 0)
     init_storage();
 
-  status_code = (SP_Status_Code)(packet_buffer[extended ? 18:19] & 0x7f);
-  DEBUG_CMD(extended?'S':'s', devices[partition].device_id, status_code);
+  status_code = (SP_Status_Code)(packet_buffer[PACKET_STATCODE_TYPE]);
+  DEBUG_CMD('s', devices[partition].device_id, status_code);
 
   switch (status_code) {
     case SP_STATUS_DIB:
-      encode_status_dib_reply_packet(devices[partition].device_id, extended, devices[partition].blocks);
+      encode_status_dib_reply_packet(devices[partition].device_id, devices[partition].blocks);
       break;
     case SP_STATUS_SIMPLE:
-      encode_status_reply_packet(devices[partition].device_id, extended, SP_SUCCESS, devices[partition].blocks);
+      encode_status_reply_packet(devices[partition].device_id, SP_SUCCESS, devices[partition].blocks);
       break;
     default:
-      encode_status_reply_packet(devices[partition].device_id, extended, SP_BADCTL, devices[partition].blocks);
+      encode_status_reply_packet(devices[partition].device_id, SP_BADCTL, devices[partition].blocks);
       break;
   }
   SendPacket( (unsigned char*) packet_buffer);
 }
 
 //Smartport READ handler
-static void smartport_read_block(unsigned char partition, unsigned char extended) {
+static void smartport_read_block(unsigned char partition) {
   unsigned long int block_num;
   SP_Error status = SP_SUCCESS;
   unsigned char tries = 3;
   int r;
 
-  block_num = smartport_get_block_num_from_buf(extended);
+  block_num = smartport_get_block_num_from_buf();
 
 read_again:
   if (open_partitions == 0)
     init_storage();
 
-  DEBUG_CMD(extended?'R':'r', devices[partition].device_id, block_num);
+  DEBUG_CMD('r', devices[partition].device_id, block_num);
 
   if (!devices[partition].sdf.isOpen()) {
     status = SP_OFFLINE;
@@ -404,21 +384,21 @@ reply:
   if (status != SP_SUCCESS)
     DEBUG_CMD('E', devices[partition].device_id, status);
 
-  encode_data_packet(devices[partition].device_id, extended, status);
+  encode_data_packet(devices[partition].device_id, status);
   SendPacket( (unsigned char*) packet_buffer);
 }
 
 //Smartport WRITE handler
-static void smartport_write_block(unsigned char partition, unsigned char extended) {
+static void smartport_write_block(unsigned char partition) {
   unsigned long int block_num;
   SP_Error status;
   unsigned int numodd, numgrps, bytes_to_write;
-  unsigned char tries = 5;
+  unsigned char tries = 5, r;
 
-  block_num = smartport_get_block_num_from_buf(extended);
+  block_num = smartport_get_block_num_from_buf();
 
 try_again:
-  if (ReceivePacket((unsigned char*) packet_buffer) != 0) {
+  if ((r = ReceivePacket((unsigned char*) packet_buffer)) != 0) {
     if (tries--) {
       Serial.print('.');
       goto try_again;
@@ -426,15 +406,15 @@ try_again:
   }
   AckPacket();
 
-  numodd  = packet_buffer[11]&0x7F;
-  numgrps = packet_buffer[12]&0x7F;
+  numodd  = packet_buffer[PACKET_NUM_ODD]&0x7F;
+  numgrps = packet_buffer[PACKET_NUM_GRP]&0x7F;
   bytes_to_write = numodd + numgrps*7;
 
-  // DumpPacket(packet_buffer, 2);
+  DumpPacket(packet_buffer, 2);
 
-  DEBUG_CMD(extended?'W':'w', devices[partition].device_id, block_num);
+  DEBUG_CMD('w', devices[partition].device_id, block_num);
 
-  if (decode_data_packet(extended) != 0 || bytes_to_write != 512) {
+  if (r != 0 || bytes_to_write != 512) {
     status = SP_BADCMD;
     goto reply;
   }
@@ -455,7 +435,7 @@ try_again:
     goto reply;
   }
   // Write block to SD Card
-  if (devices[partition].sdf.write((unsigned char*) packet_buffer, bytes_to_write) != bytes_to_write) {
+  if (devices[partition].sdf.write((unsigned char*) packet_buffer+PACKET_DATA_START, bytes_to_write) != bytes_to_write) {
     log_io_err(F("Write"), partition, block_num);
     // Sadly no retry here, ase init_storage() destroys packet_buffer and we
     // don't have enough RAM to do otherwise.
@@ -471,18 +451,18 @@ reply:
     DEBUG_CMD('E', devices[partition].device_id, status);
 
   //now return status code to host
-  encode_write_status_packet(devices[partition].device_id, extended, status);
+  encode_write_status_packet(devices[partition].device_id, status);
   SendPacket( (unsigned char*) packet_buffer);
 }
 
 //Smartport FORMAT handler
-static void smartport_format(unsigned char partition, unsigned char extended) {
-  encode_init_reply_packet(devices[partition].device_id, extended, SP_SUCCESS); //just send back a successful response
+static void smartport_format(unsigned char partition) {
+  encode_init_reply_packet(devices[partition].device_id, SP_SUCCESS); //just send back a successful response
   SendPacket( (unsigned char*) packet_buffer);
 }
 
 //Smartport INIT handler
-static void smartport_init(unsigned char dev_id, unsigned char extended) {
+static void smartport_init(unsigned char dev_id) {
   SP_Error status;
 
   devices[number_partitions_initialised].device_id = dev_id; //remember device id for partition
@@ -502,7 +482,7 @@ static void smartport_init(unsigned char dev_id, unsigned char extended) {
 
   DEBUG_CMD('I', dev_id, status == SP_SUCCESS);
 
-  encode_init_reply_packet(dev_id, extended, status);
+  encode_init_reply_packet(dev_id, status);
   SendPacket( (unsigned char*) packet_buffer);
 }
 
@@ -519,7 +499,7 @@ void loop() {
   unsigned char dev_id, r;
   SP_Command command;
   SP_State smartport_state;
-  unsigned char partition, command_extended;
+  unsigned char partition;
 
   SP_ACK_MUTE();
   SP_RD_MUTE();
@@ -554,10 +534,10 @@ void loop() {
         break;
       }
 
-      dev_id = packet_buffer[6];
-      command = (SP_Command) packet_buffer[14];
+      dev_id = packet_buffer[PACKET_DEST];
+      command = (SP_Command) packet_buffer[PACKET_COMMAND];
 
-      if ((command & ~COMMAND_EXTENDED_BIT) == SP_INIT && !device_init_done) {
+      if (command == SP_INIT && !device_init_done) {
         AckPacket();
       } else if ((partition = get_device_partition(dev_id)) != NO_PARTITION) {
         AckPacket();
@@ -569,34 +549,33 @@ void loop() {
       }
 
       SET_LED_HIGH;
+      DumpPacket(packet_buffer, 0);
 
-      command_extended = (command & COMMAND_EXTENDED_BIT) != 0;
-      command = (SP_Command)(command & ~COMMAND_EXTENDED_BIT);
       switch (command) {
       case SP_INIT:
         //we may not have a dev_id/partition match yet
-        smartport_init(dev_id, command_extended);
+        smartport_init(dev_id);
         break;
 
       case SP_STATUS:
-        smartport_answer_status(partition, command_extended);
+        smartport_answer_status(partition);
         break;
 
       case SP_READ:
-        smartport_read_block(partition, command_extended);
+        smartport_read_block(partition);
         break;
 
       case SP_WRITE:
-        smartport_write_block(partition, command_extended);
+        smartport_write_block(partition);
         break;
 
       case SP_FORMAT:
-        smartport_format(partition, command_extended);
+        smartport_format(partition);
         break;
 
       default:
-        LOGN(F("E:"), packet_buffer[14], HEX);
-        encode_init_reply_packet(devices[partition].device_id, command_extended, SP_BADCMD);
+        LOGN(F("E:"), packet_buffer[PACKET_COMMAND], HEX);
+        encode_init_reply_packet(devices[partition].device_id, SP_BADCMD);
         SendPacket( (unsigned char*) packet_buffer);
         break;
       }
@@ -692,14 +671,14 @@ static void DumpPacket(unsigned char *buffer, unsigned char type) {
     Serial.print(F("Data: "));
   } else {
     Serial.print(F("Packet from: "));
-    Serial.print(buffer[7], HEX);
+    Serial.print(buffer[PACKET_SOURCE], HEX);
     Serial.print(F(", To: "));
-    Serial.print(buffer[6], HEX);
+    Serial.print(buffer[PACKET_DEST], HEX);
     Serial.print(F(", Command: "));
-    Serial.print(buffer[14], HEX);
+    Serial.print(buffer[PACKET_COMMAND], HEX);
     Serial.println();
   }
-  for (unsigned char i = 5; i < 35; i++) {
+  for (unsigned char i = 0; i < 35; i++) {
     Serial.print(' ');
     Serial.print(buffer[i], HEX);
   }

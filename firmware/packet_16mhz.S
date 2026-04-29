@@ -91,8 +91,6 @@ r18: numgrp
 .global ReceivePacket
 ReceivePacket:
           cli
-          mov  XL,r24                 ;move packet buffer pointer into X
-          mov  XH,r25
           push r19                    ;Backup every register we use. Only r19 is
           push r20                    ;necessary *apparently* but heh.
           push r21
@@ -104,6 +102,13 @@ ReceivePacket:
           push r29
           push r17
           push r18
+
+          mov  XL,r24                 ;move packet buffer pointer into X
+          mov  XH,r25
+
+          mov  ZL,r24                 ;decoded data pointer
+          mov  ZH,r25
+          adiw z, 13
 
           clr  r19                    ;clear start of packet found flag (r19)
           st  x+, r19
@@ -261,7 +266,10 @@ get_numgrp:
           andi r23, 0x7F                       ;clear high bit
           mov  r18, r23                        ;store numgrps
           ldi  r19, 3                          ;next step is data checksumming of the odd bytes
-          rjmp waste3                          ;11 cycles
+          nop
+          nop
+          nop
+          rjmp next_byte
 check_odds:
           cpi  r20, 1                          ;if it's second to last, it's the number of odd bytes.
           brne skip
@@ -279,12 +287,7 @@ compute_odd_chksum:
           cpi  r17, 0                          ;more odd bytes?
           breq odd_chksum_done
           cpi  r29, 0                          ;do we have the MSB byte?
-          brne eor_odd                         ;if no, fetch it
-          mov  r29, r17                        ;all odd bytes need a single MSB
-          mov  r28, r23                        ;store MSB for odd
-          rol  r28                             ;get rid of its high bit
-          rjmp waste4                          ;15 cycles incl jump
-
+          breq fetch_odd_msb                   ;if no, fetch it
 eor_odd:
           rol  r23                             ;get rid of odd byte's high bit
           clc
@@ -292,7 +295,13 @@ eor_odd:
           ror  r23                             ;put it in odd byte
           eor  r21, r23                        ;update checksum
           dec  r17                             ;one odd byte done
+          st   z+, r23                         ;store the byte
           rjmp next_byte                       ;15 cycles incl jump
+fetch_odd_msb:
+          mov  r29, r17                        ;all odd bytes need a single MSB
+          mov  r28, r23                        ;store MSB for odd
+          rol  r28                             ;get rid of its high bit
+          rjmp waste3                          ;15 cycles incl jump
 
 odd_chksum_done:                               ;we're done with odd bytes
           cpi  r18, 0                          ;do we have group bytes?
@@ -322,7 +331,7 @@ cont_group:
           rol  r28                             ;current MSB to carry
           ror  r23                             ;carry to current byte
           eor  r21, r23                        ;update computed checksum
-          nop
+          st   z+, r23                         ;and store it
           nop
           nop
           rjmp next_byte                       ;13 cycles incl jump
