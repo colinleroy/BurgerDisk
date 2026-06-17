@@ -79,8 +79,9 @@ unsigned char identifier = '0';
 struct device {
   File sdf;
   unsigned char device_id;              //to hold assigned device id's for the partitions
+  unsigned char dos33;                  //0: ProDOS; 1: DOS3.3
   unsigned long blocks;                 //how many 512-byte blocks this image has
-  unsigned char header_offset;           //Some image files have headers, skip this many bytes to avoid them
+  unsigned char header_offset;          //Some image files have headers, skip this many bytes to avoid them
 };
 
 struct device devices[MAX_PARTITIONS];
@@ -110,6 +111,14 @@ static void deinit_storage(void) {
   }
   sdcard.end();
 }
+
+/* First bytes of sector 1 */
+static unsigned char prodos_sector_1[] = { 0x3F, 0x09, 0x26, 'P', 'R', 'O', 'D', 'O', 'S'};
+static char dos_sector_map[16] = {0x0, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8,
+                                  0x7, 0x6, 0x5, 0x4, 0x3, 0x2, 0x1, 0xF};
+#define BLOCKS_PER_TRACK 8
+#define BLOCK_SIZE       512
+#define SECTOR_SIZE      256
 
 static void init_storage(void) {
   if (open_partitions > 0) {
@@ -160,6 +169,17 @@ static void init_storage(void) {
             devices[open_partitions].header_offset=packet_buffer[_MAX_FILENAME_LEN+0x08];
           } else {
             devices[open_partitions].header_offset=0;
+          }
+
+          /* Check DOS3.3 order on .dsk files */
+          if (((packet_buffer[n-4]&0xdf) == 'D')
+           && ((packet_buffer[n-3]&0xdf) == 'S')
+           && ((packet_buffer[n-2]&0xdf) == 'K')
+           && devices[open_partitions].sdf.seekSet(0xE00+devices[open_partitions].header_offset)
+           && devices[open_partitions].sdf.read(packet_buffer+_MAX_FILENAME_LEN, 0x0F) == 0x0F
+           && !memcmp(packet_buffer+_MAX_FILENAME_LEN, prodos_sector_1, sizeof(prodos_sector_1))) {
+             LOG(F(" DOS3.3 ordered"));
+             devices[open_partitions].dos33 = 1;
           }
           open_partitions++;
         }
@@ -366,20 +386,59 @@ read_again:
     goto reply;
   }
 
-  if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
-    log_io_err(F("Seek"), partition, block_num);
-    status = SP_BADBLOCK;
-    goto reply;
+  if (!devices[partition].dos33) {
+    /* Simple case, read block at once */
+    if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
+      log_io_err(F("Seek"), partition, block_num);
+      status = SP_BADBLOCK;
+      goto reply;
+    }
+
+    //Read block from SD Card
+    if ((r = devices[partition].sdf.read((unsigned char*) packet_buffer, 512)) != 512) {
+      log_io_err(F("Read"), partition, block_num);
+      if (tries--) {
+        goto read_again;
+      }
+      status = SP_IOERROR;
+    }
+  } else {
+    /* Complicated DOS3.3 case, read block in two sectors at two offsets */
+    unsigned long int track_num, sector_a, sector_b;
+    unsigned char block_in_track = block_num % BLOCKS_PER_TRACK;
+    track_num = block_num / BLOCKS_PER_TRACK;
+    track_num = track_num * BLOCKS_PER_TRACK * 512;
+    sector_a = track_num + (dos_sector_map[block_in_track*2] * 256);
+    sector_b = track_num + (dos_sector_map[(block_in_track*2)+1] * 256);
+
+    if (!devices[partition].sdf.seekSet(sector_a+devices[partition].header_offset)) {
+      log_io_err(F("Seek"), partition, block_num);
+      status = SP_BADBLOCK;
+      goto reply;
+    }
+    //Read sector a from SD Card
+    if ((r = devices[partition].sdf.read((unsigned char*) packet_buffer, 256)) != 256) {
+      log_io_err(F("Read"), partition, block_num);
+      if (tries--) {
+        goto read_again;
+      }
+      status = SP_IOERROR;
+    }
+    if (!devices[partition].sdf.seekSet(sector_b+devices[partition].header_offset)) {
+      log_io_err(F("Seek"), partition, block_num);
+      status = SP_BADBLOCK;
+      goto reply;
+    }
+    //Read sector b from SD Card
+    if ((r = devices[partition].sdf.read((unsigned char*) packet_buffer+256, 256)) != 256) {
+      log_io_err(F("Read"), partition, block_num);
+      if (tries--) {
+        goto read_again;
+      }
+      status = SP_IOERROR;
+    }
   }
 
-  //Read block from SD Card
-  if ((r = devices[partition].sdf.read((unsigned char*) packet_buffer, 512)) != 512) {
-    log_io_err(F("Read"), partition, block_num);
-    if (tries--) {
-      goto read_again;
-    }
-    status = SP_IOERROR;
-  }
 reply:
   if (status != SP_SUCCESS)
     DEBUG_CMD('E', devices[partition].device_id, status);
@@ -429,18 +488,48 @@ try_again:
 
   status = SP_SUCCESS;
 
-  if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
-    log_io_err(F("Seek"), partition, block_num);
-    status = SP_BADBLOCK;
-    goto reply;
+  if (!devices[partition].dos33) {
+    if (!devices[partition].sdf.seekSet(block_num*512+devices[partition].header_offset)) {
+      log_io_err(F("Seek"), partition, block_num);
+      status = SP_BADBLOCK;
+      goto reply;
+    }
+    // Write block to SD Card
+    if (devices[partition].sdf.write((unsigned char*) packet_buffer+PACKET_DATA_START, 512) != 512) {
+      log_io_err(F("Write"), partition, block_num);
+      // Sadly no retry here, ase init_storage() destroys packet_buffer and we
+      // don't have enough RAM to do otherwise.
+      status = SP_IOERROR;
+    }
+  } else {
+    unsigned long int track_num, sector_a, sector_b;
+    unsigned char block_in_track = block_num % BLOCKS_PER_TRACK;
+    track_num = block_num / BLOCKS_PER_TRACK;
+    track_num = track_num * BLOCKS_PER_TRACK * 512;
+    sector_a = track_num + (dos_sector_map[block_in_track*2] * 256);
+    sector_b = track_num + (dos_sector_map[(block_in_track*2)+1] * 256);
+
+    if (!devices[partition].sdf.seekSet(sector_a+devices[partition].header_offset)) {
+      log_io_err(F("Seek"), partition, block_num);
+      status = SP_BADBLOCK;
+      goto reply;
+    }
+    if (devices[partition].sdf.write((unsigned char*) packet_buffer+PACKET_DATA_START, 256) != 256) {
+      log_io_err(F("Write"), partition, block_num);
+      status = SP_IOERROR;
+    }
+
+    if (!devices[partition].sdf.seekSet(sector_b+devices[partition].header_offset)) {
+      log_io_err(F("Seek"), partition, block_num);
+      status = SP_BADBLOCK;
+      goto reply;
+    }
+    if (devices[partition].sdf.write((unsigned char*) packet_buffer+PACKET_DATA_START+256, 256) != 256) {
+      log_io_err(F("Write"), partition, block_num);
+      status = SP_IOERROR;
+    }
   }
-  // Write block to SD Card
-  if (devices[partition].sdf.write((unsigned char*) packet_buffer+PACKET_DATA_START, bytes_to_write) != bytes_to_write) {
-    log_io_err(F("Write"), partition, block_num);
-    // Sadly no retry here, ase init_storage() destroys packet_buffer and we
-    // don't have enough RAM to do otherwise.
-    status = SP_IOERROR;
-  }
+
   if (!devices[partition].sdf.sync()) {
     log_io_err(F("Sync"), partition, block_num);
     status = SP_IOERROR;
