@@ -620,7 +620,7 @@ void loop() {
       // return with a non-zero code if the smartport bus gets disabled without
       // receiving anything.
       if ((r = ReceivePacket((unsigned char*) packet_buffer)) != 0) {
-        break;
+        goto out;
       }
 
       dev_id = packet_buffer[PACKET_DEST];
@@ -634,7 +634,7 @@ void loop() {
         DumpPacket(packet_buffer, 1);
         IgnorePacket();
         // Smartbus is now disabled, packet has been ignored. Loop back.
-        break;
+        goto out;
       }
 
       SET_LED_HIGH;
@@ -668,6 +668,7 @@ void loop() {
         SendPacket( (unsigned char*) packet_buffer);
         break;
       }
+out:
       SET_LED_LOW;
       break;
 
